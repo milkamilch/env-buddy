@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import containers
+from routers import containers, notifications
 
 app = FastAPI(title="Env-Buddy API", version="0.1.0")
 
@@ -12,6 +12,7 @@ app.add_middleware(
 )
 
 app.include_router(containers.router)
+app.include_router(notifications.router)
 
 @app.get("/health")
 def health():

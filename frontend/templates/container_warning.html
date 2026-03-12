@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: Arial, sans-serif; background:#f4f4f4; padding:20px;">
+  <div style="max-width:500px; margin:auto; background:white; border-radius:8px; padding:30px;">
+    <h2 style="color:#E67E22;">⚠️ Container stoppt bald</h2>
+    <p>Deine Testumgebung wird in Kürze automatisch heruntergefahren.</p>
+    <table style="width:100%; border-collapse:collapse; margin-top:16px;">
+      <tr style="background:#fdf5e6;">
+        <td style="padding:10px; font-weight:bold;">Name</td>
+        <td style="padding:10px;">{{ container_name }}</td>
+      </tr>
+      <tr>
+        <td style="padding:10px; font-weight:bold;">Stoppt in</td>
+        <td style="padding:10px; color:#E67E22; font-weight:bold;">
+          {{ minutes_left }} Minuten
+        </td>
+      </tr>
+    </table>
+    <p style="margin-top:16px;">
+      Falls du mehr Zeit brauchst, verlängere die Laufzeit im Dashboard.
+    </p>
+    <p style="margin-top:24px; color:#888; font-size:12px;">
+      Test-Buddy – On-Demand Testumgebungen auf Knopfdruck
+    </p>
+  </div>
+</body>
+</html>
