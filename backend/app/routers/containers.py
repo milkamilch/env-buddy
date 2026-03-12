@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from models.container import StartContainerRequest, ContainerResponse
-from services import docker_service
+from app.models.container import StartContainerRequest, ContainerResponse
+from app.services import docker_service
 
 router = APIRouter(prefix="/api/containers", tags=["Containers"])
 

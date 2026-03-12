@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-from services import notification_service
+from app.services import notification_service
 
 router = APIRouter(prefix="/api/notifications", tags=["Notifications"])
 
