@@ -37,7 +37,7 @@ def notify_container_started(to: str, container_name: str, template: str, port: 
         port=port,
         duration_minutes=duration_minutes
     )
-    _send_mail(to, f"⏹️ Test-Buddy: {container_name} stopped", html)
+    _send_mail(to, f"▶️ Test-Buddy: {container_name} started", html)
 
 def notify_container_warning(to: str, container_name: str, minutes_left: int):
     html = env.get_template("container_warning.html").render(
