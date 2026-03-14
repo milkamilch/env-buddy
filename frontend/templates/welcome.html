@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: system-ui, sans-serif; background: #11111b; margin: 0; padding: 0; }
+    .wrapper { max-width: 560px; margin: 40px auto; background: #1e1e2e; border-radius: 16px; overflow: hidden; border: 1px solid #313244; }
+    .header { background: #181825; padding: 32px; text-align: center; border-bottom: 1px solid #313244; }
+    .logo { font-size: 48px; margin-bottom: 8px; }
+    .title { color: #cdd6f4; font-size: 22px; font-weight: 700; margin: 0; }
+    .body { padding: 32px; }
+    .greeting { color: #cdd6f4; font-size: 18px; font-weight: 600; margin: 0 0 12px; }
+    .text { color: #a6adc8; font-size: 14px; line-height: 1.6; margin: 0 0 24px; }
+    .card { background: #181825; border: 1px solid #313244; border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; }
+    .card-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #313244; }
+    .card-row:last-child { border-bottom: none; }
+    .card-label { color: #6c7086; font-size: 13px; }
+    .card-value { color: #cdd6f4; font-size: 13px; font-weight: 600; }
+    .btn { display: block; background: #89b4fa; color: #1e1e2e; text-decoration: none; text-align: center; font-weight: 700; font-size: 15px; padding: 14px; border-radius: 8px; margin-bottom: 24px; }
+    .footer { color: #45475a; font-size: 12px; text-align: center; padding: 0 32px 24px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="logo">🧪</div>
+      <h1 class="title">Willkommen bei Test-Buddy</h1>
+    </div>
+    <div class="body">
+      <p class="greeting">Hallo {{ first_name }}!</p>
+      <p class="text">
+        Dein Konto wurde erfolgreich erstellt. Du kannst ab sofort Testumgebungen auf Knopfdruck starten – ganz ohne Docker-Kenntnisse.
+      </p>
+      <div class="card">
+        <div class="card-row">
+          <span class="card-label">Name</span>
+          <span class="card-value">{{ first_name }} {{ last_name }}</span>
+        </div>
+        <div class="card-row">
+          <span class="card-label">Benutzername</span>
+          <span class="card-value">@{{ username }}</span>
+        </div>
+        <div class="card-row">
+          <span class="card-label">E-Mail</span>
+          <span class="card-value">{{ email }}</span>
+        </div>
+      </div>
+      <a class="btn" href="http://localhost:5173">Zum Dashboard →</a>
+      <p class="text" style="margin:0;">Falls du dieses Konto nicht erstellt hast, kannst du diese E-Mail ignorieren.</p>
+    </div>
+    <div class="footer">Test-Buddy · Automatische Testumgebungen</div>
+  </div>
+</body>
+</html>

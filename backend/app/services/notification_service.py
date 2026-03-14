@@ -45,3 +45,19 @@ def notify_container_warning(to: str, container_name: str, minutes_left: int):
         minutes_left=minutes_left,
     )
     _send_mail(to, f"⚠️ Test-Buddy: {container_name} stopped in {minutes_left} minutes", html)
+
+def send_welcome_email(to: str, first_name: str, last_name: str, username: str):
+    html = env.get_template("welcome.html").render(
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
+        email=to,
+    )
+    _send_mail(to, "👋 Willkommen bei Test-Buddy!", html)
+
+def send_password_reset_email(to: str, first_name: str, reset_url: str):
+    html = env.get_template("password_reset.html").render(
+        first_name=first_name,
+        reset_url=reset_url,
+    )
+    _send_mail(to, "🔑 Test-Buddy: Passwort zurücksetzen", html)

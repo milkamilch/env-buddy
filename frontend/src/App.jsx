@@ -2,11 +2,17 @@ import { useState, useEffect, useMemo } from "react";
 import { fetchTemplates, fetchContainers } from "./services/api";
 import StartForm from "./components/StartForm";
 import ContainerCard from "./components/ContainerCard";
+import AuthPage from "./pages/AuthPage";
 import "./App.css";
 
 const STATUS_FILTERS = ["alle", "running", "paused", "exited"];
 
+function getStoredUser() {
+  try { return JSON.parse(localStorage.getItem("user")); } catch { return null; }
+}
+
 export default function App() {
+  const [user, setUser] = useState(getStoredUser);
   const [templates, setTemplates] = useState([]);
   const [containers, setContainers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,16 +22,18 @@ export default function App() {
   const [activeStatus, setActiveStatus] = useState("alle");
 
   useEffect(() => {
+    if (!user) return;
     fetchTemplates()
       .then(setTemplates)
       .catch(() => setError("Backend nicht erreichbar"));
-  }, []);
+  }, [user]);
 
   useEffect(() => {
+    if (!user) return;
     loadContainers();
     const interval = setInterval(loadContainers, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [user]);
 
   async function loadContainers() {
     try {
@@ -35,6 +43,12 @@ export default function App() {
     } catch {
       setLoading(false);
     }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
   }
 
   function handleStopped(id) {
@@ -50,6 +64,10 @@ export default function App() {
     });
   }, [containers, search, activeTemplate, activeStatus]);
 
+  if (!user) {
+    return <AuthPage onAuth={(u) => setUser(u)} />;
+  }
+
   const templateOptions = ["alle", ...templates];
 
   return (
@@ -63,6 +81,11 @@ export default function App() {
         <div className="header-badge">
           <span className={`status-dot ${error ? "dot-error" : "dot-ok"}`} />
           {error ? "Offline" : "Backend verbunden"}
+        </div>
+        <div className="header-user">
+          <span className="user-name">{user.first_name} {user.last_name}</span>
+          <span className="user-handle">@{user.username}</span>
+          <button className="btn-logout" onClick={handleLogout}>Abmelden</button>
         </div>
       </header>
 
