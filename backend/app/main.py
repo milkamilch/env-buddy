@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import containers, notifications, auth
+from app.routers import containers, notifications, auth, user_templates
 from app.database import engine
 from app.models import user as user_model
+from app.models import template as template_model
 
 user_model.Base.metadata.create_all(bind=engine)
+template_model.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Env-Buddy API", version="0.1.0")
 
@@ -18,6 +20,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(containers.router)
 app.include_router(notifications.router)
+app.include_router(user_templates.router)
 
 @app.get("/health")
 def health():
