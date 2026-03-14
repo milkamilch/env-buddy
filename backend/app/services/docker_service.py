@@ -68,7 +68,7 @@ def start_container(template_name: str, duration_minutes: int=60):
 
 def list_containers():
     containers = client.containers.list(
-        filters = {"label": "managed-by=env-buddy"}
+        filters = {"label": "managed-by=test-buddy"}
     )
 
     result = []
