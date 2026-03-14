@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.models.user import UserDB, RegisterRequest, LoginRequest, TokenResponse, UserResponse
+from app.models.user import UserDB, RegisterRequest, LoginRequest, TokenResponse, UserResponse, NotificationPrefsRequest
 from app.services.notification_service import send_welcome_email, send_password_reset_email
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
@@ -112,3 +112,38 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
     user.hashed_password = pwd_context.hash(req.new_password)
     db.commit()
     return {"message": "Passwort erfolgreich geändert"}
+
+
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Security
+
+_bearer = HTTPBearer(auto_error=False)
+
+def get_current_user(creds: HTTPAuthorizationCredentials = Security(_bearer), db: Session = Depends(get_db)):
+    if not creds:
+        raise HTTPException(status_code=401, detail="Nicht authentifiziert")
+    try:
+        payload = jwt.decode(creds.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload["sub"])
+    except (JWTError, KeyError, ValueError):
+        raise HTTPException(status_code=401, detail="Ungültiger Token")
+    user = db.query(UserDB).filter(UserDB.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
+    return user
+
+
+@router.get("/me", response_model=UserResponse)
+def me(current_user: UserDB = Depends(get_current_user)):
+    return current_user
+
+
+@router.put("/me/notifications")
+def update_notifications(req: NotificationPrefsRequest, current_user: UserDB = Depends(get_current_user), db: Session = Depends(get_db)):
+    current_user.notify_on_start   = req.notify_on_start
+    current_user.notify_on_stop    = req.notify_on_stop
+    current_user.notify_on_warning = req.notify_on_warning
+    current_user.theme             = req.theme
+    db.commit()
+    db.refresh(current_user)
+    return UserResponse.model_validate(current_user)

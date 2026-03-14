@@ -1,8 +1,10 @@
 import docker
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 client = docker.from_env()
+
+_warned_containers: set = set()
 
 TEMPLATES = {
     # Datenbanken
@@ -75,12 +77,16 @@ TEMPLATES = {
         "port":  5672,
     },
     "kafka": {
-        "image": "bitnami/kafka:3.7",
-        "env":   {"KAFKA_CFG_NODE_ID": "0", "KAFKA_CFG_PROCESS_ROLES": "controller,broker",
-                  "KAFKA_CFG_LISTENERS": "PLAINTEXT://:9092,CONTROLLER://:9093",
-                  "KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP": "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT",
-                  "KAFKA_CFG_CONTROLLER_QUORUM_VOTERS": "0@localhost:9093",
-                  "KAFKA_CFG_CONTROLLER_LISTENER_NAMES": "CONTROLLER"},
+        "image": "apache/kafka:latest",
+        "env":   {"KAFKA_NODE_ID": "1",
+                  "KAFKA_PROCESS_ROLES": "broker,controller",
+                  "KAFKA_LISTENERS": "PLAINTEXT://:9092,CONTROLLER://:9093",
+                  "KAFKA_ADVERTISED_LISTENERS": "PLAINTEXT://localhost:9092",
+                  "KAFKA_LISTENER_SECURITY_PROTOCOL_MAP": "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT",
+                  "KAFKA_CONTROLLER_QUORUM_VOTERS": "1@localhost:9093",
+                  "KAFKA_CONTROLLER_LISTENER_NAMES": "CONTROLLER",
+                  "KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR": "1",
+                  "KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS": "0"},
         "port":  9092,
     },
     "nats": {
@@ -172,6 +178,14 @@ TEMPLATES = {
     },
 }
 
+def _stops_at(started_at_str: str | None, duration_minutes: int) -> str | None:
+    if not started_at_str:
+        return None
+    dt = datetime.fromisoformat(started_at_str)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return (dt + timedelta(minutes=duration_minutes)).isoformat()
+
 def get_free_port(start=10000,end=11000):
     import socket
     for port in range(start, end):
@@ -180,49 +194,70 @@ def get_free_port(start=10000,end=11000):
                 return port
     raise RuntimeError("No free port fund, bruh!")
 
-def start_container(template_name: str, duration_minutes: int=60):
+def start_container(template_name: str, duration_minutes: int = 60,
+                    env_overrides: dict = {}, host_port: int | None = None,
+                    container_name: str | None = None, mem_limit: str | None = None,
+                    extra_labels: dict = {}, user_id: int | None = None):
     if template_name not in TEMPLATES:
         raise ValueError(f"Template '{template_name}' not found")
 
     template = TEMPLATES[template_name]
-    free_port = get_free_port()
-    container_name = f"testbuddy-{template_name}-{uuid.uuid4().hex[:6]}"
+    actual_port = host_port if host_port else get_free_port()
+    actual_name = container_name if container_name else f"testbuddy-{template_name}-{uuid.uuid4().hex[:6]}"
+    env = {**template["env"], **env_overrides}
 
-    container = client.containers.run(
-        image = template["image"], 
-        name = container_name,
-        environment = template["env"],
-        ports = {f"{template['port']}/tcp": free_port},
-        detach = True,
-        labels = {"managed-by": "test-buddy",
+    run_kwargs = dict(
+        image=template["image"],
+        name=actual_name,
+        environment=env,
+        ports={f"{template['port']}/tcp": actual_port},
+        detach=True,
+        labels={
+            "managed-by": "test-buddy",
             "started-at": datetime.utcnow().isoformat(),
             "duration-minutes": str(duration_minutes),
             "template": template_name,
+            "port": str(actual_port),
+            "user-id": str(user_id) if user_id else "",
+            **extra_labels,
         },
     )
+    if mem_limit:
+        run_kwargs["mem_limit"] = mem_limit
+
+    container = client.containers.run(**run_kwargs)
 
     return {
         "id": container.id[:12],
-        "name": container_name,
+        "name": actual_name,
         "template": template_name,
-        "port": free_port,
+        "port": actual_port,
         "status": "running",
         "started_at": datetime.utcnow().isoformat(),
-        "stops_at": None,  # Timer muss noch gebaut werden / 12.03.26
+        "stops_at": (datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)).isoformat(),
     }
 
 def _container_stats(c):
-    stats = c.stats(stream=False)
-    cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - \
-                stats["precpu_stats"]["cpu_usage"]["total_usage"]
-    system_delta = stats["cpu_stats"]["system_cpu_usage"] - \
-                   stats["precpu_stats"]["system_cpu_usage"]
-    cpu_percent = round((cpu_delta / system_delta) * 100, 2) if system_delta > 0 else 0
-    ram_mb = round(stats["memory_stats"]["usage"] / 1024 / 1024, 1)
-    return cpu_percent, ram_mb
+    if c.status != "running":
+        return 0.0, 0.0, 0.0
+    try:
+        stats = c.stats(stream=False)
+        cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - \
+                    stats["precpu_stats"]["cpu_usage"]["total_usage"]
+        system_delta = stats["cpu_stats"]["system_cpu_usage"] - \
+                       stats["precpu_stats"]["system_cpu_usage"]
+        cpu_percent = round((cpu_delta / system_delta) * 100, 2) if system_delta > 0 else 0
+        ram_usage = stats["memory_stats"]["usage"]
+        ram_limit = stats["memory_stats"].get("limit", 0)
+        ram_mb = round(ram_usage / 1024 / 1024, 1)
+        ram_percent = round((ram_usage / ram_limit) * 100, 2) if ram_limit > 0 else 0
+        return cpu_percent, ram_mb, ram_percent
+    except Exception:
+        return 0.0, 0.0, 0.0
 
-def list_containers():
+def list_containers(user_id: int | None = None):
     containers = client.containers.list(
+        all=True,
         filters = {"label": "managed-by=test-buddy"}
     )
 
@@ -231,20 +266,28 @@ def list_containers():
         labels = c.labels
         if labels.get("stack-id"):  # skip stack containers
             continue
-        cpu_percent, ram_mb = _container_stats(c)
+        if user_id is not None and labels.get("user-id") != str(user_id):
+            continue
+        cpu_percent, ram_mb, ram_percent = _container_stats(c)
+        started_at = labels.get("started-at")
+        duration = int(labels.get("duration-minutes", 60))
+        stops_at = _stops_at(started_at, duration)
         result.append({
             "id": c.short_id,
             "name": c.name,
             "template": labels.get("template", "unknown"),
+            "port": int(labels["port"]) if labels.get("port") else None,
             "status": c.status,
-            "started_at": labels.get("started-at"),
+            "started_at": started_at,
+            "stops_at": stops_at,
             "cpu_percent": cpu_percent,
             "ram_mb": ram_mb,
+            "ram_percent": ram_percent,
         })
 
     return result
 
-def start_stack(templates: list, stack_name: str, duration_minutes: int = 60):
+def start_stack(templates: list, stack_name: str, duration_minutes: int = 60, user_id: int | None = None):
     stack_id = uuid.uuid4().hex[:8]
     started = []
     try:
@@ -267,6 +310,8 @@ def start_stack(templates: list, stack_name: str, duration_minutes: int = 60):
                     "template": tpl_name,
                     "stack-id": stack_id,
                     "stack-name": stack_name,
+                    "port": str(free_port),
+                    "user-id": str(user_id) if user_id else "",
                 },
             )
             started.append({
@@ -286,8 +331,9 @@ def start_stack(templates: list, stack_name: str, duration_minutes: int = 60):
         raise
     return {"stack_id": stack_id, "stack_name": stack_name, "containers": started}
 
-def list_stacks():
+def list_stacks(user_id: int | None = None):
     containers = client.containers.list(
+        all=True,
         filters={"label": "managed-by=test-buddy"}
     )
     stacks = {}
@@ -296,15 +342,23 @@ def list_stacks():
         stack_id = labels.get("stack-id")
         if not stack_id:
             continue
-        cpu_percent, ram_mb = _container_stats(c)
+        if user_id is not None and labels.get("user-id") != str(user_id):
+            continue
+        cpu_percent, ram_mb, ram_percent = _container_stats(c)
+        started_at = labels.get("started-at")
+        duration = int(labels.get("duration-minutes", 60))
+        stops_at = _stops_at(started_at, duration)
         container_info = {
             "id": c.short_id,
             "name": c.name,
             "template": labels.get("template", "unknown"),
+            "port": int(labels["port"]) if labels.get("port") else None,
             "status": c.status,
-            "started_at": labels.get("started-at"),
+            "started_at": started_at,
+            "stops_at": stops_at,
             "cpu_percent": cpu_percent,
             "ram_mb": ram_mb,
+            "ram_percent": ram_percent,
         }
         if stack_id not in stacks:
             stacks[stack_id] = {
@@ -322,14 +376,45 @@ def stop_stack(stack_id: str):
     )
     for c in containers:
         c.stop()
-        c.remove()
     return {"message": f"Stack {stack_id} stopped"}
+
+def remove_stack(stack_id: str):
+    containers = client.containers.list(
+        all=True,
+        filters={"label": f"stack-id={stack_id}"}
+    )
+    for c in containers:
+        if c.status == "running":
+            c.stop()
+        c.remove()
+    return {"message": f"Stack {stack_id} removed"}
+
+def start_stopped_stack(stack_id: str):
+    containers = client.containers.list(
+        all=True,
+        filters={"label": f"stack-id={stack_id}"}
+    )
+    for c in containers:
+        if c.status != "running":
+            c.start()
+    return {"message": f"Stack {stack_id} started"}
 
 def stop_container(container_id: str):
     container = client.containers.get(container_id)
     container.stop()
+    return {"message": f"Container {container_id} stopped"}
+
+def remove_container(container_id: str):
+    container = client.containers.get(container_id)
+    if container.status == "running":
+        container.stop()
     container.remove()
-    return {"message": f"Container {container_id} stopped and removed"}
+    return {"message": f"Container {container_id} removed"}
+
+def start_stopped_container(container_id: str):
+    container = client.containers.get(container_id)
+    container.start()
+    return {"message": f"Container {container_id} started"}
 
 def restart_container(container_id: str):
     container = client.containers.get(container_id)
@@ -356,3 +441,117 @@ def get_container_stats(container_id: str):
         "ram_limit_mb": round(ram_limit / 1024 / 1024, 1),
         "ram_percent": round((ram_usage / ram_limit) * 100, 2),
     }
+
+def auto_stop_expired_containers():
+    from app.database import SessionLocal
+    from app.models.user import UserDB
+    from app.services.notification_service import notify_container_stopped, notify_container_warning
+    import threading
+
+    now = datetime.now(timezone.utc)
+    db = SessionLocal()
+    try:
+        containers = client.containers.list(
+            filters={"label": "managed-by=test-buddy", "status": "running"}
+        )
+    except Exception:
+        db.close()
+        return
+
+    for c in containers:
+        labels = c.labels
+        started_at_str = labels.get("started-at")
+        duration_str = labels.get("duration-minutes")
+        user_id_str = labels.get("user-id", "")
+        if not started_at_str or not duration_str:
+            continue
+        try:
+            started_at = datetime.fromisoformat(started_at_str)
+            if started_at.tzinfo is None:
+                started_at = started_at.replace(tzinfo=timezone.utc)
+            stops_at = started_at + timedelta(minutes=int(duration_str))
+
+            user = None
+            if user_id_str:
+                try:
+                    user = db.query(UserDB).filter(UserDB.id == int(user_id_str)).first()
+                except Exception:
+                    pass
+
+            # Warning: 5 min before stop
+            warn_at = stops_at - timedelta(minutes=5)
+            if c.id not in _warned_containers and warn_at <= now < stops_at:
+                _warned_containers.add(c.id)
+                if user and user.notify_on_warning:
+                    threading.Thread(target=notify_container_warning,
+                                     args=(user.email, c.name, 5), daemon=True).start()
+
+            # Auto-stop
+            if now >= stops_at:
+                _warned_containers.discard(c.id)
+                if user and user.notify_on_stop:
+                    threading.Thread(target=notify_container_stopped,
+                                     args=(user.email, c.name), daemon=True).start()
+                c.stop()
+        except Exception:
+            continue
+    db.close()
+
+def get_container_logs(container_id: str, tail: int = 200) -> list[str]:
+    import re
+    c = client.containers.get(container_id)
+    raw = c.logs(tail=tail, timestamps=False)
+    text = raw.decode("utf-8", errors="replace")
+    # strip ANSI escape codes
+    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    text = ansi_escape.sub("", text)
+    return [line for line in text.splitlines() if line]
+
+
+def get_container_config(container_id: str):
+    c = client.containers.get(container_id)
+    labels = c.labels
+
+    env_list = c.attrs["Config"].get("Env") or []
+    env_dict = {}
+    for item in env_list:
+        if "=" in item:
+            k, v = item.split("=", 1)
+            env_dict[k] = v
+
+    mem_bytes = c.attrs["HostConfig"].get("Memory", 0)
+    mem_limit = None
+    if mem_bytes and mem_bytes > 0:
+        mb = mem_bytes // (1024 * 1024)
+        mem_limit = f"{mb // 1024}g" if mb >= 1024 and mb % 1024 == 0 else f"{mb}m"
+
+    return {
+        "id": c.short_id,
+        "name": c.name,
+        "template": labels.get("template"),
+        "port": int(labels["port"]) if labels.get("port") else None,
+        "duration_minutes": int(labels.get("duration-minutes", 60)),
+        "env": env_dict,
+        "mem_limit": mem_limit,
+    }
+
+def update_container_config(container_id: str, env_overrides: dict,
+                             host_port: int | None, container_name: str | None,
+                             mem_limit: str | None):
+    c = client.containers.get(container_id)
+    labels = c.labels
+    template_name = labels.get("template")
+    duration = int(labels.get("duration-minutes", 60))
+    extra_labels = {k: labels[k] for k in ("stack-id", "stack-name") if k in labels}
+    user_id_str = labels.get("user-id", "")
+    user_id = int(user_id_str) if user_id_str else None
+    if c.status == "running":
+        c.stop()
+    c.remove()
+    return start_container(template_name, duration,
+                           env_overrides=env_overrides,
+                           host_port=host_port,
+                           container_name=container_name,
+                           mem_limit=mem_limit,
+                           extra_labels=extra_labels,
+                           user_id=user_id)

@@ -4,6 +4,10 @@ from typing import Optional
 class StartContainerRequest(BaseModel):
     template: str = Field(..., example="postgres")
     duration_minutes: int = Field(default=60, ge=5, le=480)
+    env_overrides: dict[str, str] = {}
+    host_port: Optional[int] = None
+    container_name: Optional[str] = None
+    mem_limit: Optional[str] = None  # e.g. "512m", "1g"
 
 class ContainerResponse(BaseModel):
     id: str

@@ -61,3 +61,13 @@ def send_password_reset_email(to: str, first_name: str, reset_url: str):
         reset_url=reset_url,
     )
     _send_mail(to, "🔑 Test-Buddy: Passwort zurücksetzen", html)
+
+def notify_container_stopped(to: str, container_name: str):
+    html = f"""
+    <html><body style="font-family:sans-serif;background:#1e1e2e;color:#cdd6f4;padding:2rem">
+    <h2 style="color:#f38ba8">⏹ Container gestoppt</h2>
+    <p>Der Container <strong>{container_name}</strong> wurde automatisch gestoppt.</p>
+    <p style="color:#6c7086;font-size:0.85rem">Test-Buddy</p>
+    </body></html>
+    """
+    _send_mail(to, f"⏹ Test-Buddy: {container_name} gestoppt", html)

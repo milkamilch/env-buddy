@@ -1,14 +1,45 @@
+import asyncio
+from contextlib import asynccontextmanager
+from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import containers, notifications, auth, user_templates
 from app.database import engine
 from app.models import user as user_model
 from app.models import template as template_model
+from app.services import docker_service
 
 user_model.Base.metadata.create_all(bind=engine)
 template_model.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Env-Buddy API", version="0.1.0")
+def _run_migrations():
+    new_cols = [
+        ("notify_on_start",   "1"),
+        ("notify_on_stop",    "1"),
+        ("notify_on_warning", "1"),
+        ("theme",             "'dark'"),
+    ]
+    with engine.connect() as conn:
+        for col, default in new_cols:
+            try:
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} INTEGER DEFAULT {default} NOT NULL"))
+                conn.commit()
+            except Exception:
+                pass  # column already exists
+
+async def _auto_stop_loop():
+    while True:
+        await asyncio.sleep(30)
+        docker_service.auto_stop_expired_containers()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    _run_migrations()
+    task = asyncio.create_task(_auto_stop_loop())
+    yield
+    task.cancel()
+
+app = FastAPI(title="Env-Buddy API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

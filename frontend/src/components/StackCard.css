@@ -1,6 +1,6 @@
 .stack-card {
-  background: #1e1e2e;
-  border: 1px solid #45475a;
+  background: var(--surface);
+  border: 1px solid var(--overlay1);
   border-radius: 12px;
   padding: 1.25rem;
   display: flex;
@@ -10,7 +10,7 @@
 }
 
 .stack-card:hover {
-  border-color: #89b4fa55;
+  border-color: var(--blue-a-lg);
 }
 
 .stack-header {
@@ -32,7 +32,7 @@
 
 .stack-icon-more {
   font-size: 0.75rem;
-  color: #6c7086;
+  color: var(--subtext0);
   align-self: center;
   padding-left: 0.2rem;
 }
@@ -48,7 +48,7 @@
 .stack-name {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #cdd6f4;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -59,11 +59,35 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #a6adc8;
+  color: var(--subtext1);
 }
 
-.status-running { color: #a6e3a1; }
-.status-partial  { color: #fab387; }
+.status-running { color: var(--green); }
+.status-partial  { color: var(--peach); }
+.status-stopped  { color: var(--subtext0); }
+
+.stack-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.stack-countdown {
+  font-size: 0.75rem;
+  color: var(--subtext0);
+}
+
+.countdown-urgent {
+  color: var(--peach);
+  font-weight: 600;
+  animation: countdown-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
 
 .stack-actions {
   display: flex;
@@ -74,8 +98,8 @@
 
 .btn-expand {
   background: transparent;
-  border: 1px solid #45475a;
-  color: #a6adc8;
+  border: 1px solid var(--overlay1);
+  color: var(--subtext1);
   border-radius: 6px;
   padding: 0.3rem 0.55rem;
   font-size: 0.75rem;
@@ -84,26 +108,43 @@
 }
 
 .btn-expand:hover {
-  background: #313244;
-  border-color: #89b4fa;
-  color: #89b4fa;
+  background: var(--overlay0);
+  border-color: var(--blue);
+  color: var(--blue);
 }
 
-.btn-stop {
+.btn-stack-stop, .btn-stack-start, .btn-stack-remove {
   background: transparent;
-  border: 1px solid #f38ba8;
-  color: #f38ba8;
   border-radius: 6px;
   padding: 0.35rem 0.75rem;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: background 0.2s;
   white-space: nowrap;
+  transition: background 0.2s;
 }
 
-.btn-stop:hover {
-  background: #f38ba822;
+.btn-stack-stop   { border: 1px solid var(--red); color: var(--red); }
+.btn-stack-stop:hover { background: var(--red-a); }
+
+.btn-stack-start  { border: 1px solid var(--green); color: var(--green); }
+.btn-stack-start:hover { background: var(--green-a); }
+
+.btn-stack-remove { border: 1px solid var(--overlay1); color: var(--subtext0); padding: 0.35rem 0.55rem; }
+.btn-stack-remove:hover { background: var(--red-a); border-color: var(--red); color: var(--red); }
+
+.confirm-label { font-size: 0.72rem; color: var(--peach); white-space: nowrap; }
+.btn-stack-confirm-yes, .btn-stack-confirm-no {
+  background: transparent;
+  border-radius: 6px;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s;
 }
+.btn-stack-confirm-yes { border: 1px solid var(--green); color: var(--green); }
+.btn-stack-confirm-yes:hover { background: var(--green-a); }
+.btn-stack-confirm-no  { border: 1px solid var(--overlay1);  color: var(--subtext0); }
+.btn-stack-confirm-no:hover  { background: var(--red-a); border-color: var(--red); color: var(--red); }
 
 /* Expanded container list */
 .stack-containers {
@@ -111,7 +152,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  border-top: 1px solid #313244;
+  border-top: 1px solid var(--overlay0);
   padding-top: 1rem;
 }
 
@@ -119,10 +160,15 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  background: #181825;
-  border: 1px solid #313244;
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.stack-container-row:hover {
+  border-color: var(--overlay1);
 }
 
 .row-icon {
@@ -141,7 +187,7 @@
 .row-name {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #cdd6f4;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -163,7 +209,7 @@
 
 .row-port {
   font-size: 0.75rem;
-  color: #89b4fa;
+  color: var(--blue);
   font-weight: 600;
 }
 
@@ -180,8 +226,8 @@
 
 .btn-restart {
   background: transparent;
-  border: 1px solid #89b4fa;
-  color: #89b4fa;
+  border: 1px solid var(--blue);
+  color: var(--blue);
   border-radius: 6px;
   padding: 0.25rem 0.5rem;
   font-size: 0.85rem;
@@ -191,7 +237,7 @@
 }
 
 .btn-restart:hover:not(:disabled) {
-  background: #89b4fa22;
+  background: var(--blue-a);
 }
 
 .btn-restart:disabled {
@@ -199,10 +245,23 @@
   cursor: not-allowed;
 }
 
+.btn-logs-sm {
+  background: transparent;
+  border: 1px solid var(--overlay1);
+  color: var(--subtext0);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.btn-logs-sm:hover { background: var(--blue-a); border-color: var(--blue); color: var(--blue); }
+
 .btn-stop-sm {
   background: transparent;
-  border: 1px solid #f38ba8;
-  color: #f38ba8;
+  border: 1px solid var(--red);
+  color: var(--red);
   border-radius: 6px;
   padding: 0.25rem 0.5rem;
   font-size: 0.8rem;
@@ -212,5 +271,5 @@
 }
 
 .btn-stop-sm:hover {
-  background: #f38ba822;
+  background: var(--red-a);
 }

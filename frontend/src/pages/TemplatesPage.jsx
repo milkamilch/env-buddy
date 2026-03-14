@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, saveFavorites, deleteTemplate } from "../services/api";
 import CreateTemplateModal from "../components/CreateTemplateModal";
+import { useToast } from "../components/Toast";
 import "./TemplatesPage.css";
 
 const DEFAULT_ICONS = {
@@ -15,11 +16,13 @@ const DEFAULT_ICONS = {
 
 export default function TemplatesPage() {
   const [defaultTemplates, setDefaultTemplates] = useState([]);
+  const toast = useToast();
   const [customTemplates, setCustomTemplates] = useState([]);
-  const [favorites, setFavorites] = useState([]);  // array of string keys: "postgres", "custom:42"
+  const [favorites, setFavorites] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [dragItem, setDragItem] = useState(null);
   const [dragOverFav, setDragOverFav] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   useEffect(() => {
     fetchDefaultTemplates().then(setDefaultTemplates).catch(() => {});
@@ -87,8 +90,9 @@ export default function TemplatesPage() {
   // ── Custom template actions ──────────────────────────────────────────────
 
   async function handleDelete(id) {
-    if (!confirm("Template löschen?")) return;
-    await deleteTemplate(id).catch(() => {});
+    if (confirmDeleteId !== id) { setConfirmDeleteId(id); return; }
+    try { await deleteTemplate(id); } catch (err) { toast.error("Fehler beim Löschen: " + err.message); }
+    setConfirmDeleteId(null);
     setCustomTemplates((prev) => prev.filter((t) => t.id !== id));
     persistFavorites(favorites.filter((k) => k !== `custom:${id}`));
   }
@@ -215,7 +219,15 @@ export default function TemplatesPage() {
                           ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
                           : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
                         }
-                        <button className="tc-btn-delete" onClick={() => handleDelete(t.id)}>Löschen</button>
+                        {confirmDeleteId === t.id ? (
+                          <>
+                            <span className="tc-confirm-label">Sicher?</span>
+                            <button className="tc-btn-confirm-yes" onClick={() => handleDelete(t.id)}>✓</button>
+                            <button className="tc-btn-confirm-no" onClick={() => setConfirmDeleteId(null)}>✕</button>
+                          </>
+                        ) : (
+                          <button className="tc-btn-delete" onClick={() => handleDelete(t.id)}>Löschen</button>
+                        )}
                       </div>
                     </div>
                   );
