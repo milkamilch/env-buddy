@@ -30,26 +30,26 @@ TEMPLATES = {
 def get_free_port(start=10000,end=11000):
     import socket
     for port in range(start, end):
-        with socket.socket(socket.AF_INET, sockte.SOCK_STREAM) as s:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if s.connect_ex(("localhost", port)) != 0:
                 return port
     raise RuntimeError("No free port fund, bruh!")
 
-def start_container(template_name: str, durration_minutes: int=60):
+def start_container(template_name: str, duration_minutes: int=60):
     if template_name not in TEMPLATES:
         raise ValueError(f"Template '{template_name}' not found")
 
     template = TEMPLATES[template_name]
     free_port = get_free_port()
-    container_name = f"testbuddy-{template_name}-{uuid-uuid4().hex[:6]}"
+    container_name = f"testbuddy-{template_name}-{uuid.uuid4().hex[:6]}"
 
     container = client.containers.run(
         image = template["image"], 
         name = container_name,
-        enviroment = template["env"],
+        environment = template["env"],
         ports = {f"{template['port']}/tcp": free_port},
-        detach = True
-        labels = "managed-by": "test-buddy",
+        detach = True,
+        labels = {"managed-by": "test-buddy",
             "started-at": datetime.utcnow().isoformat(),
             "duration-minutes": str(duration_minutes),
             "template": template_name,
@@ -68,7 +68,7 @@ def start_container(template_name: str, durration_minutes: int=60):
 
 def list_containers():
     containers = client.containers.list(
-        filters = {"label": "managed-by=env-buddy"}
+        filters = {"label": "managed-by=test-buddy"}
     )
 
     result = []

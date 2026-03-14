@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import containers, notifications
+from app.routers import containers, notifications
 
 app = FastAPI(title="Env-Buddy API", version="0.1.0")
 
