@@ -1,19 +1,20 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Text
 from sqlalchemy.sql import func
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from app.database import Base
 
 
 class UserDB(Base):
     __tablename__ = "users"
 
-    id             = Column(Integer, primary_key=True, index=True)
-    email          = Column(String, unique=True, index=True, nullable=False)
-    username       = Column(String, unique=True, index=True, nullable=False)
-    first_name     = Column(String, nullable=False)
-    last_name      = Column(String, nullable=False)
+    id              = Column(Integer, primary_key=True, index=True)
+    email           = Column(String, unique=True, index=True, nullable=False)
+    username        = Column(String, unique=True, index=True, nullable=False)
+    first_name      = Column(String, nullable=False)
+    last_name       = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
-    created_at     = Column(DateTime(timezone=True), server_default=func.now())
+    favorites_json  = Column(Text, default="[]")
+    created_at      = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class RegisterRequest(BaseModel):
