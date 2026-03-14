@@ -1,0 +1,88 @@
+.dash-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--surface);
+  border: 1px solid var(--overlay0);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0.9rem;
+  gap: 0.15rem;
+  min-width: 70px;
+}
+
+.stat-card-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+.stat-green { color: var(--green); }
+.stat-red   { color: var(--red); }
+.stat-blue  { color: var(--blue); }
+
+.stat-card-label {
+  font-size: 0.72rem;
+  color: var(--subtext0);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.stat-card-sub {
+  font-size: 0.68rem;
+  color: var(--overlay1);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.stat-divider {
+  width: 1px;
+  height: 2.5rem;
+  background: var(--overlay0);
+  margin: 0 0.5rem;
+  flex-shrink: 0;
+}
+
+.stat-card-templates {
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.stat-card-label-top {
+  margin-bottom: 0.2rem;
+}
+
+.stat-template-list {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.stat-template-chip {
+  background: var(--overlay0);
+  border-radius: 99px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.72rem;
+  color: var(--subtext1);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.stat-template-count {
+  background: var(--overlay1);
+  border-radius: 99px;
+  padding: 0 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text);
+}

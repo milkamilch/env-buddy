@@ -3,13 +3,68 @@
 }
 
 :root {
+  /* Catppuccin Mocha (dark) */
+  --base:         #11111b;
+  --surface:      #1e1e2e;
+  --mantle:       #181825;
+  --overlay0:     #313244;
+  --overlay1:     #45475a;
+  --overlay2:     #585b70;
+  --subtext0:     #6c7086;
+  --subtext1:     #a6adc8;
+  --text:         #cdd6f4;
+  --blue:         #89b4fa;
+  --red:          #f38ba8;
+  --green:        #a6e3a1;
+  --peach:        #fab387;
+  --sky:          #74c7ec;
+  --mauve:        #cba6f7;
+  --red-surface:  #2d1b22;
+  --green-surface:#1a2b1a;
+  --peach-surface:#2b2418;
+  --red-a:        #f38ba822;
+  --green-a:      #a6e3a122;
+  --blue-a:       #89b4fa22;
+  --blue-a-sm:    #89b4fa11;
+  --blue-a-lg:    #89b4fa55;
+}
+
+[data-theme="light"] {
+  /* Catppuccin Latte (light) */
+  color-scheme: light;
+  --base:         #eff1f5;
+  --surface:      #e6e9ef;
+  --mantle:       #dce0e8;
+  --overlay0:     #bcc0cc;
+  --overlay1:     #acb0be;
+  --overlay2:     #9ca0b0;
+  --subtext0:     #6c6f85;
+  --subtext1:     #5c5f77;
+  --text:         #4c4f69;
+  --blue:         #1e66f5;
+  --red:          #d20f39;
+  --green:        #40a02b;
+  --peach:        #fe640b;
+  --sky:          #209fb5;
+  --mauve:        #8839ef;
+  --red-surface:  #fce5e8;
+  --green-surface:#e5f5e5;
+  --peach-surface:#fff3e8;
+  --red-a:        #d20f3922;
+  --green-a:      #40a02b22;
+  --blue-a:       #1e66f522;
+  --blue-a-sm:    #1e66f511;
+  --blue-a-lg:    #1e66f555;
+}
+
+:root {
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
-  color: #cdd6f4;
-  background-color: #11111b;
+  color: var(--text);
+  background-color: var(--base);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -27,6 +82,12 @@ body {
 button {
   font-family: inherit;
 }
+
+/* Global scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--overlay1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--overlay2); }
 
 h1, h2, h3 {
   line-height: 1.2;

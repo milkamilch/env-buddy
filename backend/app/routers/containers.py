@@ -1,7 +1,60 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Security
+from jose import jwt, JWTError
+import os
+import threading
+from app.database import get_db
+from sqlalchemy.orm import Session
 from app.models.container import StartContainerRequest, ContainerResponse
+from app.models.user import UserDB
 from app.services import docker_service
+from app.services.notification_service import notify_container_started
+
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
+ALGORITHM = "HS256"
+_bearer = HTTPBearer(auto_error=False)
+
+
+def _get_required_user(creds: HTTPAuthorizationCredentials = Security(_bearer), db: Session = Depends(get_db)):
+    if not creds:
+        raise HTTPException(status_code=401, detail="Nicht angemeldet")
+    try:
+        payload = jwt.decode(creds.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload["sub"])
+        user = db.query(UserDB).filter(UserDB.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="Ungültiger Token")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Ungültiger Token")
+
+
+def _assert_owner(container_id: str, user: UserDB):
+    """Raises 403 if the container belongs to a different user."""
+    try:
+        c = docker_service.client.containers.get(container_id)
+        uid = c.labels.get("user-id", "")
+        if uid and uid != str(user.id):
+            raise HTTPException(status_code=403, detail="Kein Zugriff auf diesen Container")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=404, detail="Container nicht gefunden")
+
+
+def _assert_stack_owner(stack_id: str, user: UserDB):
+    """Raises 403 if the stack belongs to a different user."""
+    containers = docker_service.client.containers.list(
+        all=True, filters={"label": f"stack-id={stack_id}"}
+    )
+    if not containers:
+        raise HTTPException(status_code=404, detail="Stack nicht gefunden")
+    uid = containers[0].labels.get("user-id", "")
+    if uid and uid != str(user.id):
+        raise HTTPException(status_code=403, detail="Kein Zugriff auf diesen Stack")
+
 
 router = APIRouter(prefix="/api/containers", tags=["Containers"])
 
@@ -13,12 +66,24 @@ class StartStackRequest(BaseModel):
 
 
 @router.post("/start", response_model=ContainerResponse)
-def start(request: StartContainerRequest):
+def start(request: StartContainerRequest, current_user: UserDB = Depends(_get_required_user)):
     try:
-        return docker_service.start_container(
+        result = docker_service.start_container(
             request.template,
-            request.duration_minutes
+            request.duration_minutes,
+            env_overrides=request.env_overrides,
+            host_port=request.host_port,
+            container_name=request.container_name,
+            mem_limit=request.mem_limit,
+            user_id=current_user.id,
         )
+        if current_user.notify_on_start:
+            threading.Thread(
+                target=notify_container_started,
+                args=(current_user.email, result["name"], request.template, result["port"], request.duration_minutes),
+                daemon=True,
+            ).start()
+        return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -26,12 +91,13 @@ def start(request: StartContainerRequest):
 
 
 @router.post("/stacks/start")
-def start_stack(request: StartStackRequest):
+def start_stack(request: StartStackRequest, current_user: UserDB = Depends(_get_required_user)):
     try:
         return docker_service.start_stack(
             request.templates,
             request.stack_name,
-            request.duration_minutes
+            request.duration_minutes,
+            user_id=current_user.id,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -40,19 +106,45 @@ def start_stack(request: StartStackRequest):
 
 
 @router.get("/stacks")
-def list_stacks():
+def list_stacks(current_user: UserDB = Depends(_get_required_user)):
     try:
-        return docker_service.list_stacks()
+        return docker_service.list_stacks(user_id=current_user.id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/stacks/{stack_id}/stop")
+def stop_stack(stack_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_stack_owner(stack_id, current_user)
+    try:
+        return docker_service.stop_stack(stack_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/stacks/{stack_id}/start")
+def start_stopped_stack(stack_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_stack_owner(stack_id, current_user)
+    try:
+        return docker_service.start_stopped_stack(stack_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/stacks/{stack_id}")
-def stop_stack(stack_id: str):
+def remove_stack(stack_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_stack_owner(stack_id, current_user)
     try:
-        return docker_service.stop_stack(stack_id)
+        return docker_service.remove_stack(stack_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/system-info")
+def system_info():
+    info = docker_service.client.info()
+    total_ram_mb = info["MemTotal"] // (1024 * 1024)
+    return {"total_ram_mb": total_ram_mb}
 
 
 @router.get("/templates")
@@ -60,32 +152,101 @@ def get_templates():
     return list(docker_service.TEMPLATES.keys())
 
 
+@router.get("/templates/{name}")
+def get_template_details(name: str):
+    if name not in docker_service.TEMPLATES:
+        raise HTTPException(status_code=404, detail=f"Template '{name}' not found")
+    t = docker_service.TEMPLATES[name]
+    return {"name": name, "image": t["image"], "port": t["port"], "env": t["env"]}
+
+
 @router.get("/")
-def list_all():
+def list_all(current_user: UserDB = Depends(_get_required_user)):
     try:
-        return docker_service.list_containers()
+        return docker_service.list_containers(user_id=current_user.id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.delete("/{container_id}")
-def stop(container_id: str):
+@router.get("/{container_id}/config")
+def get_config(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
+    try:
+        return docker_service.get_container_config(container_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class UpdateConfigRequest(BaseModel):
+    env_overrides: dict[str, str] = {}
+    host_port: int | None = None
+    container_name: str | None = None
+    mem_limit: str | None = None
+
+
+@router.put("/{container_id}/config")
+def update_config(container_id: str, request: UpdateConfigRequest, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
+    try:
+        return docker_service.update_container_config(
+            container_id,
+            env_overrides=request.env_overrides,
+            host_port=request.host_port,
+            container_name=request.container_name,
+            mem_limit=request.mem_limit,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{container_id}/stop")
+def stop(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
     try:
         return docker_service.stop_container(container_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.delete("/{container_id}")
+def remove(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
+    try:
+        return docker_service.remove_container(container_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{container_id}/start")
+def start_stopped(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
+    try:
+        return docker_service.start_stopped_container(container_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/{container_id}/restart")
-def restart(container_id: str):
+def restart(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
     try:
         return docker_service.restart_container(container_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/{container_id}/logs")
+def get_logs(container_id: str, tail: int = 200, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
+    try:
+        return docker_service.get_container_logs(container_id, tail)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{container_id}/stats")
-def stats(container_id: str):
+def stats(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
     try:
         return docker_service.get_container_stats(container_id)
     except Exception as e:

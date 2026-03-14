@@ -1,6 +1,6 @@
 .start-form {
-  background: #1e1e2e;
-  border: 1px solid #313244;
+  background: var(--surface);
+  border: 1px solid var(--overlay0);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
@@ -11,7 +11,7 @@
 .start-form h2 {
   margin: 0;
   font-size: 1.1rem;
-  color: #cdd6f4;
+  color: var(--text);
 }
 
 .form-group {
@@ -22,14 +22,14 @@
 
 .form-group label {
   font-size: 0.85rem;
-  color: #a6adc8;
+  color: var(--subtext1);
 }
 
 .form-group select {
-  background: #181825;
-  border: 1px solid #45475a;
+  background: var(--mantle);
+  border: 1px solid var(--overlay1);
   border-radius: 8px;
-  color: #cdd6f4;
+  color: var(--text);
   padding: 0.5rem 0.75rem;
   font-size: 0.95rem;
   cursor: pointer;
@@ -37,11 +37,11 @@
 
 .form-group select:focus {
   outline: none;
-  border-color: #89b4fa;
+  border-color: var(--blue);
 }
 
 .form-group input[type="range"] {
-  accent-color: #89b4fa;
+  accent-color: var(--blue);
   width: 100%;
   cursor: pointer;
 }
@@ -50,22 +50,22 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: #6c7086;
+  color: var(--subtext0);
 }
 
 .form-error {
-  color: #f38ba8;
+  color: var(--red);
   font-size: 0.85rem;
   margin: 0;
-  background: #1e1e2e;
-  border: 1px solid #f38ba8;
+  background: var(--surface);
+  border: 1px solid var(--red);
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
 }
 
 .btn-start {
-  background: #89b4fa;
-  color: #1e1e2e;
+  background: var(--blue);
+  color: var(--surface);
   border: none;
   border-radius: 8px;
   padding: 0.6rem 1.2rem;
@@ -76,7 +76,7 @@
 }
 
 .btn-start:hover:not(:disabled) {
-  background: #74c7ec;
+  background: var(--sky);
 }
 
 .btn-start:disabled {
@@ -88,8 +88,8 @@
 .mode-tabs {
   display: flex;
   gap: 0;
-  background: #181825;
-  border: 1px solid #45475a;
+  background: var(--mantle);
+  border: 1px solid var(--overlay1);
   border-radius: 8px;
   padding: 3px;
 }
@@ -99,7 +99,7 @@
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: #6c7086;
+  color: var(--subtext0);
   padding: 0.35rem 0;
   font-size: 0.85rem;
   font-weight: 600;
@@ -108,20 +108,20 @@
 }
 
 .mode-tab.active {
-  background: #313244;
-  color: #cdd6f4;
+  background: var(--overlay0);
+  color: var(--text);
 }
 
 .mode-tab:hover:not(.active) {
-  color: #a6adc8;
+  color: var(--subtext1);
 }
 
 /* Stack name input */
 .stack-name-input {
-  background: #181825;
-  border: 1px solid #45475a;
+  background: var(--mantle);
+  border: 1px solid var(--overlay1);
   border-radius: 8px;
-  color: #cdd6f4;
+  color: var(--text);
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
   width: 100%;
@@ -130,16 +130,16 @@
 
 .stack-name-input:focus {
   outline: none;
-  border-color: #89b4fa;
+  border-color: var(--blue);
 }
 
 .stack-name-input::placeholder {
-  color: #45475a;
+  color: var(--overlay1);
 }
 
 /* Service chip grid */
 .label-hint {
-  color: #89b4fa;
+  color: var(--blue);
   font-size: 0.78rem;
 }
 
@@ -156,10 +156,10 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  background: #181825;
-  border: 1px solid #313244;
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
   border-radius: 6px;
-  color: #a6adc8;
+  color: var(--subtext1);
   padding: 0.3rem 0.6rem;
   font-size: 0.78rem;
   cursor: pointer;
@@ -168,16 +168,174 @@
 }
 
 .service-chip:hover {
-  border-color: #89b4fa55;
-  color: #cdd6f4;
+  border-color: var(--blue-a-lg);
+  color: var(--text);
 }
 
 .service-chip.selected {
-  border-color: #89b4fa;
-  background: #89b4fa18;
-  color: #89b4fa;
+  border-color: var(--blue);
+  background: var(--blue)18;
+  color: var(--blue);
 }
 
 .chip-label {
   font-weight: 500;
+}
+
+/* Config toggle button */
+.btn-config-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 8px;
+  color: var(--subtext1);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-config-toggle:hover,
+.btn-config-toggle.open {
+  border-color: var(--blue-a-lg);
+  color: var(--text);
+}
+.toggle-arrow {
+  font-size: 0.7rem;
+  color: var(--subtext0);
+}
+
+/* Config panel */
+.config-panel {
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.config-section-label {
+  font-size: 0.75rem;
+  color: var(--subtext0);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.3rem;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.config-label {
+  font-size: 0.82rem;
+  color: var(--subtext1);
+  width: 6.5rem;
+  flex-shrink: 0;
+}
+
+.config-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--overlay1);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 0.4rem 0.7rem;
+  font-size: 0.88rem;
+  min-width: 0;
+}
+.config-input:focus {
+  outline: none;
+  border-color: var(--blue);
+}
+.config-input::placeholder {
+  color: var(--overlay1);
+}
+.config-input-sm {
+  max-width: 7.5rem;
+  flex: 0 0 7.5rem;
+}
+
+/* Memory slider row */
+.config-mem-slider {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.config-mem-slider input[type="range"] {
+  width: 100%;
+  accent-color: var(--blue);
+  cursor: pointer;
+}
+.config-mem-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--subtext0);
+}
+.config-mem-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--blue);
+  text-align: right;
+  min-width: 4.5rem;
+  flex-shrink: 0;
+}
+
+/* Env var rows */
+.config-env-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.config-env-key {
+  flex: 0 0 40%;
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+.config-env-val {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+.config-env-sep {
+  color: var(--subtext0);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.btn-env-remove {
+  background: transparent;
+  border: none;
+  color: var(--subtext0);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.3rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.btn-env-remove:hover {
+  color: var(--red);
+}
+
+.btn-add-env {
+  background: transparent;
+  border: 1px dashed var(--overlay1);
+  border-radius: 6px;
+  color: var(--subtext0);
+  padding: 0.3rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  align-self: flex-start;
+  margin-top: 0.1rem;
+}
+.btn-add-env:hover {
+  border-color: var(--blue-a-lg);
+  color: var(--blue);
 }

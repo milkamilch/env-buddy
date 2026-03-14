@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text
 from sqlalchemy.sql import func
 from pydantic import BaseModel
 from app.database import Base
@@ -15,6 +15,10 @@ class UserDB(Base):
     hashed_password = Column(String, nullable=False)
     favorites_json  = Column(Text, default="[]")
     created_at      = Column(DateTime(timezone=True), server_default=func.now())
+    notify_on_start   = Column(Boolean, default=True)
+    notify_on_stop    = Column(Boolean, default=True)
+    notify_on_warning = Column(Boolean, default=True)
+    theme             = Column(String, default="dark")
 
 
 class RegisterRequest(BaseModel):
@@ -34,6 +38,10 @@ class UserResponse(BaseModel):
     username:   str
     first_name: str
     last_name:  str
+    notify_on_start:   bool = True
+    notify_on_stop:    bool = True
+    notify_on_warning: bool = True
+    theme:             str  = "dark"
 
     model_config = {"from_attributes": True}
 
@@ -41,3 +49,9 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type:   str
     user:         UserResponse
+
+class NotificationPrefsRequest(BaseModel):
+    notify_on_start:   bool
+    notify_on_stop:    bool
+    notify_on_warning: bool
+    theme:             str = "dark"
