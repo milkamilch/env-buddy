@@ -4,7 +4,7 @@ import "./CreateTemplateModal.css";
 
 const EMPTY_CONTAINER = { service_name: "", image: "", internal_port: "", env: {} };
 
-export default function CreateTemplateModal({ onCreated, onClose }) {
+export default function CreateTemplateModal({ onCreated, onClose, createFn = createTemplate, title = "Neues Template erstellen" }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [icon, setIcon] = useState("📦");
@@ -60,7 +60,7 @@ export default function CreateTemplateModal({ onCreated, onClose }) {
     }
     setLoading(true);
     try {
-      const created = await createTemplate(payload);
+      const created = await createFn(payload);
       onCreated(created);
     } catch (err) {
       setError(err.message);
@@ -73,7 +73,7 @@ export default function CreateTemplateModal({ onCreated, onClose }) {
     <div className="modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <div className="modal-header">
-          <h2>Neues Template erstellen</h2>
+          <h2>{title}</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 

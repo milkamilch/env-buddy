@@ -1,0 +1,92 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/milkamilch/env-buddy
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Backend tests
+        working-directory: ./backend
+        run: |
+          npm ci
+          npm test
+
+      - name: Frontend tests
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm test
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-frontend:latest
+            ${{ env.IMAGE_PREFIX }}-frontend:${{ github.sha }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-backend:latest
+            ${{ env.IMAGE_PREFIX }}-backend:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/deploy/envbuddy
+
+            OLD_BACKEND=$(docker inspect --format='{{.Image}}' envbuddy-backend-1 2>/dev/null || echo "")
+
+            docker compose pull
+            docker compose up -d
+
+            sleep 10
+            if ! docker compose ps | grep -q "Up"; then
+              echo "Deploy fehlgeschlagen – Rollback..."
+              docker compose down
+              if [ -n "$OLD_BACKEND" ]; then
+                docker tag $OLD_BACKEND ghcr.io/milkamilch/env-buddy-backend:latest
+              fi
+              docker compose up -d
+              exit 1
+            fi
+
+            echo "Deploy erfolgreich!"

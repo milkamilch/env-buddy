@@ -53,6 +53,16 @@
   color: var(--subtext0);
 }
 
+.custom-multi-hint {
+  font-size: 0.78rem;
+  color: var(--subtext0);
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 6px;
+  padding: 0.4rem 0.65rem;
+  margin: 0;
+}
+
 .form-error {
   color: var(--red);
   font-size: 0.85rem;
@@ -338,4 +348,334 @@
 .btn-add-env:hover {
   border-color: var(--blue-a-lg);
   color: var(--blue);
+}
+
+/* ── Stack 2-step UI ─────────────────────────────────────────────── */
+
+.stack-step-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.stack-step-label {
+  font-size: 0.7rem;
+  color: var(--subtext0);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stack-step-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chip-multi {
+  background: var(--overlay0);
+  color: var(--subtext1);
+  font-size: 0.65rem;
+  border-radius: 99px;
+  padding: 0.05rem 0.35rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.stack-containers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.stack-container-block {
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 8px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.scb-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.1rem;
+}
+
+.scb-image {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--blue);
+  font-family: monospace;
+}
+
+.scb-from {
+  font-size: 0.7rem;
+  color: var(--subtext0);
+}
+
+.scb-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.scb-label {
+  font-size: 0.75rem;
+  color: var(--subtext0);
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+.scb-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--overlay0);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 0.3rem 0.5rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.scb-input:focus { border-color: var(--blue); }
+.scb-input-sm { max-width: 140px; }
+
+.scb-env-label {
+  font-size: 0.72rem;
+  color: var(--subtext0);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.1rem;
+}
+
+.stack-step2-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-back {
+  background: var(--mantle);
+  border: 1px solid var(--overlay1);
+  border-radius: 8px;
+  color: var(--subtext1);
+  font-size: 0.875rem;
+  padding: 0.6rem 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.btn-back:hover { border-color: var(--overlay2); color: var(--text); }
+
+/* ── Drag & Drop Stack Builder ───────────────────────────────────────────── */
+
+.stack-palette-label {
+  font-size: 0.72rem;
+  color: var(--subtext0);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stack-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.palette-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 6px;
+  color: var(--subtext1);
+  padding: 0.28rem 0.55rem;
+  font-size: 0.78rem;
+  cursor: grab;
+  user-select: none;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.palette-chip:hover {
+  border-color: var(--blue);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.palette-chip:active {
+  cursor: grabbing;
+}
+
+.palette-label {
+  font-weight: 500;
+}
+
+.palette-multi {
+  background: var(--overlay0);
+  color: var(--subtext1);
+  font-size: 0.62rem;
+  border-radius: 99px;
+  padding: 0.05rem 0.3rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* Drop zone */
+.stack-drop-zone {
+  min-height: 72px;
+  border: 1.5px dashed var(--overlay1);
+  border-radius: 10px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.stack-drop-zone.dz-over {
+  border-color: var(--blue);
+  background: color-mix(in srgb, var(--blue) 6%, transparent);
+}
+
+.dz-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  pointer-events: none;
+}
+
+.dz-hint {
+  font-size: 0.8rem;
+  color: var(--overlay2);
+}
+
+/* Stack items */
+.si-block {
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.si-header {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.6rem;
+}
+
+.si-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.si-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.si-image {
+  font-size: 0.72rem;
+  color: var(--subtext0);
+  font-family: monospace;
+  flex-shrink: 0;
+  max-width: 7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.si-btn-expand,
+.si-btn-remove {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.si-btn-expand {
+  color: var(--subtext0);
+}
+
+.si-btn-expand:hover {
+  color: var(--blue);
+}
+
+.si-btn-remove {
+  color: var(--subtext0);
+}
+
+.si-btn-remove:hover {
+  color: var(--red);
+}
+
+/* Expanded config */
+.si-config {
+  border-top: 1px solid var(--overlay0);
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.si-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.si-label {
+  font-size: 0.75rem;
+  color: var(--subtext0);
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+.si-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--overlay0);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 0.3rem 0.5rem;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 0;
+}
+
+.si-input:focus {
+  border-color: var(--blue);
+}
+
+.si-input-sm {
+  max-width: 130px;
+  flex: 0 0 130px;
+}
+
+.si-env-title {
+  font-size: 0.7rem;
+  color: var(--subtext0);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.15rem;
 }

@@ -156,11 +156,11 @@ export async function restartContainer(containerId) {
   return res.json();
 }
 
-export async function startStack(templates, stackName, duration_minutes) {
+export async function startStack(containers, stackName, duration_minutes) {
   const res = await apiFetch(`${BASE}/api/containers/stacks/start`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ templates, stack_name: stackName, duration_minutes }),
+    body: JSON.stringify({ containers, stack_name: stackName, duration_minutes }),
   });
   if (!res.ok) {
     const err = await res.json();
@@ -246,6 +246,118 @@ export async function saveFavorites(favorites) {
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.detail || "Fehler beim Speichern");
+  return json;
+}
+
+// ── Team Templates ───────────────────────────────────────────────────────────
+
+export async function fetchTeamTemplates() {
+  const res = await apiFetch(`${BASE}/api/team-templates/`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden der Team-Templates");
+  return json;
+}
+
+export async function createTeamTemplate(teamId, data) {
+  const res = await apiFetch(`${BASE}/api/teams/${teamId}/templates`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Erstellen");
+  return json;
+}
+
+export async function updateTeamTemplate(teamId, tmplId, data) {
+  const res = await apiFetch(`${BASE}/api/teams/${teamId}/templates/${tmplId}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Aktualisieren");
+  return json;
+}
+
+export async function deleteTeamTemplate(teamId, tmplId) {
+  const res = await apiFetch(`${BASE}/api/teams/${teamId}/templates/${tmplId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const json = await res.json();
+    throw new Error(json.detail || "Fehler beim Löschen");
+  }
+  return res.json();
+}
+
+// ── Teams ─────────────────────────────────────────────────────────────────
+
+export async function fetchMyTeams() {
+  const res = await apiFetch(`${BASE}/api/teams/`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function createTeam(name) {
+  const res = await apiFetch(`${BASE}/api/teams/`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ name }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Erstellen");
+  return json;
+}
+
+export async function deleteTeam(teamId) {
+  const res = await apiFetch(`${BASE}/api/teams/${teamId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const json = await res.json();
+    throw new Error(json.detail || "Fehler beim Löschen");
+  }
+  return res.json();
+}
+
+export async function fetchTeamMembers(teamId) {
+  const res = await apiFetch(`${BASE}/api/teams/${teamId}/members`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function addTeamMember(teamId, username) {
+  const res = await apiFetch(`${BASE}/api/teams/${teamId}/members`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ username }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Hinzufügen");
+  return json;
+}
+
+export async function removeTeamMember(teamId, userId) {
+  const res = await apiFetch(`${BASE}/api/teams/${teamId}/members/${userId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const json = await res.json();
+    throw new Error(json.detail || "Fehler beim Entfernen");
+  }
+  return res.json();
+}
+
+export async function fetchTeamScopedTemplates(teamId) {
+  const res = await apiFetch(`${BASE}/api/teams/${teamId}/templates`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
   return json;
 }
 

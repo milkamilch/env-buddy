@@ -1,0 +1,459 @@
+.teams-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.teams-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.teams-header h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.2rem;
+  color: var(--text);
+}
+
+.teams-sub {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--subtext0);
+}
+
+/* ── Team selector bar ──────────────────────────────────────────────── */
+
+.team-selector-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--overlay0);
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+}
+
+.team-selector-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.team-selector-label {
+  font-size: 0.85rem;
+  color: var(--subtext0);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.team-dropdown {
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  min-width: 220px;
+}
+
+.team-dropdown:focus { border-color: var(--blue); }
+
+.btn-create-team {
+  background: var(--blue);
+  border: none;
+  border-radius: 8px;
+  color: var(--surface);
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.55rem 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-create-team:hover { background: var(--sky); }
+
+.btn-delete-team {
+  background: transparent;
+  border: 1px solid var(--overlay1);
+  border-radius: 8px;
+  color: var(--subtext0);
+  font-size: 0.8rem;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-delete-team:hover { border-color: var(--red); color: var(--red); }
+
+/* ── Empty state ────────────────────────────────────────────────────── */
+
+.teams-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.teams-empty-icon { font-size: 3rem; }
+.teams-empty-title { margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--text); }
+.teams-empty-sub { margin: 0; font-size: 0.875rem; color: var(--subtext0); }
+
+/* ── Team body layout ────────────────────────────────────────────────── */
+
+.team-body {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.team-loading {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+/* ── Panel shared ────────────────────────────────────────────────────── */
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--overlay0);
+  border-radius: 10px 10px 0 0;
+  border-bottom: none;
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+}
+
+.panel-count {
+  background: var(--overlay0);
+  color: var(--subtext1);
+  border-radius: 99px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+/* ── Members panel ────────────────────────────────────────────────────── */
+
+.team-members-panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--overlay0);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.members-list {
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--overlay0);
+  transition: background 0.12s;
+}
+
+.member-row:hover { background: var(--mantle); }
+.member-row:last-child { border-bottom: none; }
+
+.member-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.member-name {
+  font-size: 0.875rem;
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-handle {
+  font-size: 0.72rem;
+  color: var(--subtext0);
+}
+
+.member-role {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  flex-shrink: 0;
+}
+
+.role-owner {
+  background: var(--blue-a);
+  color: var(--blue);
+}
+
+.role-member {
+  background: var(--overlay0);
+  color: var(--subtext1);
+}
+
+.btn-remove-member {
+  background: transparent;
+  border: none;
+  color: var(--overlay1);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+
+.btn-remove-member:hover { color: var(--red); background: var(--red-a); }
+
+/* Add member form */
+
+.add-member-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.65rem 0.75rem;
+  background: var(--mantle);
+  border-top: 1px solid var(--overlay0);
+}
+
+.add-member-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--overlay0);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 0.4rem 0.6rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.add-member-input:focus { border-color: var(--blue); }
+.add-member-input::placeholder { color: var(--overlay1); }
+
+.btn-add-member {
+  background: var(--blue);
+  border: none;
+  border-radius: 6px;
+  color: var(--surface);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  width: 100%;
+  transition: background 0.15s;
+}
+
+.btn-add-member:hover:not(:disabled) { background: var(--sky); }
+.btn-add-member:disabled { opacity: 0.5; cursor: default; }
+
+/* ── Templates panel ──────────────────────────────────────────────────── */
+
+.team-templates-panel {
+  border: 1px solid var(--overlay0);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.team-templates-panel .panel-header {
+  border-radius: 0;
+}
+
+.btn-add-template {
+  background: var(--mauve);
+  border: none;
+  border-radius: 6px;
+  color: var(--base);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  margin-left: auto;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.btn-add-template:hover { background: var(--sky); }
+
+.templates-empty {
+  background: var(--surface);
+  padding: 2rem;
+  text-align: center;
+  color: var(--subtext0);
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.templates-empty p { margin: 0; }
+
+.team-templates-grid {
+  background: var(--surface);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.875rem;
+  padding: 1rem;
+}
+
+/* Template card */
+
+.team-tmpl-card {
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 10px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: border-color 0.15s;
+}
+
+.team-tmpl-card:hover { border-color: var(--mauve); }
+
+.ttc-icon { font-size: 1.75rem; line-height: 1; }
+
+.ttc-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.ttc-desc {
+  font-size: 0.78rem;
+  color: var(--subtext0);
+  line-height: 1.4;
+}
+
+.ttc-creator {
+  font-size: 0.72rem;
+  color: var(--mauve);
+  font-weight: 500;
+}
+
+.ttc-containers {
+  font-size: 0.72rem;
+  color: var(--subtext1);
+  background: var(--surface);
+  border-radius: 5px;
+  padding: 0.25rem 0.45rem;
+  margin-top: 0.1rem;
+}
+
+.ttc-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+  align-items: center;
+}
+
+.ttc-btn-edit {
+  background: transparent;
+  border: 1px solid var(--overlay1);
+  border-radius: 6px;
+  color: var(--subtext0);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ttc-btn-edit:hover { border-color: var(--mauve); color: var(--mauve); }
+
+.ttc-btn-delete {
+  background: transparent;
+  border: 1px solid var(--overlay1);
+  border-radius: 6px;
+  color: var(--subtext0);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ttc-btn-delete:hover { border-color: var(--red); color: var(--red); }
+
+/* confirm buttons reused from TemplatesPage */
+.tc-confirm-label { font-size: 0.72rem; color: var(--peach); }
+.tc-btn-confirm-yes, .tc-btn-confirm-no {
+  background: transparent;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tc-btn-confirm-yes { border: 1px solid var(--green); color: var(--green); }
+.tc-btn-confirm-yes:hover { background: var(--green-a); }
+.tc-btn-confirm-no  { border: 1px solid var(--overlay1); color: var(--subtext0); }
+.tc-btn-confirm-no:hover { border-color: var(--red); color: var(--red); }
+
+/* Create team input */
+
+.create-team-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.9rem;
+  padding: 0.55rem 0.75rem;
+  outline: none;
+  transition: border-color 0.15s;
+  margin-bottom: 0.25rem;
+}
+
+.create-team-input:focus { border-color: var(--blue); }
+.create-team-input::placeholder { color: var(--overlay1); }

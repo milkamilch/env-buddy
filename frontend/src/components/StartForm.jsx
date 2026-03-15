@@ -15,34 +15,33 @@ const ALL_MEM_STEPS = [
 ];
 
 function buildMemSteps(totalRamMb) {
-  // always include "kein Limit", then all steps that fit in total RAM
   return ALL_MEM_STEPS.filter((s) => s.mb === 0 || s.mb <= totalRamMb);
 }
 
-// templates: array of { key: "postgres"|"custom:42", label: "postgres", icon: "🐘" }
 export default function StartForm({ templates, onStarted }) {
-  const [mode, setMode] = useState("single"); // "single" | "stack"
+  const [mode, setMode] = useState("single");
 
-  // Single mode
-  const [template, setTemplate] = useState(templates[0]?.key || "");
-  const [duration, setDuration] = useState(60);
-  const [showConfig, setShowConfig] = useState(false);
-
-  // Config fields
-  const [envVars, setEnvVars] = useState([]);      // [{key, value}]
-  const [hostPort, setHostPort] = useState("");
+  // ── Single mode ──────────────────────────────────────────────────────────
+  const [template, setTemplate]           = useState(templates[0]?.key || "");
+  const [duration, setDuration]           = useState(60);
+  const [showConfig, setShowConfig]       = useState(false);
+  const [envVars, setEnvVars]             = useState([]);
+  const [hostPort, setHostPort]           = useState("");
   const [containerName, setContainerName] = useState("");
-  const [memStep, setMemStep] = useState(0);
-  const [memSteps, setMemSteps] = useState(ALL_MEM_STEPS.slice(0, 6)); // default until loaded
-  const [defaultPort, setDefaultPort] = useState(null);
+  const [memStep, setMemStep]             = useState(0);
+  const [memSteps, setMemSteps]           = useState(ALL_MEM_STEPS.slice(0, 6));
+  const [defaultPort, setDefaultPort]     = useState(null);
 
-  // Stack mode
-  const [stackName, setStackName] = useState("");
-  const [selected, setSelected] = useState([]);
+  // ── Stack mode ───────────────────────────────────────────────────────────
+  const [stackStep, setStackStep]         = useState(1);
+  const [stackSelected, setStackSelected] = useState([]); // template keys (step 1)
+  const [stackName, setStackName]         = useState("");
   const [stackDuration, setStackDuration] = useState(60);
+  // step 2: [{_id, _icon, service_name, image, internal_port, host_port, container_name, env:[{key,val}]}]
+  const [stackContainers, setStackContainers] = useState([]);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [loading, setLoading]  = useState(false);
+  const [error, setError]      = useState(null);
 
   useEffect(() => {
     if (templates.length > 0) setTemplate(templates[0].key);
@@ -51,118 +50,146 @@ export default function StartForm({ templates, onStarted }) {
   useEffect(() => {
     fetchSystemInfo()
       .then(({ total_ram_mb }) => setMemSteps(buildMemSteps(total_ram_mb)))
-      .catch(() => {}); // fallback: keep defaults
+      .catch(() => {});
   }, []);
 
-  // Load template defaults whenever template changes (only for non-custom templates)
+  // ── Single: pre-fill when template changes ───────────────────────────────
   useEffect(() => {
-    if (!template || template.startsWith("custom:")) {
-      setEnvVars([]);
-      setDefaultPort(null);
+    setHostPort(""); setContainerName(""); setMemStep(0);
+    if (!template) { setEnvVars([]); setDefaultPort(null); return; }
+    if (template.startsWith("custom:") || template.startsWith("team:")) {
+      const first = templates.find((t) => t.key === template)?.containers?.[0];
+      if (first) {
+        setEnvVars(Object.entries(first.env || {}).map(([k, v]) => ({ key: k, value: v })));
+        setDefaultPort(first.internal_port || null);
+      } else { setEnvVars([]); setDefaultPort(null); }
       return;
     }
     fetchTemplateDetails(template)
-      .then((details) => {
-        setEnvVars(Object.entries(details.env).map(([key, value]) => ({ key, value })));
-        setDefaultPort(details.port);
+      .then((d) => {
+        setEnvVars(Object.entries(d.env).map(([k, v]) => ({ key: k, value: v })));
+        setDefaultPort(d.port);
       })
-      .catch(() => {
-        setEnvVars([]);
-        setDefaultPort(null);
-      });
-    // reset port/name when template switches
-    setHostPort("");
-    setContainerName("");
-    setMemStep(0);
-  }, [template]);
+      .catch(() => { setEnvVars([]); setDefaultPort(null); });
+  }, [template]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const stackableTemplates = templates.filter((t) => !t.key.startsWith("custom:"));
+  const isMultiContainer = (template.startsWith("custom:") || template.startsWith("team:"))
+    && (templates.find((t) => t.key === template)?.containers?.length ?? 0) > 1;
 
-  function toggleSelected(key) {
-    setSelected((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
-  }
-
-  function updateEnvValue(index, value) {
-    setEnvVars((prev) => prev.map((e, i) => (i === index ? { ...e, value } : e)));
-  }
-
-  function addEnvVar() {
-    setEnvVars((prev) => [...prev, { key: "", value: "" }]);
-  }
-
-  function updateEnvKey(index, key) {
-    setEnvVars((prev) => prev.map((e, i) => (i === index ? { ...e, key } : e)));
-  }
-
-  function removeEnvVar(index) {
-    setEnvVars((prev) => prev.filter((_, i) => i !== index));
-  }
+  // ── Single helpers ────────────────────────────────────────────────────────
+  const updEnv    = (i, f, v) => setEnvVars((p) => p.map((e, idx) => idx === i ? { ...e, [f]: v } : e));
+  const removeEnv = (i)       => setEnvVars((p) => p.filter((_, idx) => idx !== i));
+  const addEnv    = ()        => setEnvVars((p) => [...p, { key: "", value: "" }]);
 
   async function handleSubmitSingle(e) {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const config = {};
-      if (envVars.length > 0) {
-        config.env_overrides = Object.fromEntries(
-          envVars.filter((e) => e.key).map((e) => [e.key, e.value])
-        );
-      }
+      if (envVars.length > 0)
+        config.env_overrides = Object.fromEntries(envVars.filter((e) => e.key).map((e) => [e.key, e.value]));
       if (hostPort) config.host_port = parseInt(hostPort, 10);
       if (containerName) config.container_name = containerName;
       const memValue = memSteps[Math.min(memStep, memSteps.length - 1)].apiValue;
       if (memValue) config.mem_limit = memValue;
-
-      const container = await startContainer(template, duration, config);
-      onStarted(container);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+      onStarted(await startContainer(template, duration, config));
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   }
+
+  // ── Stack: step 1 — chip toggle ───────────────────────────────────────────
+  function toggleStackChip(key) {
+    setStackSelected((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  }
+
+  // ── Stack: step 1 → step 2 — resolve selected templates ──────────────────
+  async function handleStackNext() {
+    setLoading(true); setError(null);
+    try {
+      const resolved = [];
+      for (const key of stackSelected) {
+        const tmplMeta = templates.find((t) => t.key === key);
+        if (key.startsWith("custom:") || key.startsWith("team:")) {
+          for (const c of (tmplMeta?.containers || [])) {
+            resolved.push({
+              _id:           Math.random().toString(36).slice(2),
+              _icon:         tmplMeta?.icon || "📦",
+              service_name:  c.service_name,
+              image:         c.image,
+              internal_port: String(c.internal_port),
+              env:           Object.entries(c.env || {}).map(([k, v]) => ({ key: k, val: v })),
+              host_port:     "",
+              container_name: "",
+            });
+          }
+        } else {
+          const d = await fetchTemplateDetails(key);
+          resolved.push({
+            _id:           Math.random().toString(36).slice(2),
+            _icon:         tmplMeta?.icon || "📦",
+            service_name:  key,
+            image:         d.image,
+            internal_port: String(d.port),
+            env:           Object.entries(d.env || {}).map(([k, v]) => ({ key: k, val: v })),
+            host_port:     "",
+            container_name: "",
+          });
+        }
+      }
+      setStackContainers(resolved);
+      setStackStep(2);
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
+  }
+
+  // ── Stack step 2: container field helpers ─────────────────────────────────
+  const updSC      = (id, f, v)  => setStackContainers((p) => p.map((c) => c._id === id ? { ...c, [f]: v } : c));
+  const updSCEnvK  = (id, i, k)  => setStackContainers((p) => p.map((c) => c._id === id
+    ? { ...c, env: c.env.map((e, idx) => idx === i ? { ...e, key: k } : e) } : c));
+  const updSCEnvV  = (id, i, v)  => setStackContainers((p) => p.map((c) => c._id === id
+    ? { ...c, env: c.env.map((e, idx) => idx === i ? { ...e, val: v } : e) } : c));
+  const removeSCEnv = (id, i)    => setStackContainers((p) => p.map((c) => c._id === id
+    ? { ...c, env: c.env.filter((_, idx) => idx !== i) } : c));
+  const addSCEnv    = (id)       => setStackContainers((p) => p.map((c) => c._id === id
+    ? { ...c, env: [...c.env, { key: "", val: "" }] } : c));
 
   async function handleSubmitStack(e) {
     e.preventDefault();
-    if (selected.length < 2) {
-      setError("Mindestens 2 Services auswählen");
-      return;
-    }
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
-      const stack = await startStack(selected, stackName || selected.join("+"), stackDuration);
-      onStarted(stack);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+      const containers = stackContainers.map((c) => ({
+        service_name:   c.service_name,
+        image:          c.image,
+        internal_port:  parseInt(c.internal_port) || 0,
+        env:            Object.fromEntries(c.env.filter((e) => e.key).map((e) => [e.key, e.val])),
+        host_port:      c.host_port ? parseInt(c.host_port) : null,
+        container_name: c.container_name || null,
+      }));
+      const defaultName = stackSelected.map((k) => templates.find((t) => t.key === k)?.label || k).join("+");
+      onStarted(await startStack(containers, stackName || defaultName, stackDuration));
+      setStackStep(1); setStackSelected([]); setStackContainers([]); setStackName("");
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   }
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="start-form">
       <div className="mode-tabs">
-        <button
-          type="button"
-          className={`mode-tab ${mode === "single" ? "active" : ""}`}
-          onClick={() => { setMode("single"); setError(null); }}
-        >
+        <button type="button" className={`mode-tab ${mode === "single" ? "active" : ""}`}
+          onClick={() => { setMode("single"); setError(null); }}>
           Container
         </button>
-        <button
-          type="button"
-          className={`mode-tab ${mode === "stack" ? "active" : ""}`}
-          onClick={() => { setMode("stack"); setError(null); }}
-        >
+        <button type="button" className={`mode-tab ${mode === "stack" ? "active" : ""}`}
+          onClick={() => { setMode("stack"); setError(null); }}>
           Stack
         </button>
       </div>
 
-      {mode === "single" ? (
+      {/* ── Single mode ── */}
+      {mode === "single" && (
         <form onSubmit={handleSubmitSingle} style={{ display: "contents" }}>
           <div className="form-group">
             <label>Template</label>
@@ -172,167 +199,189 @@ export default function StartForm({ templates, onStarted }) {
               ))}
             </select>
           </div>
-
           <div className="form-group">
             <label>Laufzeit: <strong>{duration} Minuten</strong></label>
-            <input
-              type="range"
-              min={5} max={480} step={5}
-              value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
-            />
+            <input type="range" min={5} max={480} step={5} value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))} />
             <div className="range-labels"><span>5 min</span><span>8 h</span></div>
           </div>
-
-          {/* Config toggle */}
-          {!template.startsWith("custom:") && (
-            <button
-              type="button"
-              className={`btn-config-toggle ${showConfig ? "open" : ""}`}
-              onClick={() => setShowConfig((v) => !v)}
-            >
+          {isMultiContainer ? (
+            <p className="custom-multi-hint">
+              📦 {templates.find((t) => t.key === template)?.containers?.length} Container — startet als Stack
+            </p>
+          ) : (
+            <button type="button" className={`btn-config-toggle ${showConfig ? "open" : ""}`}
+              onClick={() => setShowConfig((v) => !v)}>
               <span>⚙ Konfiguration</span>
               <span className="toggle-arrow">{showConfig ? "▲" : "▼"}</span>
             </button>
           )}
-
-          {showConfig && !template.startsWith("custom:") && (
+          {showConfig && !isMultiContainer && (
             <div className="config-panel">
-
-              {/* Port */}
               <div className="config-row">
                 <label className="config-label">Host-Port</label>
-                <input
-                  className="config-input config-input-sm"
-                  type="number"
+                <input className="config-input config-input-sm" type="number"
                   placeholder={defaultPort ? `auto (z.B. ${defaultPort})` : "auto"}
-                  value={hostPort}
-                  onChange={(e) => setHostPort(e.target.value)}
-                  min={1024}
-                  max={65535}
-                />
+                  value={hostPort} onChange={(e) => setHostPort(e.target.value)} min={1024} max={65535} />
               </div>
-
-              {/* Name */}
               <div className="config-row">
                 <label className="config-label">Name</label>
-                <input
-                  className="config-input"
-                  type="text"
+                <input className="config-input" type="text"
                   placeholder={`auto (testbuddy-${template}-…)`}
-                  value={containerName}
-                  onChange={(e) => setContainerName(e.target.value)}
-                />
+                  value={containerName} onChange={(e) => setContainerName(e.target.value)} />
               </div>
-
-              {/* Memory */}
               <div className="config-row">
                 <label className="config-label">Memory-Limit</label>
                 <div className="config-mem-slider">
-                  <input
-                    type="range"
-                    min={0}
-                    max={memSteps.length - 1}
-                    step={1}
+                  <input type="range" min={0} max={memSteps.length - 1} step={1}
                     value={Math.min(memStep, memSteps.length - 1)}
-                    onChange={(e) => setMemStep(Number(e.target.value))}
-                  />
+                    onChange={(e) => setMemStep(Number(e.target.value))} />
                   <div className="config-mem-labels">
-                    <span>kein Limit</span>
-                    <span>{memSteps[memSteps.length - 1].label}</span>
+                    <span>kein Limit</span><span>{memSteps[memSteps.length - 1].label}</span>
                   </div>
                 </div>
                 <span className="config-mem-value">{memSteps[Math.min(memStep, memSteps.length - 1)].label}</span>
               </div>
-
-              {/* Env vars */}
-              {envVars.length > 0 && (
-                <div className="config-section-label">Umgebungsvariablen</div>
-              )}
+              {envVars.length > 0 && <div className="config-section-label">Umgebungsvariablen</div>}
               {envVars.map((e, i) => (
                 <div key={i} className="config-env-row">
-                  <input
-                    className="config-input config-env-key"
-                    value={e.key}
-                    onChange={(ev) => updateEnvKey(i, ev.target.value)}
-                    placeholder="KEY"
-                  />
+                  <input className="config-input config-env-key" value={e.key} placeholder="KEY"
+                    onChange={(ev) => updEnv(i, "key", ev.target.value)} />
                   <span className="config-env-sep">=</span>
-                  <input
-                    className="config-input config-env-val"
-                    value={e.value}
-                    onChange={(ev) => updateEnvValue(i, ev.target.value)}
-                    placeholder="value"
-                  />
-                  <button
-                    type="button"
-                    className="btn-env-remove"
-                    onClick={() => removeEnvVar(i)}
-                    title="Entfernen"
-                  >
-                    ✕
-                  </button>
+                  <input className="config-input config-env-val" value={e.value} placeholder="value"
+                    onChange={(ev) => updEnv(i, "value", ev.target.value)} />
+                  <button type="button" className="btn-env-remove" onClick={() => removeEnv(i)}>✕</button>
                 </div>
               ))}
-              <button type="button" className="btn-add-env" onClick={addEnvVar}>
-                + Env-Variable hinzufügen
-              </button>
+              <button type="button" className="btn-add-env" onClick={addEnv}>+ Env-Variable</button>
             </div>
           )}
-
           {error && <p className="form-error">{error}</p>}
-
           <button type="submit" disabled={loading || !template} className="btn-start">
             {loading ? "Startet..." : "▶ Starten"}
           </button>
         </form>
-      ) : (
-        <form onSubmit={handleSubmitStack} style={{ display: "contents" }}>
-          <div className="form-group">
-            <label>Stack-Name (optional)</label>
-            <input
-              className="stack-name-input"
-              type="text"
-              placeholder="z.B. my-backend-stack"
-              value={stackName}
-              onChange={(e) => setStackName(e.target.value)}
-            />
+      )}
+
+      {/* ── Stack mode ── */}
+      {mode === "stack" && stackStep === 1 && (
+        <div style={{ display: "contents" }}>
+          <div className="stack-step-header">
+            <span className="stack-step-label">Schritt 1 von 2</span>
+            <span className="stack-step-title">Templates auswählen</span>
           </div>
 
           <div className="form-group">
-            <label>Services auswählen <span className="label-hint">({selected.length} ausgewählt)</span></label>
+            <label>
+              Templates{" "}
+              <span className="label-hint">
+                {stackSelected.length > 0 ? `${stackSelected.length} ausgewählt` : "mind. 2 wählen"}
+              </span>
+            </label>
             <div className="service-grid">
-              {stackableTemplates.map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  className={`service-chip ${selected.includes(t.key) ? "selected" : ""}`}
-                  onClick={() => toggleSelected(t.key)}
-                  title={t.label}
-                >
-                  <span>{t.icon || "📦"}</span>
-                  <span className="chip-label">{t.label}</span>
-                </button>
-              ))}
+              {templates.map((t) => {
+                const sel = stackSelected.includes(t.key);
+                const count = t.containers?.length;
+                return (
+                  <button key={t.key} type="button"
+                    className={`service-chip ${sel ? "selected" : ""}`}
+                    onClick={() => toggleStackChip(t.key)}>
+                    <span>{t.icon || "📦"}</span>
+                    <span className="chip-label">{t.label}</span>
+                    {count > 1 && <span className="chip-multi">{count}</span>}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div className="form-group">
+            <label>Stack-Name (optional)</label>
+            <input className="stack-name-input" type="text" placeholder="z.B. my-backend-stack"
+              value={stackName} onChange={(e) => setStackName(e.target.value)} />
+          </div>
+
+          <div className="form-group">
             <label>Laufzeit: <strong>{stackDuration} Minuten</strong></label>
-            <input
-              type="range"
-              min={5} max={480} step={5}
-              value={stackDuration}
-              onChange={(e) => setStackDuration(Number(e.target.value))}
-            />
+            <input type="range" min={5} max={480} step={5} value={stackDuration}
+              onChange={(e) => setStackDuration(Number(e.target.value))} />
             <div className="range-labels"><span>5 min</span><span>8 h</span></div>
           </div>
 
           {error && <p className="form-error">{error}</p>}
 
-          <button type="submit" disabled={loading || selected.length < 2} className="btn-start">
-            {loading ? "Startet..." : `▶ Stack starten (${selected.length})`}
+          <button type="button" className="btn-start"
+            disabled={loading || stackSelected.length < 2}
+            onClick={handleStackNext}>
+            {loading ? "Lädt…" : `Weiter (${stackSelected.length} gewählt) →`}
           </button>
+        </div>
+      )}
+
+      {mode === "stack" && stackStep === 2 && (
+        <form onSubmit={handleSubmitStack} style={{ display: "contents" }}>
+          <div className="stack-step-header">
+            <span className="stack-step-label">Schritt 2 von 2</span>
+            <span className="stack-step-title">Container konfigurieren</span>
+          </div>
+
+          <div className="stack-containers-list">
+            {stackContainers.map((c) => (
+              <div key={c._id} className="stack-container-block">
+                <div className="scb-header">
+                  <span className="scb-image">{c._icon} {c.image}</span>
+                  <span className="scb-from">{c.service_name}</span>
+                </div>
+                <div className="scb-row">
+                  <label className="scb-label">Service-Name</label>
+                  <input className="scb-input" value={c.service_name}
+                    onChange={(e) => updSC(c._id, "service_name", e.target.value)} />
+                </div>
+                <div className="scb-row">
+                  <label className="scb-label">Host-Port</label>
+                  <input className="scb-input scb-input-sm" type="number"
+                    placeholder={`auto (intern: ${c.internal_port})`}
+                    value={c.host_port}
+                    onChange={(e) => updSC(c._id, "host_port", e.target.value)}
+                    min={1024} max={65535} />
+                </div>
+                <div className="scb-row">
+                  <label className="scb-label">Name</label>
+                  <input className="scb-input" placeholder="auto"
+                    value={c.container_name}
+                    onChange={(e) => updSC(c._id, "container_name", e.target.value)} />
+                </div>
+                {c.env.length > 0 && <div className="scb-env-label">Env-Variablen</div>}
+                {c.env.map((e, i) => (
+                  <div key={i} className="config-env-row">
+                    <input className="config-input config-env-key" value={e.key} placeholder="KEY"
+                      onChange={(ev) => updSCEnvK(c._id, i, ev.target.value)} />
+                    <span className="config-env-sep">=</span>
+                    <input className="config-input config-env-val" value={e.val} placeholder="value"
+                      onChange={(ev) => updSCEnvV(c._id, i, ev.target.value)} />
+                    <button type="button" className="btn-env-remove"
+                      onClick={() => removeSCEnv(c._id, i)}>✕</button>
+                  </div>
+                ))}
+                <button type="button" className="btn-add-env" onClick={() => addSCEnv(c._id)}>
+                  + Env
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {error && <p className="form-error">{error}</p>}
+
+          <div className="stack-step2-actions">
+            <button type="button" className="btn-back"
+              onClick={() => { setStackStep(1); setError(null); }}>
+              ← Zurück
+            </button>
+            <button type="submit" className="btn-start" style={{ flex: 1 }}
+              disabled={loading || stackContainers.length < 2}>
+              {loading ? "Startet…" : `▶ Stack starten (${stackContainers.length})`}
+            </button>
+          </div>
         </form>
       )}
     </div>

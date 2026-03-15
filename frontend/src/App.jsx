@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from "react";
-import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, removeContainer } from "./services/api";
+import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, removeContainer, fetchTeamTemplates } from "./services/api";
 import StartForm from "./components/StartForm";
 import ContainerCard from "./components/ContainerCard";
 import StackCard from "./components/StackCard";
 import AuthPage from "./pages/AuthPage";
 import TemplatesPage from "./pages/TemplatesPage";
+import TeamsPage from "./pages/TeamsPage";
 import ProfileModal from "./components/ProfileModal";
 import DashboardStats from "./components/DashboardStats";
 import "./App.css";
@@ -98,9 +99,9 @@ export default function App() {
         defaults.map((k) => [k, { key: k, label: k, icon: DEFAULT_ICONS[k] || "📦" }])
       );
 
-      let customs = [], favKeys = [];
+      let customs = [], teamTpls = [], favKeys = [];
       try {
-        [customs, favKeys] = await Promise.all([fetchMyTemplates(), fetchFavorites()]);
+        [customs, teamTpls, favKeys] = await Promise.all([fetchMyTemplates(), fetchTeamTemplates(), fetchFavorites()]);
       } catch (authErr) {
         // 401 = token abgelaufen → ausloggen
         if (authErr.message?.includes("401") || authErr.message?.includes("Ungültiger")) {
@@ -110,9 +111,12 @@ export default function App() {
       }
 
       const customMap = Object.fromEntries(
-        customs.map((t) => [`custom:${t.id}`, { key: `custom:${t.id}`, label: t.name, icon: t.icon }])
+        customs.map((t) => [`custom:${t.id}`, { key: `custom:${t.id}`, label: t.name, icon: t.icon, containers: t.containers }])
       );
-      const allMap = { ...defaultMap, ...customMap };
+      const teamMap = Object.fromEntries(
+        teamTpls.map((t) => [`team:${t.id}`, { key: `team:${t.id}`, label: t.name, icon: t.icon, containers: t.containers }])
+      );
+      const allMap = { ...defaultMap, ...customMap, ...teamMap };
 
       if (favKeys.length > 0) {
         setStartFormTemplates(favKeys.map((k) => allMap[k]).filter(Boolean));
@@ -208,6 +212,12 @@ export default function App() {
           >
             Templates
           </button>
+          <button
+            className={`nav-btn ${page === "teams" ? "active" : ""}`}
+            onClick={() => setPage("teams")}
+          >
+            Teams
+          </button>
         </nav>
 
         <div className="header-badge">
@@ -234,6 +244,8 @@ export default function App() {
 
       {page === "templates" ? (
         <TemplatesPage />
+      ) : page === "teams" ? (
+        <TeamsPage user={user} />
       ) : (
         <main className="app-main">
           <aside className="app-sidebar">
