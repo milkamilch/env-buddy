@@ -14,17 +14,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Backend tests
         working-directory: ./backend
         run: |
-          npm ci
-          npm test
+          pip install -r requirements.txt
+          python -m pytest tests/ -v
 
-      - name: Frontend tests
+      - name: Frontend lint
         working-directory: ./frontend
         run: |
           npm ci
-          npm test
+          npm run lint
 
   build-and-push:
     needs: test

@@ -1,6 +1,6 @@
 import os
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
@@ -23,11 +23,11 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def create_token(user_id: int) -> str:
-    payload = {"sub": str(user_id), "exp": datetime.utcnow() + timedelta(hours=TOKEN_EXPIRE_HOURS)}
+    payload = {"sub": str(user_id), "exp": datetime.now(timezone.utc) + timedelta(hours=TOKEN_EXPIRE_HOURS)}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def create_reset_token(email: str) -> str:
-    payload = {"reset": email, "exp": datetime.utcnow() + timedelta(hours=RESET_EXPIRE_HOURS)}
+    payload = {"reset": email, "exp": datetime.now(timezone.utc) + timedelta(hours=RESET_EXPIRE_HOURS)}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 def _send_async(fn, *args):
