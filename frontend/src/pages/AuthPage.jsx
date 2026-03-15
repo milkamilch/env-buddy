@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { login, register, forgotPassword, resetPassword } from "../services/api";
 import "./AuthPage.css";
 

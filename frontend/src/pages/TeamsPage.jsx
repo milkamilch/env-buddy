@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import {
   fetchMyTeams, createTeam, deleteTeam,
   fetchTeamMembers, addTeamMember, removeTeamMember,
-  fetchTeamScopedTemplates, createTeamTemplate, deleteTeamTemplate,
+  fetchTeamScopedTemplates, deleteTeamTemplate,
 } from "../services/api";
 import TeamStackBuilder from "../components/TeamStackBuilder";
 import { useToast } from "../components/Toast";

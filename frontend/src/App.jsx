@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, removeContainer, fetchTeamTemplates } from "./services/api";
+import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, fetchTeamTemplates } from "./services/api";
 import StartForm from "./components/StartForm";
 import ContainerCard from "./components/ContainerCard";
 import StackCard from "./components/StackCard";
@@ -62,35 +62,11 @@ export default function App() {
   const [activeStatus, setActiveStatus] = useState("alle");
   const [viewMode, setViewMode] = useState("grid");
 
-  useEffect(() => {
-    function onAuthLogout() { handleLogout(); }
-    window.addEventListener("auth:logout", onAuthLogout);
-    return () => window.removeEventListener("auth:logout", onAuthLogout);
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", user?.theme || "dark");
-  }, [user?.theme]);
-
-  useEffect(() => {
-    const running = [
-      ...containers.filter((c) => c.status === "running"),
-      ...stacks.flatMap((s) => s.containers).filter((c) => c.status === "running"),
-    ].length;
-    document.title = running > 0 ? `(${running}) Test-Buddy` : "Test-Buddy";
-  }, [containers, stacks]);
-
-  useEffect(() => {
-    if (!user) return;
-    loadStartFormTemplates();
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    loadAll();
-    const interval = setInterval(loadAll, 5000);
-    return () => clearInterval(interval);
-  }, [user]);
+  function handleLogout() {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+  }
 
   async function loadStartFormTemplates() {
     try {
@@ -139,12 +115,6 @@ export default function App() {
     }
   }
 
-  function handleLogout() {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-  }
-
   function handleStopped() {
     loadAll();
   }
@@ -157,6 +127,38 @@ export default function App() {
     setStacks((prev) => prev.filter((s) => s.stack_id !== stackId));
     loadAll(); // refresh to catch partial stops
   }
+
+  useEffect(() => {
+    function onAuthLogout() { handleLogout(); }
+    window.addEventListener("auth:logout", onAuthLogout);
+    return () => window.removeEventListener("auth:logout", onAuthLogout);
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", user?.theme || "dark");
+  }, [user?.theme]);
+
+  useEffect(() => {
+    const running = [
+      ...containers.filter((c) => c.status === "running"),
+      ...stacks.flatMap((s) => s.containers).filter((c) => c.status === "running"),
+    ].length;
+    document.title = running > 0 ? `(${running}) Test-Buddy` : "Test-Buddy";
+  }, [containers, stacks]);
+
+  useEffect(() => {
+    if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadStartFormTemplates();
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    loadAll();
+    const interval = setInterval(loadAll, 5000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const filtered = useMemo(() => {
     return containers.filter((c) => {
