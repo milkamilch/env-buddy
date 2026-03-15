@@ -307,3 +307,30 @@
 .empty-custom p { margin: 0; }
 
 .custom-card { border-color: var(--overlay1)44; }
+
+.team-card { border-color: var(--mauve)44; }
+.team-card:hover { border-color: var(--mauve); }
+.team-card.is-favorite { border-color: var(--mauve)88; }
+
+.tc-creator {
+  font-size: 0.72rem;
+  color: var(--mauve);
+  font-weight: 500;
+}
+
+.library-section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.library-section-header .library-section-title {
+  margin-bottom: 0;
+}
+
+.team-section-hint {
+  font-size: 0.75rem;
+  color: var(--subtext0);
+}
+

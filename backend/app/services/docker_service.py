@@ -237,6 +237,84 @@ def start_container(template_name: str, duration_minutes: int = 60,
         "stops_at": (datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)).isoformat(),
     }
 
+def start_container_from_config(config: dict, duration_minutes: int,
+                                user_id: int | None = None, template_label: str = "custom"):
+    """Start a single container from a user/team template container config dict."""
+    actual_port = get_free_port()
+    service_name = config.get("service_name", "app")
+    actual_name = f"testbuddy-{service_name}-{uuid.uuid4().hex[:6]}"
+
+    container = client.containers.run(
+        image=config["image"],
+        name=actual_name,
+        environment=config.get("env", {}),
+        ports={f"{config['internal_port']}/tcp": actual_port},
+        detach=True,
+        labels={
+            "managed-by": "test-buddy",
+            "started-at": datetime.utcnow().isoformat(),
+            "duration-minutes": str(duration_minutes),
+            "template": template_label,
+            "port": str(actual_port),
+            "user-id": str(user_id) if user_id else "",
+        },
+    )
+    return {
+        "id": container.id[:12],
+        "name": actual_name,
+        "template": template_label,
+        "port": actual_port,
+        "status": "running",
+        "started_at": datetime.utcnow().isoformat(),
+        "stops_at": (datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)).isoformat(),
+    }
+
+
+def start_stack_from_configs(configs: list, stack_name: str, duration_minutes: int = 60,
+                              user_id: int | None = None):
+    """Start a stack from a list of container config dicts."""
+    stack_id = uuid.uuid4().hex[:8]
+    started = []
+    try:
+        for config in configs:
+            service_name = config.get("service_name", "app")
+            free_port = config.get("host_port") or get_free_port()
+            container_name = config.get("container_name") or f"testbuddy-{service_name}-{uuid.uuid4().hex[:6]}"
+            container = client.containers.run(
+                image=config["image"],
+                name=container_name,
+                environment=config.get("env", {}),
+                ports={f"{config['internal_port']}/tcp": free_port},
+                detach=True,
+                labels={
+                    "managed-by": "test-buddy",
+                    "started-at": datetime.utcnow().isoformat(),
+                    "duration-minutes": str(duration_minutes),
+                    "template": service_name,
+                    "stack-id": stack_id,
+                    "stack-name": stack_name,
+                    "port": str(free_port),
+                    "user-id": str(user_id) if user_id else "",
+                },
+            )
+            started.append({
+                "id": container.id[:12],
+                "name": container_name,
+                "template": service_name,
+                "port": free_port,
+                "status": "running",
+                "started_at": datetime.utcnow().isoformat(),
+            })
+    except Exception:
+        for c_info in started:
+            try:
+                stop_container(c_info["id"])
+            except Exception:
+                pass
+        raise
+    return {"stack_id": stack_id, "stack_name": stack_name, "containers": started}
+
+
 def _container_stats(c):
     if c.status != "running":
         return 0.0, 0.0, 0.0

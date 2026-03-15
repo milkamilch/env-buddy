@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, saveFavorites, deleteTemplate } from "../services/api";
+import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, saveFavorites, deleteTemplate, fetchTeamTemplates } from "../services/api";
 import CreateTemplateModal from "../components/CreateTemplateModal";
 import { useToast } from "../components/Toast";
 import "./TemplatesPage.css";
@@ -18,6 +18,7 @@ export default function TemplatesPage() {
   const [defaultTemplates, setDefaultTemplates] = useState([]);
   const toast = useToast();
   const [customTemplates, setCustomTemplates] = useState([]);
+  const [teamTemplates, setTeamTemplates] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [dragItem, setDragItem] = useState(null);
@@ -27,6 +28,7 @@ export default function TemplatesPage() {
   useEffect(() => {
     fetchDefaultTemplates().then(setDefaultTemplates).catch(() => {});
     fetchMyTemplates().then(setCustomTemplates).catch(() => {});
+    fetchTeamTemplates().then(setTeamTemplates).catch(() => {});
     fetchFavorites().then(setFavorites).catch(() => {});
   }, []);
 
@@ -91,7 +93,7 @@ export default function TemplatesPage() {
 
   async function handleDelete(id) {
     if (confirmDeleteId !== id) { setConfirmDeleteId(id); return; }
-    try { await deleteTemplate(id); } catch (err) { toast.error("Fehler beim Löschen: " + err.message); }
+    try { await deleteTemplate(id); } catch (err) { toast.error("Fehler beim Löschen: " + err.message); return; }
     setConfirmDeleteId(null);
     setCustomTemplates((prev) => prev.filter((t) => t.id !== id));
     persistFavorites(favorites.filter((k) => k !== `custom:${id}`));
@@ -109,6 +111,10 @@ export default function TemplatesPage() {
       const t = customTemplates.find((t) => `custom:${t.id}` === key);
       return t ? `${t.icon} ${t.name}` : key;
     }
+    if (key.startsWith("team:")) {
+      const t = teamTemplates.find((t) => `team:${t.id}` === key);
+      return t ? `${t.icon} ${t.name}` : key;
+    }
     return `${DEFAULT_ICONS[key] || "📦"} ${key}`;
   }
 
@@ -119,7 +125,7 @@ export default function TemplatesPage() {
           <h2>Templates</h2>
           <p className="tp-sub">Ziehe Templates in deine Schnellauswahl oder erstelle eigene.</p>
         </div>
-        <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Neues Template</button>
+        <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Mein Template</button>
       </div>
 
       <div className="tp-layout">
@@ -193,54 +199,86 @@ export default function TemplatesPage() {
             </>
           )}
 
-          {customTemplates.length > 0 && (
+          <h3 className="library-section-title">Meine Templates</h3>
+          {customTemplates.length === 0 ? (
+            <div className="empty-custom">
+              <p>Noch keine eigenen Templates. Erstelle dein erstes!</p>
+              <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Mein Template</button>
+            </div>
+          ) : (
+            <div className="template-grid">
+              {customTemplates.map((t) => {
+                const key = `custom:${t.id}`;
+                return (
+                  <div
+                    key={t.id}
+                    className={`template-card custom-card ${favorites.includes(key) ? "is-favorite" : ""}`}
+                    draggable
+                    onDragStart={(e) => onDragStartLibrary(e, key)}
+                  >
+                    <div className="tc-icon">{t.icon}</div>
+                    <div className="tc-name">{t.name}</div>
+                    <div className="tc-desc">{t.description}</div>
+                    <div className="tc-containers">
+                      {t.containers.length} Container{": "}
+                      {t.containers.map((c) => c.image).join(", ")}
+                    </div>
+                    <div className="tc-actions">
+                      {favorites.includes(key)
+                        ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
+                        : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
+                      }
+                      {confirmDeleteId === t.id ? (
+                        <>
+                          <span className="tc-confirm-label">Sicher?</span>
+                          <button className="tc-btn-confirm-yes" onClick={() => handleDelete(t.id)}>✓</button>
+                          <button className="tc-btn-confirm-no" onClick={() => setConfirmDeleteId(null)}>✕</button>
+                        </>
+                      ) : (
+                        <button className="tc-btn-delete" onClick={() => handleDelete(t.id)}>Löschen</button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Team templates from all user's teams — drag to favorites */}
+          {teamTemplates.length > 0 && (
             <>
-              <h3 className="library-section-title">Meine Templates</h3>
+              <div className="library-section-header">
+                <h3 className="library-section-title">Team-Templates</h3>
+                <span className="team-section-hint">Von deinen Teams — ins Teams-Tab für Verwaltung</span>
+              </div>
               <div className="template-grid">
-                {customTemplates.map((t) => {
-                  const key = `custom:${t.id}`;
+                {teamTemplates.map((t) => {
+                  const key = `team:${t.id}`;
                   return (
                     <div
                       key={t.id}
-                      className={`template-card custom-card ${favorites.includes(key) ? "is-favorite" : ""}`}
+                      className={`template-card team-card ${favorites.includes(key) ? "is-favorite" : ""}`}
                       draggable
                       onDragStart={(e) => onDragStartLibrary(e, key)}
                     >
                       <div className="tc-icon">{t.icon}</div>
                       <div className="tc-name">{t.name}</div>
-                      <div className="tc-desc">{t.description}</div>
+                      {t.description && <div className="tc-desc">{t.description}</div>}
+                      <div className="tc-creator">👤 {t.creator_name}</div>
                       <div className="tc-containers">
-                        {t.containers.length} Container{t.containers.length !== 1 ? "" : ""}
-                        {": "}
-                        {t.containers.map((c) => c.image).join(", ")}
+                        {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
                       </div>
                       <div className="tc-actions">
                         {favorites.includes(key)
                           ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
                           : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
                         }
-                        {confirmDeleteId === t.id ? (
-                          <>
-                            <span className="tc-confirm-label">Sicher?</span>
-                            <button className="tc-btn-confirm-yes" onClick={() => handleDelete(t.id)}>✓</button>
-                            <button className="tc-btn-confirm-no" onClick={() => setConfirmDeleteId(null)}>✕</button>
-                          </>
-                        ) : (
-                          <button className="tc-btn-delete" onClick={() => handleDelete(t.id)}>Löschen</button>
-                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
             </>
-          )}
-
-          {customTemplates.length === 0 && (
-            <div className="empty-custom">
-              <p>Noch keine eigenen Templates. Erstelle dein erstes!</p>
-              <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Neues Template</button>
-            </div>
           )}
         </section>
       </div>

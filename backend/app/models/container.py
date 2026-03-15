@@ -9,6 +9,14 @@ class StartContainerRequest(BaseModel):
     container_name: Optional[str] = None
     mem_limit: Optional[str] = None  # e.g. "512m", "1g"
 
+class StackContainerSpec(BaseModel):
+    service_name:   str
+    image:          str
+    internal_port:  int
+    env:            dict[str, str] = {}
+    host_port:      Optional[int] = None
+    container_name: Optional[str] = None
+
 class ContainerResponse(BaseModel):
     id: str
     name: str

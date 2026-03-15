@@ -7,8 +7,10 @@ import os
 import threading
 from app.database import get_db
 from sqlalchemy.orm import Session
-from app.models.container import StartContainerRequest, ContainerResponse
+from app.models.container import StartContainerRequest, StackContainerSpec
 from app.models.user import UserDB
+from app.models.template import UserTemplateDB
+from app.models.team_template import TeamTemplateDB
 from app.services import docker_service
 from app.services.notification_service import notify_container_started
 
@@ -60,30 +62,70 @@ router = APIRouter(prefix="/api/containers", tags=["Containers"])
 
 
 class StartStackRequest(BaseModel):
-    templates: list[str]
-    stack_name: str
+    containers:       list[StackContainerSpec]
+    stack_name:       str
     duration_minutes: int = 60
 
 
-@router.post("/start", response_model=ContainerResponse)
-def start(request: StartContainerRequest, current_user: UserDB = Depends(_get_required_user)):
+@router.post("/start")
+def start(request: StartContainerRequest,
+          current_user: UserDB = Depends(_get_required_user),
+          db: Session = Depends(get_db)):
     try:
-        result = docker_service.start_container(
-            request.template,
-            request.duration_minutes,
-            env_overrides=request.env_overrides,
-            host_port=request.host_port,
-            container_name=request.container_name,
-            mem_limit=request.mem_limit,
-            user_id=current_user.id,
-        )
+        if request.template.startswith("team:"):
+            tmpl_id = int(request.template.split(":")[1])
+            tmpl = db.query(TeamTemplateDB).filter(TeamTemplateDB.id == tmpl_id).first()
+            if not tmpl:
+                raise HTTPException(status_code=404, detail="Team-Template nicht gefunden")
+            configs = tmpl.containers
+            if len(configs) == 1:
+                result = docker_service.start_container_from_config(
+                    configs[0], request.duration_minutes,
+                    user_id=current_user.id, template_label=request.template,
+                )
+            else:
+                result = docker_service.start_stack_from_configs(
+                    configs, tmpl.name, request.duration_minutes, user_id=current_user.id,
+                )
+        elif request.template.startswith("custom:"):
+            tmpl_id = int(request.template.split(":")[1])
+            tmpl = db.query(UserTemplateDB).filter(
+                UserTemplateDB.id == tmpl_id,
+                UserTemplateDB.user_id == current_user.id,
+            ).first()
+            if not tmpl:
+                raise HTTPException(status_code=404, detail="Template nicht gefunden")
+            configs = tmpl.containers
+            if len(configs) == 1:
+                result = docker_service.start_container_from_config(
+                    configs[0], request.duration_minutes,
+                    user_id=current_user.id, template_label=request.template,
+                )
+            else:
+                result = docker_service.start_stack_from_configs(
+                    configs, tmpl.name, request.duration_minutes, user_id=current_user.id,
+                )
+        else:
+            result = docker_service.start_container(
+                request.template,
+                request.duration_minutes,
+                env_overrides=request.env_overrides,
+                host_port=request.host_port,
+                container_name=request.container_name,
+                mem_limit=request.mem_limit,
+                user_id=current_user.id,
+            )
         if current_user.notify_on_start:
+            name = result.get("name") or (result.get("containers") or [{}])[0].get("name", "")
+            port = result.get("port") or 0
             threading.Thread(
                 target=notify_container_started,
-                args=(current_user.email, result["name"], request.template, result["port"], request.duration_minutes),
+                args=(current_user.email, name, request.template, port, request.duration_minutes),
                 daemon=True,
             ).start()
         return result
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
@@ -91,10 +133,11 @@ def start(request: StartContainerRequest, current_user: UserDB = Depends(_get_re
 
 
 @router.post("/stacks/start")
-def start_stack(request: StartStackRequest, current_user: UserDB = Depends(_get_required_user)):
+def start_stack(request: StartStackRequest,
+                current_user: UserDB = Depends(_get_required_user)):
     try:
-        return docker_service.start_stack(
-            request.templates,
+        return docker_service.start_stack_from_configs(
+            [c.model_dump() for c in request.containers],
             request.stack_name,
             request.duration_minutes,
             user_id=current_user.id,
