@@ -230,8 +230,13 @@
   flex-shrink: 0;
 }
 
-.role-owner {
-  background: var(--blue-a);
+.role-admin {
+  background: color-mix(in srgb, var(--red) 15%, transparent);
+  color: var(--red);
+}
+
+.role-manager {
+  background: color-mix(in srgb, var(--blue) 15%, transparent);
   color: var(--blue);
 }
 
@@ -239,6 +244,72 @@
   background: var(--overlay0);
   color: var(--subtext1);
 }
+
+/* Eigene Rolle im Team-Selector */
+.my-role-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 4px;
+  padding: 0.15rem 0.45rem;
+}
+
+/* Rollen-Dropdown in der Mitgliederliste */
+.member-role-select {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-radius: 4px;
+  padding: 0.15rem 0.35rem;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid var(--overlay1);
+  background: var(--mantle);
+  color: var(--text);
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.member-role-select:focus { border-color: var(--blue); }
+.member-role-select.role-admin  { border-color: var(--red);  color: var(--red); }
+.member-role-select.role-manager { border-color: var(--blue); color: var(--blue); }
+
+/* Team löschen Bestätigung */
+.delete-team-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--peach);
+}
+
+.btn-confirm-yes-sm {
+  background: transparent;
+  border: 1px solid var(--red);
+  border-radius: 6px;
+  color: var(--red);
+  font-size: 0.78rem;
+  padding: 0.25rem 0.65rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-confirm-yes-sm:hover { background: color-mix(in srgb, var(--red) 15%, transparent); }
+
+.btn-confirm-no-sm {
+  background: transparent;
+  border: 1px solid var(--overlay1);
+  border-radius: 6px;
+  color: var(--subtext0);
+  font-size: 0.78rem;
+  padding: 0.25rem 0.65rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-confirm-no-sm:hover { border-color: var(--overlay2); color: var(--text); }
 
 .btn-remove-member {
   background: transparent;

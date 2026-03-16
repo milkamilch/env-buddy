@@ -151,7 +151,11 @@ def start_stack(request: StartStackRequest,
 @router.get("/stacks")
 def list_stacks(current_user: UserDB = Depends(_get_required_user)):
     try:
-        return docker_service.list_stacks(user_id=current_user.id)
+        stacks = docker_service.list_stacks(user_id=current_user.id)
+        for s in stacks:
+            for c in s["containers"]:
+                c["started_by"] = current_user.username
+        return stacks
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -206,7 +210,10 @@ def get_template_details(name: str):
 @router.get("/")
 def list_all(current_user: UserDB = Depends(_get_required_user)):
     try:
-        return docker_service.list_containers(user_id=current_user.id)
+        containers = docker_service.list_containers(user_id=current_user.id)
+        for c in containers:
+            c["started_by"] = current_user.username
+        return containers
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

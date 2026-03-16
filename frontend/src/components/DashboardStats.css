@@ -52,37 +52,97 @@
   flex-shrink: 0;
 }
 
+/* Bar cards */
+.stat-card-bar {
+  align-items: flex-start;
+  min-width: 140px;
+  gap: 0.25rem;
+}
+
+.stat-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.stat-bar-value {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.stat-progress-track {
+  width: 100%;
+  height: 5px;
+  background: var(--overlay0);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.stat-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.stat-bar-sub {
+  font-size: 0.66rem;
+  color: var(--overlay1);
+  white-space: nowrap;
+}
+
+/* Template mini bars */
 .stat-card-templates {
   align-items: flex-start;
-  min-width: 0;
+  min-width: 160px;
 }
 
 .stat-card-label-top {
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.25rem;
 }
 
-.stat-template-list {
+.stat-template-bars {
   display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 0.3rem;
+  width: 100%;
 }
 
-.stat-template-chip {
-  background: var(--overlay0);
-  border-radius: 99px;
-  padding: 0.1rem 0.5rem;
-  font-size: 0.72rem;
-  color: var(--subtext1);
+.stat-tpl-row {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.4rem;
 }
 
-.stat-template-count {
-  background: var(--overlay1);
+.stat-tpl-name {
+  font-size: 0.72rem;
+  color: var(--subtext1);
+  width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.stat-tpl-track {
+  flex: 1;
+  height: 5px;
+  background: var(--overlay0);
   border-radius: 99px;
-  padding: 0 0.3rem;
-  font-size: 0.68rem;
+  overflow: hidden;
+}
+
+.stat-tpl-fill {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.stat-tpl-count {
+  font-size: 0.7rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--subtext1);
+  min-width: 14px;
+  text-align: right;
 }

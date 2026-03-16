@@ -6,11 +6,14 @@ from typing import List
 from app.database import get_db
 from app.auth_utils import get_current_user
 from app.models.user import UserDB
-from app.models.team import TeamDB, TeamMemberDB, CreateTeamRequest, TeamResponse, TeamMemberResponse, AddMemberRequest
+from app.models.team import TeamDB, TeamMemberDB, CreateTeamRequest, TeamResponse, TeamMemberResponse, AddMemberRequest, UpdateRoleRequest
 from app.models.template import ContainerConfig
 from app.models.team_template import TeamTemplateDB, CreateTeamTemplateRequest, TeamTemplateResponse
 
 router = APIRouter(prefix="/api/teams", tags=["Teams"])
+
+# Rollen-Hierarchie: höherer Index = mehr Rechte
+_ROLE_LEVEL = {"member": 0, "manager": 1, "admin": 2}
 
 
 def _get_team_or_404(team_id: int, db: Session) -> TeamDB:
@@ -30,10 +33,19 @@ def _assert_member(team_id: int, user_id: int, db: Session) -> TeamMemberDB:
     return m
 
 
-def _assert_owner(team_id: int, user_id: int, db: Session):
+def _assert_admin(team_id: int, user_id: int, db: Session) -> TeamMemberDB:
     m = _assert_member(team_id, user_id, db)
-    if m.role != "owner":
-        raise HTTPException(status_code=403, detail="Nur der Team-Owner kann das tun")
+    if m.role != "admin":
+        raise HTTPException(status_code=403, detail="Nur der Team-Admin kann das tun")
+    return m
+
+
+def _assert_can_manage(team_id: int, user_id: int, db: Session) -> TeamMemberDB:
+    """Admin oder Manager dürfen Mitglieder und Rollen verwalten."""
+    m = _assert_member(team_id, user_id, db)
+    if _ROLE_LEVEL.get(m.role, 0) < 1:
+        raise HTTPException(status_code=403, detail="Keine Berechtigung zur Mitgliederverwaltung")
+    return m
 
 
 # ── Teams CRUD ──────────────────────────────────────────────────────────────
@@ -65,7 +77,7 @@ def create_team(
     team = TeamDB(name=req.name.strip(), created_by=current_user.id)
     db.add(team)
     db.flush()
-    member = TeamMemberDB(team_id=team.id, user_id=current_user.id, role="owner")
+    member = TeamMemberDB(team_id=team.id, user_id=current_user.id, role="admin")
     db.add(member)
     db.commit()
     db.refresh(team)
@@ -79,7 +91,7 @@ def delete_team(
     db: Session = Depends(get_db),
 ):
     _get_team_or_404(team_id, db)
-    _assert_owner(team_id, current_user.id, db)
+    _assert_admin(team_id, current_user.id, db)
     db.query(TeamTemplateDB).filter(TeamTemplateDB.team_id == team_id).delete()
     db.query(TeamMemberDB).filter(TeamMemberDB.team_id == team_id).delete()
     db.query(TeamDB).filter(TeamDB.id == team_id).delete()
@@ -117,7 +129,7 @@ def add_member(
     db: Session = Depends(get_db),
 ):
     _get_team_or_404(team_id, db)
-    _assert_owner(team_id, current_user.id, db)
+    _assert_can_manage(team_id, current_user.id, db)
     user = db.query(UserDB).filter(UserDB.username == req.username).first()
     if not user:
         raise HTTPException(status_code=404, detail=f"Benutzer '{req.username}' nicht gefunden")
@@ -144,22 +156,71 @@ def remove_member(
     db: Session = Depends(get_db),
 ):
     _get_team_or_404(team_id, db)
-    current_member = _assert_member(team_id, current_user.id, db)
-    # Owner can remove anyone; members can only remove themselves (leave)
-    if user_id != current_user.id and current_member.role != "owner":
-        raise HTTPException(status_code=403, detail="Nur der Owner kann Mitglieder entfernen")
-    # Owner cannot leave — must delete the team
+    actor = _assert_member(team_id, current_user.id, db)
+
     target = db.query(TeamMemberDB).filter(
         TeamMemberDB.team_id == team_id,
         TeamMemberDB.user_id == user_id,
     ).first()
     if not target:
         raise HTTPException(status_code=404, detail="Mitglied nicht gefunden")
-    if target.role == "owner":
-        raise HTTPException(status_code=400, detail="Der Owner kann das Team nicht verlassen. Lösche das Team stattdessen.")
+
+    # Selbst entfernen (verlassen) ist immer erlaubt — außer wenn man admin ist
+    if user_id == current_user.id:
+        if target.role == "admin":
+            raise HTTPException(status_code=400, detail="Der Admin kann das Team nicht verlassen. Lösche das Team stattdessen.")
+        db.delete(target)
+        db.commit()
+        return {"message": "Team verlassen"}
+
+    # Andere entfernen: muss admin oder manager sein
+    if _ROLE_LEVEL.get(actor.role, 0) < 1:
+        raise HTTPException(status_code=403, detail="Keine Berechtigung zum Entfernen von Mitgliedern")
+
+    # Manager darf keine Admins entfernen
+    if actor.role == "manager" and target.role == "admin":
+        raise HTTPException(status_code=403, detail="Manager können keine Admins entfernen")
+
     db.delete(target)
     db.commit()
     return {"message": "Mitglied entfernt"}
+
+
+@router.put("/{team_id}/members/{user_id}/role", status_code=200)
+def update_member_role(
+    team_id: int,
+    user_id: int,
+    req: UpdateRoleRequest,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _get_team_or_404(team_id, db)
+    actor = _assert_can_manage(team_id, current_user.id, db)
+
+    if req.role not in ("member", "manager", "admin"):
+        raise HTTPException(status_code=400, detail="Ungültige Rolle. Erlaubt: member, manager, admin")
+
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Eigene Rolle kann nicht geändert werden")
+
+    target = db.query(TeamMemberDB).filter(
+        TeamMemberDB.team_id == team_id,
+        TeamMemberDB.user_id == user_id,
+    ).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="Mitglied nicht gefunden")
+
+    # Manager darf keine Admin-Rollen anfassen
+    if actor.role == "manager" and target.role == "admin":
+        raise HTTPException(status_code=403, detail="Manager können Admin-Rollen nicht ändern")
+
+    # Manager darf niemanden zum Admin ernennen
+    if actor.role == "manager" and req.role == "admin":
+        raise HTTPException(status_code=403, detail="Manager können keine Admins ernennen")
+
+    target.role = req.role
+    db.commit()
+    return {"message": f"Rolle geändert zu {req.role}"}
 
 
 # ── Team Templates ───────────────────────────────────────────────────────────
@@ -224,15 +285,16 @@ def update_team_template(
     db: Session = Depends(get_db),
 ):
     _get_team_or_404(team_id, db)
-    _assert_member(team_id, current_user.id, db)
+    actor = _assert_member(team_id, current_user.id, db)
     tmpl = db.query(TeamTemplateDB).filter(
         TeamTemplateDB.id == tmpl_id,
         TeamTemplateDB.team_id == team_id,
     ).first()
     if not tmpl:
         raise HTTPException(status_code=404, detail="Template nicht gefunden")
-    if tmpl.created_by != current_user.id:
-        raise HTTPException(status_code=403, detail="Nur der Ersteller kann dieses Template bearbeiten")
+    # Admin/Manager dürfen alle Templates bearbeiten, Member nur eigene
+    if tmpl.created_by != current_user.id and _ROLE_LEVEL.get(actor.role, 0) < 1:
+        raise HTTPException(status_code=403, detail="Keine Berechtigung zum Bearbeiten dieses Templates")
     if not req.containers:
         raise HTTPException(status_code=400, detail="Mindestens ein Container erforderlich")
     tmpl.name = req.name
@@ -257,15 +319,16 @@ def delete_team_template(
     db: Session = Depends(get_db),
 ):
     _get_team_or_404(team_id, db)
-    _assert_member(team_id, current_user.id, db)
+    actor = _assert_member(team_id, current_user.id, db)
     tmpl = db.query(TeamTemplateDB).filter(
         TeamTemplateDB.id == tmpl_id,
         TeamTemplateDB.team_id == team_id,
     ).first()
     if not tmpl:
         raise HTTPException(status_code=404, detail="Template nicht gefunden")
-    if tmpl.created_by != current_user.id:
-        raise HTTPException(status_code=403, detail="Nur der Ersteller kann dieses Template löschen")
+    # Admin/Manager dürfen alle Templates löschen, Member nur eigene
+    if tmpl.created_by != current_user.id and _ROLE_LEVEL.get(actor.role, 0) < 1:
+        raise HTTPException(status_code=403, detail="Keine Berechtigung zum Löschen dieses Templates")
     db.delete(tmpl)
     db.commit()
     return {"message": "Template gelöscht"}
