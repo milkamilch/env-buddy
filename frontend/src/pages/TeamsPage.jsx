@@ -257,7 +257,6 @@ export default function TeamsPage({ user }) {
 
                 <div className="members-list">
                   {members.map((m) => {
-                    const targetLevel = ROLE_LEVEL[m.role] ?? 0;
                     // Kann actor die Rolle dieses Mitglieds ändern?
                     const canChangeRole =
                       canManage &&
