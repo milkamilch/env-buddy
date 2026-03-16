@@ -93,7 +93,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
       <button className="btn-logs" onClick={(e) => { e.stopPropagation(); setLogsOpen(true); }} title="Logs anzeigen">▤</button>
       {isRunning && (
         <button className="btn-restart" onClick={handleRestart} disabled={restarting} title="Neustart">
-          {restarting ? "…" : "↺"}
+          {restarting ? "…" : "↺ Neustart"}
         </button>
       )}
       {isRunning ? (
@@ -131,6 +131,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
             <span className={`row-status-sm status-${container.status}`}>{container.status}</span>
           </div>
           {container.port && <span className="row-port-sm">:{container.port}</span>}
+          {container.started_by && <span className="row-started-by">👤 {container.started_by}</span>}
           {isRunning && remaining != null && (
             <span className={`row-countdown-sm ${isExpiringSoon ? "countdown-urgent" : ""}`}>
               ⏱ {formatCountdown(remaining)}
@@ -190,6 +191,9 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
         <div className="card-meta">
           <span>Port: <strong>{container.port || "—"}</strong></span>
           <span>Template: <strong>{container.template}</strong></span>
+          {container.started_by && (
+            <span className="card-started-by">👤 {container.started_by}</span>
+          )}
           {isRunning && remaining != null && (
             <span className={`card-countdown ${isExpiringSoon ? "countdown-urgent" : ""}`}>
               ⏱ {formatCountdown(remaining)}

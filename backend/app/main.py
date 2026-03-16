@@ -36,6 +36,12 @@ def _run_migrations():
             conn.commit()
         except Exception:
             pass
+        # rename owner → admin in team_members
+        try:
+            conn.execute(text("UPDATE team_members SET role = 'admin' WHERE role = 'owner'"))
+            conn.commit()
+        except Exception:
+            pass
 
 async def _auto_stop_loop():
     while True:

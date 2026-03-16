@@ -342,6 +342,17 @@ export async function addTeamMember(teamId, username) {
   return json;
 }
 
+export async function updateMemberRole(teamId, userId, role) {
+  const res = await apiFetch(`${BASE}/api/teams/${teamId}/members/${userId}/role`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify({ role }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Ändern der Rolle");
+  return json;
+}
+
 export async function removeTeamMember(teamId, userId) {
   const res = await apiFetch(`${BASE}/api/teams/${teamId}/members/${userId}`, {
     method: "DELETE",

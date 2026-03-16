@@ -114,6 +114,11 @@
   color: var(--text);
 }
 
+.card-started-by {
+  font-size: 0.78rem;
+  color: var(--subtext0);
+}
+
 .card-countdown {
   margin-left: auto;
   font-size: 0.8rem;
@@ -214,6 +219,12 @@
   font-size: 0.8rem;
   color: var(--subtext0);
   font-family: monospace;
+  flex-shrink: 0;
+}
+
+.row-started-by {
+  font-size: 0.75rem;
+  color: var(--subtext0);
   flex-shrink: 0;
 }
 

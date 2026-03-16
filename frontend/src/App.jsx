@@ -1,16 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, fetchTeamTemplates } from "./services/api";
-import StartForm from "./components/StartForm";
-import ContainerCard from "./components/ContainerCard";
-import StackCard from "./components/StackCard";
 import AuthPage from "./pages/AuthPage";
+import DashboardPage from "./pages/DashboardPage";
 import TemplatesPage from "./pages/TemplatesPage";
 import TeamsPage from "./pages/TeamsPage";
 import ProfileModal from "./components/ProfileModal";
-import DashboardStats from "./components/DashboardStats";
 import "./App.css";
-
-const STATUS_FILTERS = ["alle", "running", "paused", "exited"];
 
 const AVATAR_COLORS = ["#89b4fa","#a6e3a1","#fab387","#f38ba8","#cba6f7","#89dceb","#f9e2af"];
 function avatarColor(username = "") {
@@ -34,7 +29,8 @@ function UserAvatar({ user }) {
     </span>
   );
 }
-const DEFAULT_ICONS  = {
+
+const DEFAULT_ICONS = {
   postgres: "🐘", mysql: "🐬", mariadb: "🐬", mongo: "🍃", redis: "⚡",
   cockroachdb: "🪳", neo4j: "🕸️", influxdb: "📈", couchdb: "🛋️", timescaledb: "⏱️",
   elasticsearch: "🔍", cassandra: "💎", rabbitmq: "🐰", kafka: "📨", nats: "🚀", mosquitto: "🦟",
@@ -57,10 +53,6 @@ export default function App() {
   const [startFormTemplates, setStartFormTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [search, setSearch] = useState("");
-  const [activeTemplate, setActiveTemplate] = useState("alle");
-  const [activeStatus, setActiveStatus] = useState("alle");
-  const [viewMode, setViewMode] = useState("grid");
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -79,7 +71,6 @@ export default function App() {
       try {
         [customs, teamTpls, favKeys] = await Promise.all([fetchMyTemplates(), fetchTeamTemplates(), fetchFavorites()]);
       } catch (authErr) {
-        // 401 = token abgelaufen → ausloggen
         if (authErr.message?.includes("401") || authErr.message?.includes("Ungültiger")) {
           handleLogout();
           return;
@@ -115,17 +106,11 @@ export default function App() {
     }
   }
 
-  function handleStopped() {
-    loadAll();
-  }
-
-  function handleRemoved(id) {
-    setContainers((prev) => prev.filter((c) => c.id !== id));
-  }
-
+  function handleStopped() { loadAll(); }
+  function handleRemoved(id) { setContainers((prev) => prev.filter((c) => c.id !== id)); }
   function handleStackStopped(stackId) {
     setStacks((prev) => prev.filter((s) => s.stack_id !== stackId));
-    loadAll(); // refresh to catch partial stops
+    loadAll();
   }
 
   useEffect(() => {
@@ -148,52 +133,19 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadStartFormTemplates();
   }, [user]);
 
   useEffect(() => {
     if (!user) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAll();
     const interval = setInterval(loadAll, 5000);
     return () => clearInterval(interval);
   }, [user]);
 
-  const filtered = useMemo(() => {
-    return containers.filter((c) => {
-      const matchSearch   = c.name.toLowerCase().includes(search.toLowerCase());
-      const matchTemplate = activeTemplate === "alle" || c.template === activeTemplate;
-      const matchStatus   = activeStatus   === "alle" || c.status   === activeStatus;
-      return matchSearch && matchTemplate && matchStatus;
-    });
-  }, [containers, search, activeTemplate, activeStatus]);
-
-  const filteredStacks = useMemo(() => {
-    return stacks.filter((s) => {
-      const q = search.toLowerCase();
-      const matchSearch   = !q
-        || s.stack_name.toLowerCase().includes(q)
-        || s.containers.some((c) => c.name.toLowerCase().includes(q) || c.template.toLowerCase().includes(q));
-      const matchTemplate = activeTemplate === "alle"
-        || s.containers.some((c) => c.template === activeTemplate);
-      const matchStatus   = activeStatus === "alle"
-        || s.containers.some((c) => c.status === activeStatus);
-      return matchSearch && matchTemplate && matchStatus;
-    });
-  }, [stacks, search, activeTemplate, activeStatus]);
-
   if (!user) {
     return <AuthPage onAuth={(u) => setUser(u)} />;
   }
-
-  const templateFilterOptions = [
-    "alle",
-    ...new Set([
-      ...containers.map((c) => c.template),
-      ...stacks.flatMap((s) => s.containers.map((c) => c.template)),
-    ]),
-  ];
 
   return (
     <div className="app">
@@ -249,120 +201,18 @@ export default function App() {
       ) : page === "teams" ? (
         <TeamsPage user={user} />
       ) : (
-        <main className="app-main">
-          <aside className="app-sidebar">
-            {startFormTemplates.length > 0 && (
-              <StartForm templates={startFormTemplates} onStarted={loadAll} />
-            )}
-          </aside>
-
-          <section className="app-content">
-            <div className="content-header">
-              <h2>Laufende Container</h2>
-              <span className="container-count">
-                {filtered.length + filteredStacks.length} / {containers.length + stacks.length}
-              </span>
-            </div>
-
-            {!loading && (containers.length > 0 || stacks.length > 0) && (
-              <DashboardStats containers={containers} stacks={stacks} />
-            )}
-
-            <div className="toolbar">
-              <div className="search-wrapper">
-                <span className="search-icon">🔍</span>
-                <input
-                  className="search-input"
-                  type="text"
-                  placeholder="Container suchen..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                {search && (
-                  <button className="search-clear" onClick={() => setSearch("")}>✕</button>
-                )}
-              </div>
-
-              <div className="filter-group">
-                <span className="filter-label">Template:</span>
-                {templateFilterOptions.map((t) => (
-                  <button
-                    key={t}
-                    className={`filter-btn ${activeTemplate === t ? "active" : ""}`}
-                    onClick={() => setActiveTemplate(t)}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-
-              <div className="filter-group">
-                <span className="filter-label">Status:</span>
-                {STATUS_FILTERS.map((s) => (
-                  <button
-                    key={s}
-                    className={`filter-btn filter-status-${s} ${activeStatus === s ? "active" : ""}`}
-                    onClick={() => setActiveStatus(s)}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-
-              <div className="view-toggle">
-                <button className={`view-btn ${viewMode === "grid" ? "active" : ""}`} onClick={() => setViewMode("grid")} title="Kachelansicht">⊞</button>
-                <button className={`view-btn ${viewMode === "list" ? "active" : ""}`} onClick={() => setViewMode("list")} title="Listenansicht">☰</button>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="loading-spinner-wrap">
-                <span className="loading-spinner" />
-              </div>
-            ) : containers.length === 0 && stacks.length === 0 ? (
-              <div className="empty-state">
-                <span className="empty-state-icon">🧪</span>
-                <p className="empty-state-title">Noch keine Container</p>
-                <p className="empty-state-sub">Wähle links ein Template und starte deinen ersten Container.</p>
-              </div>
-            ) : filtered.length === 0 && filteredStacks.length === 0 ? (
-              <div className="empty-state">
-                <span className="empty-state-icon">🔍</span>
-                <p className="empty-state-title">Keine Treffer</p>
-                <p className="empty-state-sub">Kein Container passt zu den aktiven Filtern.</p>
-              </div>
-            ) : (
-              <>
-                {filteredStacks.length > 0 && (
-                  <div className="section-block">
-                    <div className="section-label">Stacks <span className="section-count">{filteredStacks.length}</span></div>
-                    <div className={`container-grid ${viewMode === "list" ? "grid-list" : ""}`}>
-                      {filteredStacks.map((s) => (
-                        <StackCard key={s.stack_id} stack={s} onStopped={handleStackStopped} viewMode={viewMode} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {filteredStacks.length > 0 && filtered.length > 0 && (
-                  <hr className="section-divider" />
-                )}
-
-                {filtered.length > 0 && (
-                  <div className="section-block">
-                    <div className="section-label">Container <span className="section-count">{filtered.length}</span></div>
-                    <div className={`container-grid ${viewMode === "list" ? "grid-list" : ""}`}>
-                      {filtered.map((c) => (
-                        <ContainerCard key={c.id} container={c} onStopped={handleStopped} onRemoved={handleRemoved} viewMode={viewMode} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </section>
-        </main>
+        <DashboardPage
+          containers={containers}
+          stacks={stacks}
+          loading={loading}
+          startFormTemplates={startFormTemplates}
+          onStarted={loadAll}
+          onStopped={handleStopped}
+          onRemoved={handleRemoved}
+          onStackStopped={handleStackStopped}
+        />
       )}
+
       {profileOpen && (
         <ProfileModal
           user={user}

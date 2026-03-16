@@ -213,6 +213,21 @@
   color: var(--text);
 }
 
+.btn-start-all {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  color: var(--green);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-start-all:hover { background: color-mix(in srgb, var(--green) 15%, transparent); }
+.btn-start-all:disabled { opacity: 0.5; cursor: default; }
+
 .container-count {
   background: var(--overlay0);
   color: var(--subtext1);
