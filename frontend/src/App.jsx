@@ -133,11 +133,13 @@ export default function App() {
 
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadStartFormTemplates();
   }, [user]);
 
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAll();
     const interval = setInterval(loadAll, 5000);
     return () => clearInterval(interval);
