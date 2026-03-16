@@ -55,6 +55,13 @@ def send_welcome_email(to: str, first_name: str, last_name: str, username: str):
     )
     _send_mail(to, "👋 Willkommen bei Test-Buddy!", html)
 
+def send_verification_email(to: str, first_name: str, verify_url: str):
+    html = env.get_template("verify_email.html").render(
+        first_name=first_name,
+        verify_url=verify_url,
+    )
+    _send_mail(to, "✉️ Test-Buddy: E-Mail-Adresse bestätigen", html)
+
 def send_password_reset_email(to: str, first_name: str, reset_url: str):
     html = env.get_template("password_reset.html").render(
         first_name=first_name,

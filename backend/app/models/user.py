@@ -19,6 +19,7 @@ class UserDB(Base):
     notify_on_stop    = Column(Boolean, default=True)
     notify_on_warning = Column(Boolean, default=True)
     theme             = Column(String, default="dark")
+    is_verified       = Column(Boolean, default=False)
 
 
 class RegisterRequest(BaseModel):

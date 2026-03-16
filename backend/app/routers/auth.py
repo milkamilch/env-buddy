@@ -9,15 +9,16 @@ from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.user import UserDB, RegisterRequest, LoginRequest, TokenResponse, UserResponse, NotificationPrefsRequest
-from app.services.notification_service import send_welcome_email, send_password_reset_email
+from app.services.notification_service import send_welcome_email, send_password_reset_email, send_verification_email
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
-SECRET_KEY         = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
-ALGORITHM          = "HS256"
-TOKEN_EXPIRE_HOURS = 24
-RESET_EXPIRE_HOURS = 1
-FRONTEND_URL       = os.getenv("FRONTEND_URL", "http://localhost:5173")
+SECRET_KEY          = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
+ALGORITHM           = "HS256"
+TOKEN_EXPIRE_HOURS  = 24
+RESET_EXPIRE_HOURS  = 1
+VERIFY_EXPIRE_HOURS = 48
+FRONTEND_URL        = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -30,11 +31,15 @@ def create_reset_token(email: str) -> str:
     payload = {"reset": email, "exp": datetime.now(timezone.utc) + timedelta(hours=RESET_EXPIRE_HOURS)}
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
+def create_verify_token(email: str) -> str:
+    payload = {"verify": email, "exp": datetime.now(timezone.utc) + timedelta(hours=VERIFY_EXPIRE_HOURS)}
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
 def _send_async(fn, *args):
     threading.Thread(target=fn, args=args, daemon=True).start()
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
+@router.post("/register", status_code=201)
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     if db.query(UserDB).filter(UserDB.email == req.email).first():
         raise HTTPException(status_code=409, detail="E-Mail bereits vergeben")
@@ -47,18 +52,39 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         first_name       = req.first_name,
         last_name        = req.last_name,
         hashed_password  = pwd_context.hash(req.password),
+        is_verified      = False,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
 
-    _send_async(send_welcome_email, user.email, user.first_name, user.last_name, user.username)
+    verify_token = create_verify_token(user.email)
+    verify_url = f"{FRONTEND_URL}?verify_token={verify_token}"
+    _send_async(send_verification_email, user.email, user.first_name, verify_url)
 
-    return TokenResponse(
-        access_token=create_token(user.id),
-        token_type="bearer",
-        user=UserResponse.model_validate(user),
-    )
+    return {"message": "Registrierung erfolgreich. Bitte bestätige deine E-Mail-Adresse."}
+
+
+@router.get("/verify-email", status_code=200)
+def verify_email(token: str, db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("verify")
+        if not email:
+            raise HTTPException(status_code=400, detail="Ungültiger Token")
+    except JWTError:
+        raise HTTPException(status_code=400, detail="Token ungültig oder abgelaufen")
+
+    user = db.query(UserDB).filter(UserDB.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Benutzer nicht gefunden")
+    if user.is_verified:
+        return {"message": "E-Mail bereits bestätigt"}
+
+    user.is_verified = True
+    db.commit()
+    _send_async(send_welcome_email, user.email, user.first_name, user.last_name, user.username)
+    return {"message": "E-Mail erfolgreich bestätigt"}
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -66,6 +92,8 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(UserDB).filter(UserDB.email == req.email).first()
     if not user or not pwd_context.verify(req.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="E-Mail oder Passwort falsch")
+    if not user.is_verified:
+        raise HTTPException(status_code=403, detail="E-Mail-Adresse noch nicht bestätigt. Bitte prüfe dein Postfach.")
 
     return TokenResponse(
         access_token=create_token(user.id),

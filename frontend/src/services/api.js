@@ -29,6 +29,13 @@ export async function register(data) {
   return json;
 }
 
+export async function verifyEmail(token) {
+  const res = await fetch(`${BASE}/api/auth/verify-email?token=${encodeURIComponent(token)}`);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Verifizierung fehlgeschlagen");
+  return json;
+}
+
 export async function login(email, password) {
   const res = await fetch(`${BASE}/api/auth/login`, {
     method: "POST",
