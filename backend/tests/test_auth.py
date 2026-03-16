@@ -3,8 +3,20 @@ from unittest.mock import patch
 
 from jose import jwt
 
-from app.routers.auth import create_token, create_reset_token, SECRET_KEY, ALGORITHM
+from app.routers.auth import create_token, create_reset_token, create_verify_token, SECRET_KEY, ALGORITHM
 from tests.conftest import REGISTER_PAYLOAD
+
+
+def _verify_and_login(client, payload=REGISTER_PAYLOAD) -> str:
+    """Registriert einen User, verifiziert ihn per Token und gibt den Login-Token zurück."""
+    client.post("/api/auth/register", json=payload)
+    verify_token = create_verify_token(payload["email"])
+    client.get(f"/api/auth/verify-email?token={verify_token}")
+    r = client.post("/api/auth/login", json={
+        "email": payload["email"],
+        "password": payload["password"],
+    })
+    return r.json()["access_token"]
 
 
 # ---------------------------------------------------------------------------
@@ -35,14 +47,10 @@ def test_create_reset_token_contains_email():
 # POST /api/auth/register
 # ---------------------------------------------------------------------------
 
-def test_register_returns_token_and_user(client):
+def test_register_returns_pending_message(client):
     r = client.post("/api/auth/register", json=REGISTER_PAYLOAD)
     assert r.status_code == 201
-    data = r.json()
-    assert "access_token" in data
-    assert data["token_type"] == "bearer"
-    assert data["user"]["email"] == REGISTER_PAYLOAD["email"]
-    assert data["user"]["username"] == REGISTER_PAYLOAD["username"]
+    assert "message" in r.json()
 
 
 def test_register_duplicate_email_returns_409(client):
@@ -62,11 +70,36 @@ def test_register_duplicate_username_returns_409(client):
 
 
 # ---------------------------------------------------------------------------
+# GET /api/auth/verify-email
+# ---------------------------------------------------------------------------
+
+def test_verify_email_success(client):
+    client.post("/api/auth/register", json=REGISTER_PAYLOAD)
+    token = create_verify_token(REGISTER_PAYLOAD["email"])
+    r = client.get(f"/api/auth/verify-email?token={token}")
+    assert r.status_code == 200
+
+
+def test_verify_email_invalid_token_returns_400(client):
+    r = client.get("/api/auth/verify-email?token=notavalidtoken")
+    assert r.status_code == 400
+
+
+def test_login_unverified_returns_403(client):
+    client.post("/api/auth/register", json=REGISTER_PAYLOAD)
+    r = client.post("/api/auth/login", json={
+        "email": REGISTER_PAYLOAD["email"],
+        "password": REGISTER_PAYLOAD["password"],
+    })
+    assert r.status_code == 403
+
+
+# ---------------------------------------------------------------------------
 # POST /api/auth/login
 # ---------------------------------------------------------------------------
 
 def test_login_success(client):
-    client.post("/api/auth/register", json=REGISTER_PAYLOAD)
+    _verify_and_login(client)  # kein Fehler = Erfolg
     r = client.post("/api/auth/login", json={
         "email": REGISTER_PAYLOAD["email"],
         "password": REGISTER_PAYLOAD["password"],
@@ -97,8 +130,7 @@ def test_login_unknown_email_returns_401(client):
 # ---------------------------------------------------------------------------
 
 def test_me_returns_current_user(client):
-    reg = client.post("/api/auth/register", json=REGISTER_PAYLOAD).json()
-    token = reg["access_token"]
+    token = _verify_and_login(client)
     r = client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
     assert r.json()["email"] == REGISTER_PAYLOAD["email"]
@@ -134,7 +166,7 @@ def test_forgot_password_returns_200_for_known_email(client):
 # ---------------------------------------------------------------------------
 
 def test_reset_password_success(client):
-    client.post("/api/auth/register", json=REGISTER_PAYLOAD)
+    _verify_and_login(client)
     reset_token = create_reset_token(REGISTER_PAYLOAD["email"])
     r = client.post("/api/auth/reset-password", json={
         "token": reset_token,
@@ -142,7 +174,6 @@ def test_reset_password_success(client):
     })
     assert r.status_code == 200
 
-    # new password should work for login
     login = client.post("/api/auth/login", json={
         "email": REGISTER_PAYLOAD["email"],
         "password": "newpassword123",
