@@ -36,6 +36,14 @@ def _run_migrations():
             conn.commit()
         except Exception:
             pass
+        # is_verified column — bestehende User sind bereits verifiziert
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN is_verified INTEGER DEFAULT 0 NOT NULL"))
+            conn.commit()
+            conn.execute(text("UPDATE users SET is_verified = 1"))
+            conn.commit()
+        except Exception:
+            pass
         # rename owner → admin in team_members
         try:
             conn.execute(text("UPDATE team_members SET role = 'admin' WHERE role = 'owner'"))

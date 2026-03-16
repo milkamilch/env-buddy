@@ -1,21 +1,43 @@
-import { useState } from "react";
-import { login, register, forgotPassword, resetPassword } from "../services/api";
+import { useState, useEffect } from "react";
+import { login, register, forgotPassword, resetPassword, verifyEmail } from "../services/api";
 import "./AuthPage.css";
 
-function getResetToken() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("reset_token");
+function getUrlParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
 }
 
 export default function AuthPage({ onAuth }) {
-  const [mode, setMode] = useState(() => getResetToken() ? "reset" : "login");
-  const [resetToken] = useState(getResetToken);
+  const [resetToken]  = useState(() => getUrlParam("reset_token"));
+  const [verifyToken] = useState(() => getUrlParam("verify_token"));
+
+  const [mode, setMode] = useState(() => {
+    if (getUrlParam("reset_token"))  return "reset";
+    if (getUrlParam("verify_token")) return "verifying";
+    return "login";
+  });
+
   const [form, setForm] = useState({
     email: "", password: "", username: "", first_name: "", last_name: "", new_password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError]     = useState(null);
   const [success, setSuccess] = useState(null);
+
+  // Automatisch verifizieren wenn verify_token in URL
+  useEffect(() => {
+    if (mode !== "verifying" || !verifyToken) return;
+    verifyEmail(verifyToken)
+      .then(() => {
+        window.history.replaceState({}, "", "/");
+        setSuccess("E-Mail erfolgreich bestätigt! Du kannst dich jetzt anmelden.");
+        setMode("login");
+      })
+      .catch((err) => {
+        window.history.replaceState({}, "", "/");
+        setError(err.message);
+        setMode("login");
+      });
+  }, [mode, verifyToken]);
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -40,13 +62,11 @@ export default function AuthPage({ onAuth }) {
         onAuth(result.user);
 
       } else if (mode === "register") {
-        const result = await register({
+        await register({
           email: form.email, password: form.password,
           username: form.username, first_name: form.first_name, last_name: form.last_name,
         });
-        localStorage.setItem("token", result.access_token);
-        localStorage.setItem("user", JSON.stringify(result.user));
-        onAuth(result.user);
+        setMode("verify-pending");
 
       } else if (mode === "forgot") {
         await forgotPassword(form.email);
@@ -63,6 +83,39 @@ export default function AuthPage({ onAuth }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  // ── Verify pending screen ─────────────────────────────────────────────────
+  if (mode === "verify-pending") {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="auth-logo">✉️</div>
+          <h1 className="auth-title">E-Mail bestätigen</h1>
+          <p className="auth-sub" style={{ textAlign: "center", marginTop: "0.5rem", lineHeight: 1.6 }}>
+            Wir haben dir einen Bestätigungslink geschickt.<br />
+            Bitte prüfe dein Postfach und klicke auf den Link, um deinen Account zu aktivieren.
+          </p>
+          <button className="auth-link" style={{ marginTop: "1.5rem" }} onClick={() => switchMode("login")}>
+            Zurück zum Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Verifying screen (kurz sichtbar während JWT geprüft wird) ─────────────
+  if (mode === "verifying") {
+    return (
+      <div className="auth-page">
+        <div className="auth-card">
+          <div className="auth-logo">🧪</div>
+          <h1 className="auth-title">Test-Buddy</h1>
+          <p className="auth-sub" style={{ textAlign: "center" }}>E-Mail wird bestätigt…</p>
+          <span className="loading-spinner" style={{ margin: "1.5rem auto", display: "block", width: 28, height: 28 }} />
+        </div>
+      </div>
+    );
   }
 
   return (
