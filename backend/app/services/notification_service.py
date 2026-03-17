@@ -14,7 +14,7 @@ SMTP_USER     = os.getenv("SMTP_USER")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 FROM_ADDRESS  = os.getenv("NOTIFICATION_FROM", SMTP_USER)
 
-TEMPLATE_DIR = Path(__file__).parent.parent.parent.parent / "frontend" / "templates"
+TEMPLATE_DIR = Path(__file__).parent.parent.parent / "templates"
 env = Environment(loader=FileSystemLoader(str(TEMPLATE_DIR)))
 
 def _send_mail(to: str, subject: str, html_body: str):
