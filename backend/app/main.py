@@ -1,20 +1,24 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import containers, notifications, auth, user_templates, team_templates, teams
+from starlette.staticfiles import StaticFiles
+from app.routers import containers, notifications, auth, user_templates, team_templates, teams, marketplace
 from app.database import engine
 from app.models import user as user_model
 from app.models import template as template_model
 from app.models import team_template as team_template_model
 from app.models import team as team_model
+from app.models import marketplace as marketplace_model
 from app.services import docker_service
 
 user_model.Base.metadata.create_all(bind=engine)
 template_model.Base.metadata.create_all(bind=engine)
 team_model.Base.metadata.create_all(bind=engine)
 team_template_model.Base.metadata.create_all(bind=engine)
+marketplace_model.Base.metadata.create_all(bind=engine)
 
 def _run_migrations():
     user_cols = [
@@ -78,6 +82,11 @@ app.include_router(notifications.router)
 app.include_router(user_templates.router)
 app.include_router(team_templates.router)
 app.include_router(teams.router)
+app.include_router(marketplace.router)
+
+UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads", "marketplace"))
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads/marketplace", StaticFiles(directory=UPLOAD_DIR), name="marketplace-uploads")
 
 @app.get("/health")
 def health():

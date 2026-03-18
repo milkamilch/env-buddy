@@ -402,3 +402,122 @@ export async function updateNotificationPrefs(prefs) {
   if (!res.ok) throw new Error(json.detail || "Fehler beim Speichern");
   return json;
 }
+
+// ── Marketplace ───────────────────────────────────────────────────────────────
+
+export async function fetchMarketplace({ search = "", sort = "newest" } = {}) {
+  const params = new URLSearchParams({ sort });
+  if (search) params.set("search", search);
+  const res = await apiFetch(`${BASE}/api/marketplace/?${params}`);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function fetchMarketplaceTemplate(id) {
+  const res = await apiFetch(`${BASE}/api/marketplace/${id}`);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function publishTemplate(data) {
+  const res = await apiFetch(`${BASE}/api/marketplace/`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Veröffentlichen");
+  return json;
+}
+
+export async function deleteMarketplaceTemplate(id) {
+  const res = await apiFetch(`${BASE}/api/marketplace/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Löschen");
+  return json;
+}
+
+export async function rateMarketplaceTemplate(id, rating) {
+  const res = await apiFetch(`${BASE}/api/marketplace/${id}/rate`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ rating }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Bewerten");
+  return json;
+}
+
+export async function fetchMarketplaceComments(id) {
+  const res = await apiFetch(`${BASE}/api/marketplace/${id}/comments`);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function addMarketplaceComment(id, content) {
+  const res = await apiFetch(`${BASE}/api/marketplace/${id}/comments`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ content }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Kommentieren");
+  return json;
+}
+
+export async function deleteMarketplaceComment(templateId, commentId) {
+  const res = await apiFetch(`${BASE}/api/marketplace/${templateId}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Löschen");
+  return json;
+}
+
+export async function fetchMarketplaceImages(id) {
+  const res = await apiFetch(`${BASE}/api/marketplace/${id}/images`);
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function uploadMarketplaceImage(id, file) {
+  const token = localStorage.getItem("token");
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await apiFetch(`${BASE}/api/marketplace/${id}/images`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Upload");
+  return json;
+}
+
+export async function deleteMarketplaceImage(templateId, imageId) {
+  const res = await apiFetch(`${BASE}/api/marketplace/${templateId}/images/${imageId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Löschen");
+  return json;
+}
+
+export async function importMarketplaceTemplate(id) {
+  const res = await apiFetch(`${BASE}/api/marketplace/${id}/import`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Importieren");
+  return json;
+}

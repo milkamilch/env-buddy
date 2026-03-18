@@ -4,6 +4,7 @@ import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import TemplatesPage from "./pages/TemplatesPage";
 import TeamsPage from "./pages/TeamsPage";
+import MarketplacePage from "./pages/MarketplacePage";
 import ProfileModal from "./components/ProfileModal";
 import "./App.css";
 
@@ -174,6 +175,12 @@ export default function App() {
           >
             Teams
           </button>
+          <button
+            className={`nav-btn ${page === "marketplace" ? "active" : ""}`}
+            onClick={() => setPage("marketplace")}
+          >
+            Marketplace
+          </button>
         </nav>
 
         <div className="header-badge">
@@ -202,6 +209,8 @@ export default function App() {
         <TemplatesPage />
       ) : page === "teams" ? (
         <TeamsPage user={user} />
+      ) : page === "marketplace" ? (
+        <MarketplacePage user={user} />
       ) : (
         <DashboardPage
           containers={containers}
