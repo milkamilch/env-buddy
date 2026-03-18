@@ -52,7 +52,8 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const remaining = useCountdown(isRunning ? container.stops_at : null);
   const isExpiringSoon = remaining != null && remaining > 0 && remaining <= 300;
 
-  const icon = TEMPLATE_ICONS[container.template] || "📦";
+  const templateBase = (container.template || "").split(":")[0].split("/").pop().toLowerCase();
+  const icon = TEMPLATE_ICONS[templateBase] || "📦";
   const cpuColor = container.cpu_percent > 80 ? "#f38ba8" : container.cpu_percent > 50 ? "#fab387" : "#a6e3a1";
   const ramColor = container.ram_percent > 80 ? "#f38ba8" : container.ram_percent > 50 ? "#fab387" : "#a6e3a1";
 
