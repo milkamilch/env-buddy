@@ -274,6 +274,8 @@ def start_stack_from_configs(configs: list, stack_name: str, duration_minutes: i
                               user_id: int | None = None):
     """Start a stack from a list of container config dicts."""
     stack_id = uuid.uuid4().hex[:8]
+    network_name = f"testbuddy-{stack_id}"
+    network = client.networks.create(network_name, driver="bridge")
     started = []
     try:
         for config in configs:
@@ -286,6 +288,8 @@ def start_stack_from_configs(configs: list, stack_name: str, duration_minutes: i
                 environment=config.get("env", {}),
                 ports={f"{config['internal_port']}/tcp": free_port},
                 detach=True,
+                network=network_name,
+                hostname=service_name,
                 labels={
                     "managed-by": "test-buddy",
                     "started-at": datetime.utcnow().isoformat(),
@@ -293,10 +297,12 @@ def start_stack_from_configs(configs: list, stack_name: str, duration_minutes: i
                     "template": service_name,
                     "stack-id": stack_id,
                     "stack-name": stack_name,
+                    "stack-network": network_name,
                     "port": str(free_port),
                     "user-id": str(user_id) if user_id else "",
                 },
             )
+            network.connect(container, aliases=[service_name])
             started.append({
                 "id": container.id[:12],
                 "name": container_name,
@@ -311,8 +317,12 @@ def start_stack_from_configs(configs: list, stack_name: str, duration_minutes: i
                 stop_container(c_info["id"])
             except Exception:
                 pass
+        try:
+            network.remove()
+        except Exception:
+            pass
         raise
-    return {"stack_id": stack_id, "stack_name": stack_name, "containers": started}
+    return {"stack_id": stack_id, "stack_name": stack_name, "network": network_name, "containers": started}
 
 
 def _container_stats(c):
@@ -442,6 +452,7 @@ def list_stacks(user_id: int | None = None):
             stacks[stack_id] = {
                 "stack_id": stack_id,
                 "stack_name": labels.get("stack-name", stack_id),
+                "network": labels.get("stack-network"),
                 "started_at": labels.get("started-at"),
                 "containers": [],
             }
@@ -461,10 +472,19 @@ def remove_stack(stack_id: str):
         all=True,
         filters={"label": f"stack-id={stack_id}"}
     )
+    network_name = None
     for c in containers:
+        if not network_name:
+            network_name = c.labels.get("stack-network")
         if c.status == "running":
             c.stop()
         c.remove()
+    if network_name:
+        try:
+            net = client.networks.get(network_name)
+            net.remove()
+        except Exception:
+            pass
     return {"message": f"Stack {stack_id} removed"}
 
 def start_stopped_stack(stack_id: str):
