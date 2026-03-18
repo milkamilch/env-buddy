@@ -163,7 +163,7 @@ function DetailModal({ tmpl, user, onClose, onImported, onDeleted }) {
             <span className="mp-publisher">von {detail.publisher_name}</span>
           </div>
           <div className="mp-detail-actions">
-            {user && user.id !== detail.user_id && (
+            {user && (
               <button className="btn-import" onClick={handleImport}>⬇ Importieren</button>
             )}
             {user && user.id === detail.user_id && (
