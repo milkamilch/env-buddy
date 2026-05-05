@@ -33,15 +33,28 @@ Nach Ablauf eines konfigurierbaren Timers werden die Umgebungen automatisch wied
 ## ✨ Features
 
 ### Container-Verwaltung
-- ▶️ Container per Klick starten (aus vordefinierten Templates)
+- ▶️ Container per Klick starten (aus eigenen oder Team-Templates)
 - ⏹️ Container manuell stoppen
 - 📊 Live CPU- und RAM-Auslastung pro Container
 - 🔍 Suche & Filter nach Template und Status
+- 📝 Container-Logs live einsehen
+- ✏️ Laufende Container bearbeiten
+
+### Templates
+- 👤 Eigene Templates erstellen, bearbeiten und als Favoriten markieren
+- 👥 Team-Templates teilen und gemeinsam verwalten
+- 🛒 Marketplace: Community-Templates mit Bewertungen, Kommentaren und Bildern
+
+### Teams
+- 👥 Teams erstellen und Mitglieder einladen
+- 🔐 Rollen: Owner, Admin, Member
+- 📦 Team-eigene Template-Bibliothek
 
 ### Authentifizierung
 - 👤 Registrierung mit Name, Vorname, Benutzername & E-Mail
 - 🔐 Login mit JWT-Token (24h gültig)
 - 🔑 Passwort zurücksetzen per E-Mail
+- 👁️ Profilverwaltung
 
 ### Notifications
 - 📧 Willkommens-E-Mail bei Registrierung
@@ -135,9 +148,23 @@ FRONTEND_URL=http://localhost:5173
 
 ## ▶️ Projekt lokal starten
 
-Das Projekt benötigt **zwei Terminals** — eines für Backend, eines für Frontend.
+### Empfohlen: Ein-Befehl-Start (vom Projektroot)
 
-### Terminal 1 — Backend
+```bash
+./start.sh
+```
+
+Das Skript startet Backend und Frontend automatisch in einem einzigen Terminal und beendet beide Prozesse sauber mit `Ctrl+C`.
+
+✅ Backend läuft auf: **http://localhost:8000**  
+✅ Frontend läuft auf: **http://localhost:5173**  
+📖 Swagger UI (API-Doku): **http://localhost:8000/docs**
+
+> Die SQLite-Datenbank (`backend/testbuddy.db`) wird beim ersten Start automatisch erstellt.
+
+### Alternativ: Manuell mit zwei Terminals
+
+**Terminal 1 — Backend**
 
 ```bash
 cd backend
@@ -152,19 +179,12 @@ source venv/bin/activate
 uvicorn app.main:app --reload
 ```
 
-✅ Backend läuft auf: **http://localhost:8000**
-📖 Swagger UI (API-Doku): **http://localhost:8000/docs**
-
-> Die SQLite-Datenbank (`testbuddy.db`) wird beim ersten Start automatisch erstellt.
-
-### Terminal 2 — Frontend
+**Terminal 2 — Frontend**
 
 ```bash
 cd frontend
 npm run dev
 ```
-
-✅ Frontend läuft auf: **http://localhost:5173**
 
 ### Docker prüfen
 
@@ -201,6 +221,63 @@ Nach dem Start des Backends ist die interaktive Swagger-Doku erreichbar:
 | `GET` | `/api/containers/` | Alle laufenden Container auflisten |
 | `DELETE` | `/api/containers/{id}` | Container stoppen & entfernen |
 | `GET` | `/api/containers/{id}/stats` | Live CPU & RAM eines Containers |
+| `GET` | `/api/containers/{id}/logs` | Logs eines Containers abrufen |
+| `PUT` | `/api/containers/{id}` | Container-Konfiguration bearbeiten |
+
+### User Templates
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|--------------|
+| `GET` | `/api/user-templates/` | Eigene Templates abrufen |
+| `POST` | `/api/user-templates/` | Neues Template erstellen |
+| `DELETE` | `/api/user-templates/{id}` | Template löschen |
+| `GET` | `/api/user-templates/favorites` | Favorisierte Templates abrufen |
+| `PUT` | `/api/user-templates/favorites` | Favoriten aktualisieren |
+
+### Teams
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|--------------|
+| `GET` | `/api/teams/` | Eigene Teams abrufen |
+| `POST` | `/api/teams/` | Neues Team erstellen |
+| `DELETE` | `/api/teams/{id}` | Team löschen |
+| `GET` | `/api/teams/{id}/members` | Mitglieder eines Teams abrufen |
+| `POST` | `/api/teams/{id}/members` | Mitglied einladen |
+| `DELETE` | `/api/teams/{id}/members/{user_id}` | Mitglied entfernen |
+| `PUT` | `/api/teams/{id}/members/{user_id}/role` | Rolle eines Mitglieds ändern |
+| `GET` | `/api/teams/{id}/templates` | Team-Templates abrufen |
+| `POST` | `/api/teams/{id}/templates` | Template zum Team hinzufügen |
+| `PUT` | `/api/teams/{id}/templates/{tmpl_id}` | Team-Template bearbeiten |
+| `DELETE` | `/api/teams/{id}/templates/{tmpl_id}` | Team-Template entfernen |
+
+### Team Templates
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|--------------|
+| `GET` | `/api/team-templates/` | Alle Team-Templates (teamübergreifend) |
+
+### Marketplace
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|--------------|
+| `GET` | `/api/marketplace/` | Alle öffentlichen Templates abrufen |
+| `POST` | `/api/marketplace/` | Template veröffentlichen |
+| `GET` | `/api/marketplace/{id}` | Template-Details abrufen |
+| `DELETE` | `/api/marketplace/{id}` | Template entfernen |
+| `POST` | `/api/marketplace/{id}/rate` | Template bewerten |
+| `GET` | `/api/marketplace/{id}/comments` | Kommentare abrufen |
+| `POST` | `/api/marketplace/{id}/comments` | Kommentar hinzufügen |
+| `DELETE` | `/api/marketplace/{id}/comments/{cid}` | Kommentar löschen |
+| `POST` | `/api/marketplace/{id}/images` | Bild hochladen |
+| `GET` | `/api/marketplace/{id}/images` | Bilder abrufen |
+| `DELETE` | `/api/marketplace/{id}/images/{img_id}` | Bild löschen |
+| `POST` | `/api/marketplace/{id}/import` | Template in eigene Bibliothek importieren |
+
+### Notifications
+
+| Methode | Endpunkt | Beschreibung |
+|---------|----------|--------------|
+| `POST` | `/api/notifications/test` | Test-Benachrichtigung senden |
 
 ---
 
@@ -208,21 +285,41 @@ Nach dem Start des Backends ist die interaktive Swagger-Doku erreichbar:
 
 ```
 env-buddy-1/
+├── start.sh                            # Ein-Befehl-Start (Backend + Frontend)
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                     # FastAPI Einstiegspunkt
 │   │   ├── database.py                 # SQLite / SQLAlchemy Setup
+│   │   ├── auth_utils.py               # JWT-Hilfsfunktionen
 │   │   ├── routers/
 │   │   │   ├── auth.py                 # Login, Register, Passwort-Reset
 │   │   │   ├── containers.py           # Container-Endpunkte
-│   │   │   └── notifications.py        # Notifications-Endpunkte
+│   │   │   ├── notifications.py        # Notifications-Endpunkte
+│   │   │   ├── user_templates.py       # Eigene Templates
+│   │   │   ├── team_templates.py       # Team-Templates (teamübergreifend)
+│   │   │   ├── teams.py                # Teams & Mitglieder
+│   │   │   └── marketplace.py          # Marketplace mit Bewertungen & Kommentaren
 │   │   ├── services/
 │   │   │   ├── docker_service.py       # Docker SDK Logik
 │   │   │   └── notification_service.py # E-Mail Versand (SMTP)
 │   │   └── models/
 │   │       ├── container.py            # Container Pydantic-Modelle
-│   │       └── user.py                 # User DB-Modell & Schemas
-│   ├── venv/
+│   │       ├── user.py                 # User DB-Modell & Schemas
+│   │       ├── template.py             # Template-Modelle
+│   │       ├── team.py                 # Team-Modelle
+│   │       ├── team_template.py        # Team-Template-Modelle
+│   │       └── marketplace.py          # Marketplace-Modelle
+│   ├── templates/                      # HTML E-Mail Templates
+│   │   ├── welcome.html
+│   │   ├── verify_email.html
+│   │   ├── password_reset.html
+│   │   ├── container_started.html
+│   │   ├── container_stopped.html
+│   │   └── container_warning.html
+│   ├── uploads/marketplace/            # Hochgeladene Marketplace-Bilder
+│   ├── tests/
+│   │   ├── conftest.py
+│   │   └── test_auth.py
 │   ├── testbuddy.db                    # SQLite Datenbank (auto-erstellt)
 │   ├── .env                            # Umgebungsvariablen (nicht einchecken!)
 │   └── requirements.txt
@@ -230,20 +327,26 @@ env-buddy-1/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── ContainerCard.jsx       # Container-Karte mit Stats & Stop
-│   │   │   └── StartForm.jsx           # Template-Auswahl & Laufzeit
+│   │   │   ├── ContainerEditModal.jsx  # Container bearbeiten
+│   │   │   ├── ContainerLogsModal.jsx  # Container-Logs anzeigen
+│   │   │   ├── CreateTemplateModal.jsx # Neues Template erstellen
+│   │   │   ├── DashboardStats.jsx      # Statistik-Übersicht
+│   │   │   ├── ProfileModal.jsx        # Profilverwaltung
+│   │   │   ├── StackCard.jsx           # Marketplace-Template-Karte
+│   │   │   ├── StartForm.jsx           # Template-Auswahl & Laufzeit
+│   │   │   ├── TeamStackBuilder.jsx    # Team-Template zusammenstellen
+│   │   │   └── Toast.jsx               # Benachrichtigungen
 │   │   ├── pages/
-│   │   │   └── AuthPage.jsx            # Login / Register / Passwort-Reset
+│   │   │   ├── AuthPage.jsx            # Login / Register / Passwort-Reset
+│   │   │   ├── DashboardPage.jsx       # Haupt-Dashboard mit Container-Verwaltung
+│   │   │   ├── MarketplacePage.jsx     # Community-Templates
+│   │   │   ├── TeamsPage.jsx           # Team-Verwaltung
+│   │   │   └── TemplatesPage.jsx       # Eigene Templates verwalten
 │   │   ├── services/
 │   │   │   └── api.js                  # Alle API-Aufrufe
-│   │   └── App.jsx                     # Haupt-Dashboard
+│   │   └── App.jsx                     # Router & Navigation
 │   └── package.json
-├── templates/                          # HTML E-Mail Templates
-│   ├── welcome.html                    # Willkommens-Mail
-│   ├── password_reset.html             # Passwort-Reset-Mail
-│   ├── container_started.html          # Container gestartet
-│   └── container_warning.html          # Container läuft ab
-├── .gitignore
-└── README.md
+└── .gitignore
 ```
 
 ---
@@ -258,6 +361,8 @@ env-buddy-1/
 | `mongo` | mongo:6 | 27017 |
 
 > Ports werden dynamisch im Bereich 10000–11000 zugewiesen – keine Konflikte mit laufenden Diensten!
+
+Eigene Templates können über das **Templates**-Tab oder den **Marketplace** hinzugefügt werden.
 
 ---
 
