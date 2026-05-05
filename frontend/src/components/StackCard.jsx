@@ -133,6 +133,11 @@ export default function StackCard({ stack, onStopped, viewMode = "grid" }) {
               </span>
             )}
           </div>
+          {stack.network && (
+            <span className="stack-network" title="Internes Docker-Netzwerk — Container erreichbar via service_name:port">
+              🔗 {stack.network}
+            </span>
+          )}
         </div>
 
         <div className="stack-actions">

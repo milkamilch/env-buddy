@@ -77,6 +77,14 @@
   color: var(--subtext0);
 }
 
+.stack-network {
+  font-size: 0.72rem;
+  color: var(--subtext0);
+  font-family: monospace;
+  margin-top: 0.15rem;
+  opacity: 0.75;
+}
+
 .countdown-urgent {
   color: var(--peach);
   font-weight: 600;
