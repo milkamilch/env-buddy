@@ -2,6 +2,14 @@ import docker
 import uuid
 from datetime import datetime, timezone, timedelta
 
+
+def _handle_docker_api_error(e: docker.errors.APIError, port: int | None = None) -> None:
+    msg = str(e).lower()
+    if "port is already allocated" in msg or "address already in use" in msg or "bind for" in msg:
+        hint = f" (Port {port})" if port else ""
+        raise ValueError(f"Port{hint} ist bereits belegt. Wähle einen anderen Host-Port.")
+    raise e
+
 client = docker.from_env()
 
 _warned_containers: set = set()
@@ -226,7 +234,10 @@ def start_container(template_name: str, duration_minutes: int = 60,
     if mem_limit:
         run_kwargs["mem_limit"] = mem_limit
 
-    container = client.containers.run(**run_kwargs)
+    try:
+        container = client.containers.run(**run_kwargs)
+    except docker.errors.APIError as e:
+        _handle_docker_api_error(e, actual_port)
 
     return {
         "id": container.id[:12],
@@ -245,21 +256,24 @@ def start_container_from_config(config: dict, duration_minutes: int,
     service_name = config.get("service_name", "app")
     actual_name = f"testbuddy-{service_name}-{uuid.uuid4().hex[:6]}"
 
-    container = client.containers.run(
-        image=config["image"],
-        name=actual_name,
-        environment=config.get("env", {}),
-        ports={f"{config['internal_port']}/tcp": actual_port},
-        detach=True,
-        labels={
-            "managed-by": "test-buddy",
-            "started-at": datetime.utcnow().isoformat(),
-            "duration-minutes": str(duration_minutes),
-            "template": template_label,
-            "port": str(actual_port),
-            "user-id": str(user_id) if user_id else "",
-        },
-    )
+    try:
+        container = client.containers.run(
+            image=config["image"],
+            name=actual_name,
+            environment=config.get("env", {}),
+            ports={f"{config['internal_port']}/tcp": actual_port},
+            detach=True,
+            labels={
+                "managed-by": "test-buddy",
+                "started-at": datetime.utcnow().isoformat(),
+                "duration-minutes": str(duration_minutes),
+                "template": template_label,
+                "port": str(actual_port),
+                "user-id": str(user_id) if user_id else "",
+            },
+        )
+    except docker.errors.APIError as e:
+        _handle_docker_api_error(e, actual_port)
     return {
         "id": container.id[:12],
         "name": actual_name,
@@ -283,26 +297,29 @@ def start_stack_from_configs(configs: list, stack_name: str, duration_minutes: i
             service_name = config.get("service_name", "app")
             free_port = config.get("host_port") or get_free_port()
             container_name = config.get("container_name") or f"testbuddy-{service_name}-{uuid.uuid4().hex[:6]}"
-            container = client.containers.run(
-                image=config["image"],
-                name=container_name,
-                environment=config.get("env", {}),
-                ports={f"{config['internal_port']}/tcp": free_port},
-                detach=True,
-                network=network_name,
-                hostname=service_name,
-                labels={
-                    "managed-by": "test-buddy",
-                    "started-at": datetime.utcnow().isoformat(),
-                    "duration-minutes": str(duration_minutes),
-                    "template": service_name,
-                    "stack-id": stack_id,
-                    "stack-name": stack_name,
-                    "stack-network": network_name,
-                    "port": str(free_port),
-                    "user-id": str(user_id) if user_id else "",
-                },
-            )
+            try:
+                container = client.containers.run(
+                    image=config["image"],
+                    name=container_name,
+                    environment=config.get("env", {}),
+                    ports={f"{config['internal_port']}/tcp": free_port},
+                    detach=True,
+                    network=network_name,
+                    hostname=service_name,
+                    labels={
+                        "managed-by": "test-buddy",
+                        "started-at": datetime.utcnow().isoformat(),
+                        "duration-minutes": str(duration_minutes),
+                        "template": service_name,
+                        "stack-id": stack_id,
+                        "stack-name": stack_name,
+                        "stack-network": network_name,
+                        "port": str(free_port),
+                        "user-id": str(user_id) if user_id else "",
+                    },
+                )
+            except docker.errors.APIError as e:
+                _handle_docker_api_error(e, free_port)
             network.connect(container, aliases=[service_name])
             started.append({
                 "id": container.id[:12],
