@@ -21,6 +21,8 @@ class UserDB(Base):
     theme             = Column(String, default="dark")
     is_verified       = Column(Boolean, default=False)
     webhook_url       = Column(String, nullable=True)
+    avatar_url        = Column(String, nullable=True)
+    bio               = Column(Text, nullable=True)
 
 
 class RegisterRequest(BaseModel):
@@ -45,6 +47,8 @@ class UserResponse(BaseModel):
     notify_on_warning: bool = True
     theme:             str  = "dark"
     webhook_url:       str | None = None
+    avatar_url:        str | None = None
+    bio:               str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -66,3 +70,4 @@ class UpdateProfileRequest(BaseModel):
     username:     str | None = None
     email:        str | None = None
     new_password: str | None = None
+    bio:          str | None = None

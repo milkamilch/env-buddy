@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { fetchMe, updateNotificationPrefs, updateProfile, sendTestNotification } from "../services/api";
+import { fetchMe, updateNotificationPrefs, updateProfile, sendTestNotification, uploadAvatar } from "../services/api";
 import "./ProfileModal.css";
+
+const BASE = import.meta.env.VITE_API_URL || "";
 
 const PREFS = [
   { key: "notify_on_start",   label: "E-Mail bei Container-Start",              desc: "Wenn du einen Container oder Stack startest" },
@@ -28,7 +30,10 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
     username:   user.username   || "",
     email:      user.email      || "",
     new_password: "",
+    bio:        user.bio || "",
   });
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef(null);
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved,  setProfileSaved]  = useState(false);
   const [profileError,  setProfileError]  = useState(null);
@@ -72,6 +77,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
         username:   editProfile.username   || undefined,
         email:      editProfile.email      || undefined,
         new_password: editProfile.new_password || undefined,
+        bio:        editProfile.bio !== undefined ? editProfile.bio : undefined,
       };
       const updated = await updateProfile(payload);
       onUpdate(updated);
@@ -82,6 +88,20 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
       setProfileError(e.message);
     } finally {
       setProfileSaving(false);
+    }
+  }
+
+  async function handleAvatarUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    try {
+      const updated = await uploadAvatar(file);
+      onUpdate(updated);
+    } catch (err) {
+      setProfileError(err.message);
+    } finally {
+      setAvatarUploading(false);
     }
   }
 
@@ -124,7 +144,29 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
         </div>
 
         <div className="modal-body">
-          <div className="profile-section-label">Konto</div>
+          <div className="profile-section-label">Profilbild</div>
+          <div className="avatar-section">
+            <div className="avatar-preview" onClick={() => avatarInputRef.current?.click()} title="Klicken zum Ändern">
+              {user.avatar_url ? (
+                <img src={`${BASE}${user.avatar_url}`} alt="Avatar" className="avatar-img" />
+              ) : (
+                <div className="avatar-placeholder">
+                  {(user.first_name?.[0] || user.username?.[0] || "?").toUpperCase()}
+                </div>
+              )}
+              <div className="avatar-overlay">{avatarUploading ? "…" : "✎"}</div>
+            </div>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={handleAvatarUpload}
+            />
+            <span className="avatar-hint">JPG, PNG, GIF — max. 5 MB</span>
+          </div>
+
+          <div className="profile-section-label" style={{ marginTop: "1rem" }}>Konto</div>
           <div className="profile-edit-grid">
             <label className="profile-edit-label">Vorname</label>
             <input className="profile-edit-input" value={editProfile.first_name}
@@ -142,6 +184,10 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
             <input className="profile-edit-input" type="password" placeholder="Leer lassen = unverändert"
               value={editProfile.new_password}
               onChange={(e) => setEditProfile((p) => ({ ...p, new_password: e.target.value }))} />
+            <label className="profile-edit-label">Bio</label>
+            <textarea className="profile-edit-input profile-bio" rows={3} placeholder="Kurze Beschreibung (optional)"
+              value={editProfile.bio}
+              onChange={(e) => setEditProfile((p) => ({ ...p, bio: e.target.value }))} />
           </div>
           {profileError && <p className="modal-error">{profileError}</p>}
           <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>

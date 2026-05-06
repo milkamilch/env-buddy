@@ -413,6 +413,20 @@ export async function updateProfile(data) {
   return json;
 }
 
+export async function uploadAvatar(file) {
+  const token = localStorage.getItem("token");
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await apiFetch(`${BASE}/api/auth/me/avatar`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Upload fehlgeschlagen");
+  return json;
+}
+
 export async function updateNotificationPrefs(prefs) {
   const res = await apiFetch(`${BASE}/api/auth/me/notifications`, {
     method: "PUT",

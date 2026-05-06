@@ -1,7 +1,9 @@
 import os
+import uuid
 import threading
 from datetime import datetime, timedelta, timezone
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -184,6 +186,33 @@ def update_profile(req: UpdateProfileRequest, current_user: UserDB = Depends(get
         if len(req.new_password) < 6:
             raise HTTPException(status_code=400, detail="Passwort muss mindestens 6 Zeichen haben")
         current_user.hashed_password = pwd_context.hash(req.new_password)
+    if req.bio is not None:
+        current_user.bio = req.bio or None
+    db.commit()
+    db.refresh(current_user)
+    return UserResponse.model_validate(current_user)
+
+
+AVATAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads", "avatars"))
+
+@router.post("/me/avatar", response_model=UserResponse)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Nur Bilddateien erlaubt")
+    os.makedirs(AVATAR_DIR, exist_ok=True)
+    ext = os.path.splitext(file.filename)[1] or ".jpg"
+    filename = f"{current_user.id}_{uuid.uuid4().hex[:8]}{ext}"
+    path = os.path.join(AVATAR_DIR, filename)
+    content = await file.read()
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Maximale Dateigröße: 5 MB")
+    with open(path, "wb") as f:
+        f.write(content)
+    current_user.avatar_url = f"/uploads/avatars/{filename}"
     db.commit()
     db.refresh(current_user)
     return UserResponse.model_validate(current_user)
