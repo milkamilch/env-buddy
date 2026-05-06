@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { fetchAuditLog } from "../services/api";
+import "./AuditPage.css";
 
 const ACTION_ICONS = {
   started:      "▶",
@@ -41,73 +42,58 @@ export default function AuditPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const actions = ["alle", ...new Set(entries.map((e) => e.action))];
+  const actions = useMemo(
+    () => ["alle", ...new Set(entries.map((e) => e.action))],
+    [entries]
+  );
+
   const filtered = filter === "alle" ? entries : entries.filter((e) => e.action === filter);
 
   return (
-    <div style={{ padding: "1.5rem", maxWidth: "900px", margin: "0 auto" }}>
-      <h2 style={{ marginBottom: "1rem", color: "var(--text-primary, #cdd6f4)" }}>Verlauf</h2>
+    <div className="audit-page">
+      <h2 className="audit-title">Verlauf</h2>
 
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+      <div className="audit-filters">
         {actions.map((a) => (
           <button
             key={a}
+            className={`audit-filter-btn ${filter === a ? "active" : ""}`}
             onClick={() => setFilter(a)}
-            style={{
-              padding: "0.3rem 0.75rem",
-              borderRadius: "1rem",
-              border: "1px solid var(--border, #45475a)",
-              background: filter === a ? "var(--accent, #89b4fa)" : "transparent",
-              color: filter === a ? "#1e1e2e" : "var(--text-primary, #cdd6f4)",
-              cursor: "pointer",
-              fontSize: "0.8rem",
-              fontWeight: filter === a ? 700 : 400,
-            }}
           >
             {a === "alle" ? "Alle" : (ACTION_LABELS[a] || a)}
           </button>
         ))}
       </div>
 
-      {loading && <p style={{ color: "var(--text-muted, #6c7086)" }}>Lädt…</p>}
-      {error   && <p style={{ color: "#f38ba8" }}>Fehler: {error}</p>}
+      {loading && <p className="audit-empty">Lädt…</p>}
+      {error   && <p className="audit-error">Fehler: {error}</p>}
 
       {!loading && !error && filtered.length === 0 && (
-        <p style={{ color: "var(--text-muted, #6c7086)" }}>Keine Einträge.</p>
+        <p className="audit-empty">Keine Einträge.</p>
       )}
 
       {!loading && filtered.length > 0 && (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.875rem" }}>
+        <table className="audit-table">
           <thead>
-            <tr style={{ borderBottom: "1px solid var(--border, #45475a)", color: "var(--text-muted, #6c7086)" }}>
-              <th style={{ textAlign: "left", padding: "0.5rem 0.75rem" }}>Zeit</th>
-              <th style={{ textAlign: "left", padding: "0.5rem 0.75rem" }}>Aktion</th>
-              <th style={{ textAlign: "left", padding: "0.5rem 0.75rem" }}>Container</th>
-              <th style={{ textAlign: "left", padding: "0.5rem 0.75rem" }}>Template</th>
-              <th style={{ textAlign: "left", padding: "0.5rem 0.75rem" }}>Details</th>
+            <tr>
+              <th>Zeit</th>
+              <th>Aktion</th>
+              <th>Container</th>
+              <th>Template</th>
+              <th>Details</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((e) => (
-              <tr key={e.id} style={{ borderBottom: "1px solid var(--border, #313244)" }}>
-                <td style={{ padding: "0.5rem 0.75rem", color: "var(--text-muted, #6c7086)", whiteSpace: "nowrap" }}>
-                  {formatDate(e.created_at)}
+              <tr key={e.id}>
+                <td className="audit-td audit-td-time">{formatDate(e.created_at)}</td>
+                <td className="audit-td audit-td-action">
+                  <span className="audit-td-action-icon">{ACTION_ICONS[e.action] || "•"}</span>
+                  {ACTION_LABELS[e.action] || e.action}
                 </td>
-                <td style={{ padding: "0.5rem 0.75rem" }}>
-                  <span style={{ marginRight: "0.35rem" }}>{ACTION_ICONS[e.action] || "•"}</span>
-                  <span style={{ color: "var(--text-primary, #cdd6f4)" }}>
-                    {ACTION_LABELS[e.action] || e.action}
-                  </span>
-                </td>
-                <td style={{ padding: "0.5rem 0.75rem", fontFamily: "monospace", color: "var(--text-primary, #cdd6f4)" }}>
-                  {e.container_name || "—"}
-                </td>
-                <td style={{ padding: "0.5rem 0.75rem", color: "var(--text-muted, #6c7086)" }}>
-                  {e.template || "—"}
-                </td>
-                <td style={{ padding: "0.5rem 0.75rem", color: "var(--text-muted, #6c7086)" }}>
-                  {e.extra || "—"}
-                </td>
+                <td className="audit-td audit-td-name">{e.container_name || "—"}</td>
+                <td className="audit-td audit-td-muted">{e.template || "—"}</td>
+                <td className="audit-td audit-td-muted">{e.extra || "—"}</td>
               </tr>
             ))}
           </tbody>
