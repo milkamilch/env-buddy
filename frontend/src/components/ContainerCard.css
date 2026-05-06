@@ -169,6 +169,12 @@
   transition: width 0.4s ease;
 }
 
+.stat-sparklines {
+  display: flex;
+  gap: 0.5rem;
+  padding-top: 0.15rem;
+}
+
 .stat-value {
   font-size: 0.78rem;
   font-weight: 600;

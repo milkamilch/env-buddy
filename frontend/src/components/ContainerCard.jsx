@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
@@ -16,6 +16,36 @@ const TEMPLATE_ICONS = {
   gitea: "🐱", prometheus: "🔥", grafana: "📊", jaeger: "🔭", sonarqube: "🧹",
   registry: "📦", verdaccio: "📦",
 };
+
+const HISTORY_MAX = 30;
+
+function useStatsHistory(container) {
+  const histRef = useRef([]);
+  useEffect(() => {
+    if (container.status !== "running") return;
+    histRef.current = [
+      ...histRef.current,
+      { cpu: container.cpu_percent ?? 0, ram: container.ram_percent ?? 0 },
+    ].slice(-HISTORY_MAX);
+  }, [container.cpu_percent, container.ram_percent, container.status]);
+  return histRef.current;
+}
+
+function Sparkline({ values, color, width = 80, height = 22 }) {
+  if (values.length < 2) return null;
+  const max = Math.max(...values, 1);
+  const step = width / (HISTORY_MAX - 1);
+  const pts = values.map((v, i) => {
+    const x = (HISTORY_MAX - values.length + i) * step;
+    const y = height - (v / max) * (height - 2) - 1;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+  return (
+    <svg width={width} height={height} style={{ display: "block", overflow: "visible" }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" opacity="0.85" />
+    </svg>
+  );
+}
 
 function useCountdown(stopsAt) {
   const [remaining, setRemaining] = useState(null);
@@ -56,6 +86,8 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
   const isExpiringSoon = remaining != null && remaining > 0 && remaining <= 300;
+
+  const statsHistory = useStatsHistory(container);
 
   const HEALTH_COLOR = { healthy: "#a6e3a1", unhealthy: "#f38ba8", starting: "#fab387", none: "transparent" };
   const HEALTH_TITLE = { healthy: "healthy", unhealthy: "unhealthy", starting: "starting…", none: "" };
@@ -334,6 +366,12 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
               </div>
               <div className="stat-value" style={{ color: ramColor }}>{container.ram_mb} MB</div>
             </div>
+            {statsHistory.length >= 2 && (
+              <div className="stat-sparklines">
+                <Sparkline values={statsHistory.map((p) => p.cpu)} color={cpuColor} />
+                <Sparkline values={statsHistory.map((p) => p.ram)} color={ramColor} />
+              </div>
+            )}
           </div>
         )}
       </div>
