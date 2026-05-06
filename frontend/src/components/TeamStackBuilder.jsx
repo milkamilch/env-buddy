@@ -34,6 +34,8 @@ export default function TeamStackBuilder({ teamId, onCreated, onClose, initialTe
     }));
   });
   const [dragOver, setDragOver] = useState(false);
+  const [dragSrcId, setDragSrcId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState(null);
@@ -105,8 +107,38 @@ export default function TeamStackBuilder({ teamId, onCreated, onClose, initialTe
   async function handleDrop(e) {
     e.preventDefault();
     setDragOver(false);
+    if (e.dataTransfer.getData("tsb-reorder")) return; // handled by item onDrop
     const key = e.dataTransfer.getData("tsb-key");
     if (key) await addFromKey(key);
+  }
+
+  function handleItemDragStart(e, id) {
+    e.dataTransfer.setData("tsb-reorder", id);
+    e.dataTransfer.effectAllowed = "move";
+    setDragSrcId(id);
+  }
+
+  function handleItemDragOver(e, id) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (id !== dragSrcId) setDragOverId(id);
+  }
+
+  function handleItemDrop(e, targetId) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverId(null);
+    setDragSrcId(null);
+    if (!dragSrcId || dragSrcId === targetId) return;
+    setItems((prev) => {
+      const srcIdx = prev.findIndex((c) => c._id === dragSrcId);
+      const tgtIdx = prev.findIndex((c) => c._id === targetId);
+      if (srcIdx === -1 || tgtIdx === -1) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(srcIdx, 1);
+      next.splice(tgtIdx, 0, moved);
+      return next;
+    });
   }
 
   // ── Item helpers ──────────────────────────────────────────────────────────
@@ -252,8 +284,18 @@ export default function TeamStackBuilder({ teamId, onCreated, onClose, initialTe
                 <p className="tsb-dz-hint">Templates hierher ziehen oder oben klicken</p>
               ) : (
                 items.map((c) => (
-                  <div key={c._id} className="tsb-item">
+                  <div
+                    key={c._id}
+                    className={`tsb-item ${dragOverId === c._id ? "tsb-item-drag-over" : ""} ${dragSrcId === c._id ? "tsb-item-dragging" : ""}`}
+                    draggable
+                    onDragStart={(e) => handleItemDragStart(e, c._id)}
+                    onDragOver={(e) => handleItemDragOver(e, c._id)}
+                    onDragLeave={() => setDragOverId(null)}
+                    onDrop={(e) => handleItemDrop(e, c._id)}
+                    onDragEnd={() => { setDragSrcId(null); setDragOverId(null); }}
+                  >
                     <div className="tsb-item-header">
+                      <span className="tsb-item-drag-handle" title="Ziehen zum Neuanordnen">⠿</span>
                       <span className="tsb-item-icon">{c._icon}</span>
                       <span className="tsb-item-name">{c.service_name}</span>
                       <span className="tsb-item-image">{c.image}</span>
