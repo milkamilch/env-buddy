@@ -343,6 +343,14 @@ def start_stack_from_configs(configs: list, stack_name: str, duration_minutes: i
     return {"stack_id": stack_id, "stack_name": stack_name, "network": network_name, "containers": started}
 
 
+def _health_status(c) -> str:
+    try:
+        health = c.attrs.get("State", {}).get("Health", {})
+        return health.get("Status", "none") if health else "none"
+    except Exception:
+        return "none"
+
+
 def _container_stats(c):
     if c.status != "running":
         return 0.0, 0.0, 0.0
@@ -385,6 +393,7 @@ def list_containers(user_id: int | None = None):
             "template": labels.get("template", "unknown"),
             "port": int(labels["port"]) if labels.get("port") else None,
             "status": c.status,
+            "health": _health_status(c),
             "started_at": started_at,
             "stops_at": stops_at,
             "cpu_percent": cpu_percent,
@@ -462,6 +471,7 @@ def list_stacks(user_id: int | None = None):
             "template": labels.get("template", "unknown"),
             "port": int(labels["port"]) if labels.get("port") else None,
             "status": c.status,
+            "health": _health_status(c),
             "started_at": started_at,
             "stops_at": stops_at,
             "cpu_percent": cpu_percent,

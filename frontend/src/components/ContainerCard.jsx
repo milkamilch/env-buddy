@@ -57,6 +57,12 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const remaining = useCountdown(isRunning ? container.stops_at : null);
   const isExpiringSoon = remaining != null && remaining > 0 && remaining <= 300;
 
+  const HEALTH_COLOR = { healthy: "#a6e3a1", unhealthy: "#f38ba8", starting: "#fab387", none: "transparent" };
+  const HEALTH_TITLE = { healthy: "healthy", unhealthy: "unhealthy", starting: "starting…", none: "" };
+  const health = container.health || "none";
+  const healthColor = HEALTH_COLOR[health] ?? "transparent";
+  const healthTitle = HEALTH_TITLE[health] ?? "";
+
   const templateBase = (container.template || "").split(":")[0].split("/").pop().toLowerCase();
   const icon = TEMPLATE_ICONS[templateBase] || "📦";
   const cpuColor = container.cpu_percent > 80 ? "#f38ba8" : container.cpu_percent > 50 ? "#fab387" : "#a6e3a1";
@@ -210,6 +216,12 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           <div className="row-info-sm">
             <span className="row-name-sm">{container.name}</span>
             <span className={`row-status-sm status-${container.status}`}>{container.status}</span>
+            {health !== "none" && (
+              <span title={`Health: ${healthTitle}`} style={{
+                width: "0.5rem", height: "0.5rem", borderRadius: "50%",
+                background: healthColor, display: "inline-block", flexShrink: 0,
+              }} />
+            )}
           </div>
           {container.port && <span className="row-port-sm">:{container.port}</span>}
           {container.started_by && <span className="row-started-by">👤 {container.started_by}</span>}
@@ -274,6 +286,12 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           <div className="card-title">
             <span className="card-name">{container.name}</span>
             <span className={`card-status status-${container.status}`}>{container.status}</span>
+            {health !== "none" && (
+              <span title={`Health: ${healthTitle}`} style={{
+                width: "0.55rem", height: "0.55rem", borderRadius: "50%",
+                background: healthColor, display: "inline-block", flexShrink: 0,
+              }} />
+            )}
           </div>
           {selectMode && (
             <input
