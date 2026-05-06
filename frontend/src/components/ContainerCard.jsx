@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { stopContainer, removeContainer, restartContainer, startStoppedContainer } from "../services/api";
+import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import { useToast } from "./Toast";
@@ -47,6 +47,8 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [editOpen, setEditOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [extendOpen, setExtendOpen] = useState(false);
+  const [extending, setExtending]   = useState(false);
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
@@ -56,6 +58,13 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const icon = TEMPLATE_ICONS[templateBase] || "📦";
   const cpuColor = container.cpu_percent > 80 ? "#f38ba8" : container.cpu_percent > 50 ? "#fab387" : "#a6e3a1";
   const ramColor = container.ram_percent > 80 ? "#f38ba8" : container.ram_percent > 50 ? "#fab387" : "#a6e3a1";
+
+  useEffect(() => {
+    if (!extendOpen) return;
+    function close() { setExtendOpen(false); }
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [extendOpen]);
 
   async function handleStop(e) {
     e.stopPropagation();
@@ -81,6 +90,21 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     finally { setRestarting(false); }
   }
 
+  async function handleExtend(e, minutes) {
+    e.stopPropagation();
+    setExtending(true);
+    try {
+      await extendContainer(container.id, minutes);
+      setExtendOpen(false);
+      onStopped();
+      toast.success(`+${minutes} Min. hinzugefügt`);
+    } catch (err) {
+      toast.error("Fehler: " + err.message);
+    } finally {
+      setExtending(false);
+    }
+  }
+
   async function handleRemove(e) {
     e.stopPropagation();
     if (!confirmDelete) { setConfirmDelete(true); return; }
@@ -96,6 +120,41 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
         <button className="btn-restart" onClick={handleRestart} disabled={restarting} title="Neustart">
           {restarting ? "…" : "↺ Neustart"}
         </button>
+      )}
+      {isRunning && (
+        <div style={{ position: "relative", display: "inline-block" }}>
+          <button
+            className="btn-restart"
+            onClick={(e) => { e.stopPropagation(); setExtendOpen((o) => !o); }}
+            disabled={extending}
+            title="Laufzeit verlängern"
+          >
+            ⏱+
+          </button>
+          {extendOpen && (
+            <div
+              style={{
+                position: "absolute", top: "110%", right: 0, zIndex: 100,
+                background: "var(--surface1)", border: "1px solid var(--border)",
+                borderRadius: "0.5rem", padding: "0.4rem", display: "flex",
+                flexDirection: "column", gap: "0.3rem", minWidth: "7rem",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {[15, 30, 60].map((m) => (
+                <button
+                  key={m}
+                  className="btn-restart"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  onClick={(e) => handleExtend(e, m)}
+                  disabled={extending}
+                >
+                  +{m} Min.
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
       {isRunning ? (
         <button className="btn-stop" onClick={handleStop} disabled={acting} title="Stoppen">

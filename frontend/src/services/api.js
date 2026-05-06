@@ -163,6 +163,16 @@ export async function restartContainer(containerId) {
   return res.json();
 }
 
+export async function extendContainer(containerId, extraMinutes = 30) {
+  const res = await apiFetch(`${BASE}/api/containers/${containerId}/extend`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ extra_minutes: extraMinutes }),
+  });
+  if (!res.ok) throw new Error("Failed to extend container");
+  return res.json();
+}
+
 export async function startStack(containers, stackName, duration_minutes) {
   const res = await apiFetch(`${BASE}/api/containers/stacks/start`, {
     method: "POST",
