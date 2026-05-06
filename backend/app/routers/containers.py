@@ -15,6 +15,14 @@ from app.services import docker_service
 from app.services.notification_service import notify_container_started
 from app.models.audit import AuditLogDB
 
+
+def _container_limit() -> int:
+    try:
+        return int(os.getenv("MAX_CONTAINERS_PER_USER", "10"))
+    except ValueError:
+        return 10
+
+
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 ALGORITHM = "HS256"
 _bearer = HTTPBearer(auto_error=False)
@@ -85,7 +93,7 @@ class StartStackRequest(BaseModel):
 def start(request: StartContainerRequest,
           current_user: UserDB = Depends(_get_required_user),
           db: Session = Depends(get_db)):
-    limit = int(os.getenv("MAX_CONTAINERS_PER_USER", "10"))
+    limit = _container_limit()
     if limit > 0:
         running = [c for c in docker_service.list_containers(user_id=current_user.id) if c["status"] == "running"]
         if len(running) >= limit:
@@ -158,6 +166,14 @@ def start(request: StartContainerRequest,
 @router.post("/stacks/start")
 def start_stack(request: StartStackRequest,
                 current_user: UserDB = Depends(_get_required_user)):
+    limit = _container_limit()
+    if limit > 0:
+        running = [c for c in docker_service.list_containers(user_id=current_user.id) if c["status"] == "running"]
+        if len(running) >= limit:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Limit erreicht: maximal {limit} laufende Container pro User."
+            )
     try:
         return docker_service.start_stack_from_configs(
             [c.model_dump() for c in request.containers],
@@ -214,7 +230,7 @@ def remove_stack(stack_id: str, current_user: UserDB = Depends(_get_required_use
 def system_info():
     info = docker_service.client.info()
     total_ram_mb = info["MemTotal"] // (1024 * 1024)
-    limit = int(os.getenv("MAX_CONTAINERS_PER_USER", "10"))
+    limit = _container_limit()
     return {"total_ram_mb": total_ram_mb, "max_containers_per_user": limit}
 
 
