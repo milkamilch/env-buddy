@@ -531,3 +531,11 @@ export async function importMarketplaceTemplate(id) {
   if (!res.ok) throw new Error(json.detail || "Fehler beim Importieren");
   return json;
 }
+
+// ── Audit ─────────────────────────────────────────────────────────────────
+
+export async function fetchAuditLog() {
+  const res = await apiFetch(`${BASE}/api/audit/`, { headers: authHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch audit log");
+  return res.json();
+}
