@@ -20,6 +20,29 @@
 .profile-info-key { color: var(--subtext0); }
 .profile-info-val { color: var(--text); font-weight: 500; }
 
+.profile-edit-grid {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: 0.45rem 0.75rem;
+  align-items: center;
+  font-size: 0.88rem;
+}
+.profile-edit-label { color: var(--subtext0); }
+.profile-edit-input {
+  background: var(--surface1, #313244);
+  border: 1px solid var(--border, #45475a);
+  border-radius: 0.4rem;
+  color: var(--text, #cdd6f4);
+  font-size: 0.88rem;
+  padding: 0.3rem 0.6rem;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.profile-edit-input:focus {
+  border-color: var(--accent, #89b4fa);
+}
+
 .profile-prefs {
   display: flex;
   flex-direction: column;

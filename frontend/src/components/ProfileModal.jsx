@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { fetchMe, updateNotificationPrefs, sendTestNotification } from "../services/api";
+import { fetchMe, updateNotificationPrefs, updateProfile, sendTestNotification } from "../services/api";
 import "./ProfileModal.css";
 
 const PREFS = [
@@ -21,6 +21,18 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
     notify_on_warning: user.notify_on_warning ?? true,
     theme:             user.theme ?? "dark",
   });
+  const [editProfile, setEditProfile] = useState({
+    first_name: user.first_name || "",
+    last_name:  user.last_name  || "",
+    username:   user.username   || "",
+    email:      user.email      || "",
+    new_password: "",
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaved,  setProfileSaved]  = useState(false);
+  const [profileError,  setProfileError]  = useState(null);
+  const profileTimerRef = useRef(null);
+
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
@@ -43,8 +55,33 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
     return () => {
       clearTimeout(saveTimerRef.current);
       clearTimeout(testTimerRef.current);
+      clearTimeout(profileTimerRef.current);
     };
   }, []);
+
+  async function handleProfileSave() {
+    setProfileSaving(true);
+    setProfileError(null);
+    setProfileSaved(false);
+    try {
+      const payload = {
+        first_name: editProfile.first_name || undefined,
+        last_name:  editProfile.last_name  || undefined,
+        username:   editProfile.username   || undefined,
+        email:      editProfile.email      || undefined,
+        new_password: editProfile.new_password || undefined,
+      };
+      const updated = await updateProfile(payload);
+      onUpdate(updated);
+      setProfileSaved(true);
+      setEditProfile((p) => ({ ...p, new_password: "" }));
+      profileTimerRef.current = setTimeout(() => setProfileSaved(false), 2000);
+    } catch (e) {
+      setProfileError(e.message);
+    } finally {
+      setProfileSaving(false);
+    }
+  }
 
   async function handleTestEmail() {
     setTestSending(true);
@@ -86,13 +123,29 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
 
         <div className="modal-body">
           <div className="profile-section-label">Konto</div>
-          <div className="profile-info-grid">
-            <span className="profile-info-key">Name</span>
-            <span className="profile-info-val">{user.first_name} {user.last_name}</span>
-            <span className="profile-info-key">Benutzername</span>
-            <span className="profile-info-val">@{user.username}</span>
-            <span className="profile-info-key">E-Mail</span>
-            <span className="profile-info-val">{user.email}</span>
+          <div className="profile-edit-grid">
+            <label className="profile-edit-label">Vorname</label>
+            <input className="profile-edit-input" value={editProfile.first_name}
+              onChange={(e) => setEditProfile((p) => ({ ...p, first_name: e.target.value }))} />
+            <label className="profile-edit-label">Nachname</label>
+            <input className="profile-edit-input" value={editProfile.last_name}
+              onChange={(e) => setEditProfile((p) => ({ ...p, last_name: e.target.value }))} />
+            <label className="profile-edit-label">Benutzername</label>
+            <input className="profile-edit-input" value={editProfile.username}
+              onChange={(e) => setEditProfile((p) => ({ ...p, username: e.target.value }))} />
+            <label className="profile-edit-label">E-Mail</label>
+            <input className="profile-edit-input" type="email" value={editProfile.email}
+              onChange={(e) => setEditProfile((p) => ({ ...p, email: e.target.value }))} />
+            <label className="profile-edit-label">Neues Passwort</label>
+            <input className="profile-edit-input" type="password" placeholder="Leer lassen = unverändert"
+              value={editProfile.new_password}
+              onChange={(e) => setEditProfile((p) => ({ ...p, new_password: e.target.value }))} />
+          </div>
+          {profileError && <p className="modal-error">{profileError}</p>}
+          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+            <button className="modal-btn-save" onClick={handleProfileSave} disabled={profileSaving}>
+              {profileSaving ? "Speichert…" : profileSaved ? "✓ Gespeichert" : "Profil speichern"}
+            </button>
           </div>
 
           <div className="profile-section-label" style={{ marginTop: "1.25rem" }}>Darstellung</div>

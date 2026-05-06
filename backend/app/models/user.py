@@ -56,3 +56,10 @@ class NotificationPrefsRequest(BaseModel):
     notify_on_stop:    bool
     notify_on_warning: bool
     theme:             str = "dark"
+
+class UpdateProfileRequest(BaseModel):
+    first_name:   str | None = None
+    last_name:    str | None = None
+    username:     str | None = None
+    email:        str | None = None
+    new_password: str | None = None

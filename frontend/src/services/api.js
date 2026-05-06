@@ -402,6 +402,17 @@ export async function fetchMe() {
   return json;
 }
 
+export async function updateProfile(data) {
+  const res = await apiFetch(`${BASE}/api/auth/me/profile`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Speichern");
+  return json;
+}
+
 export async function updateNotificationPrefs(prefs) {
   const res = await apiFetch(`${BASE}/api/auth/me/notifications`, {
     method: "PUT",

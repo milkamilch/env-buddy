@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 
 from app.database import get_db
-from app.models.user import UserDB, RegisterRequest, LoginRequest, TokenResponse, UserResponse, NotificationPrefsRequest
+from app.models.user import UserDB, RegisterRequest, LoginRequest, TokenResponse, UserResponse, NotificationPrefsRequest, UpdateProfileRequest
 from app.services.notification_service import send_welcome_email, send_password_reset_email, send_verification_email
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
@@ -164,6 +164,29 @@ def get_current_user(creds: HTTPAuthorizationCredentials = Security(_bearer), db
 @router.get("/me", response_model=UserResponse)
 def me(current_user: UserDB = Depends(get_current_user)):
     return current_user
+
+
+@router.put("/me/profile", response_model=UserResponse)
+def update_profile(req: UpdateProfileRequest, current_user: UserDB = Depends(get_current_user), db: Session = Depends(get_db)):
+    if req.username and req.username != current_user.username:
+        if db.query(UserDB).filter(UserDB.username == req.username, UserDB.id != current_user.id).first():
+            raise HTTPException(status_code=409, detail="Benutzername bereits vergeben")
+        current_user.username = req.username
+    if req.email and req.email != current_user.email:
+        if db.query(UserDB).filter(UserDB.email == req.email, UserDB.id != current_user.id).first():
+            raise HTTPException(status_code=409, detail="E-Mail bereits vergeben")
+        current_user.email = req.email
+    if req.first_name:
+        current_user.first_name = req.first_name
+    if req.last_name:
+        current_user.last_name = req.last_name
+    if req.new_password:
+        if len(req.new_password) < 6:
+            raise HTTPException(status_code=400, detail="Passwort muss mindestens 6 Zeichen haben")
+        current_user.hashed_password = pwd_context.hash(req.new_password)
+    db.commit()
+    db.refresh(current_user)
+    return UserResponse.model_validate(current_user)
 
 
 @router.put("/me/notifications")
