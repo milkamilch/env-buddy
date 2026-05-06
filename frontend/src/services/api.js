@@ -395,6 +395,19 @@ export async function fetchContainerLogs(containerId, tail = 200) {
   return res.json();
 }
 
+export async function downloadContainerDotenv(containerId, containerName) {
+  const res = await apiFetch(`${BASE}/api/containers/${containerId}/dotenv`, { headers: authHeaders() });
+  if (!res.ok) throw new Error("Fehler beim Laden der .env");
+  const text = await res.text();
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `.env.${containerName}`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export async function fetchMe() {
   const res = await apiFetch(`${BASE}/api/auth/me`, { headers: authHeaders() });
   const json = await res.json();

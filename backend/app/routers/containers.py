@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Security
@@ -392,5 +393,16 @@ def stats(container_id: str, current_user: UserDB = Depends(_get_required_user))
     _assert_owner(container_id, current_user)
     try:
         return docker_service.get_container_stats(container_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{container_id}/dotenv", response_class=PlainTextResponse)
+def get_dotenv(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
+    try:
+        content = docker_service.get_dotenv_content(container_id)
+        return PlainTextResponse(content, media_type="text/plain",
+                                 headers={"Content-Disposition": f'attachment; filename=".env"'})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -268,3 +268,40 @@
   width: 3.5rem;
   text-align: right;
 }
+
+.card-connection {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--surface1, #1e1e2e);
+  border: 1px solid var(--overlay0);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  overflow: hidden;
+}
+
+.card-conn-str {
+  flex: 1;
+  font-size: 0.7rem;
+  color: var(--subtext1, #a6adc8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: monospace;
+}
+
+.btn-copy-conn {
+  background: var(--overlay0);
+  border: none;
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 0.75rem;
+  padding: 0.2rem 0.45rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.btn-copy-conn:hover {
+  background: var(--overlay1);
+}

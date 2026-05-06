@@ -187,6 +187,52 @@ TEMPLATES = {
     },
 }
 
+_CONNECTION_STRING_TEMPLATES = {
+    "postgres":    "postgresql://envbuddy:envbuddy@localhost:{port}/testdb",
+    "timescaledb": "postgresql://envbuddy:envbuddy@localhost:{port}/testdb",
+    "mysql":       "mysql://root:envbuddy@localhost:{port}/testdb",
+    "mariadb":     "mysql://root:envbuddy@localhost:{port}/testdb",
+    "mongo":       "mongodb://localhost:{port}",
+    "redis":       "redis://localhost:{port}",
+    "elasticsearch": "http://localhost:{port}",
+    "neo4j":       "bolt://localhost:{port}",
+    "influxdb":    "http://localhost:{port}",
+    "couchdb":     "http://envbuddy:envbuddy@localhost:{port}",
+    "rabbitmq":    "amqp://envbuddy:envbuddy@localhost:{port}",
+    "kafka":       "localhost:{port}",
+    "nats":        "nats://localhost:{port}",
+    "mosquitto":   "mqtt://localhost:{port}",
+    "minio":       "http://localhost:{port}  (user: envbuddy, password: envbuddy123)",
+    "vault":       "http://localhost:{port}  (token: envbuddy)",
+}
+
+def get_connection_string(template_name: str, port: int) -> str | None:
+    tpl = _CONNECTION_STRING_TEMPLATES.get(template_name)
+    if tpl:
+        return tpl.format(port=port)
+    return f"http://localhost:{port}"
+
+
+def get_dotenv_content(container_id: str) -> str:
+    c = client.containers.get(container_id)
+    template = c.labels.get("template", "")
+    port = c.labels.get("port", "")
+    env_list = c.attrs["Config"].get("Env") or []
+    lines = [
+        f"# Test-Buddy Container: {c.name}",
+        f"# Template: {template}",
+        f"HOST_PORT={port}",
+    ]
+    for item in env_list:
+        if "=" in item:
+            lines.append(item)
+    conn = get_connection_string(template, int(port)) if port else None
+    if conn:
+        key = template.upper().replace("-", "_")
+        lines.append(f"{key}_URL={conn}")
+    return "\n".join(lines) + "\n"
+
+
 def _stops_at(started_at_str: str | None, duration_minutes: int) -> str | None:
     if not started_at_str:
         return None
@@ -387,11 +433,13 @@ def list_containers(user_id: int | None = None):
         duration = int(labels.get("duration-minutes", 60))
         extra = _extensions.get(c.short_id, 0)
         stops_at = _stops_at(started_at, duration + extra)
+        tpl_name = labels.get("template", "unknown")
+        port_val = int(labels["port"]) if labels.get("port") else None
         result.append({
             "id": c.short_id,
             "name": c.name,
-            "template": labels.get("template", "unknown"),
-            "port": int(labels["port"]) if labels.get("port") else None,
+            "template": tpl_name,
+            "port": port_val,
             "status": c.status,
             "health": _health_status(c),
             "started_at": started_at,
@@ -399,6 +447,7 @@ def list_containers(user_id: int | None = None):
             "cpu_percent": cpu_percent,
             "ram_mb": ram_mb,
             "ram_percent": ram_percent,
+            "connection_string": get_connection_string(tpl_name, port_val) if port_val else None,
         })
 
     return result
