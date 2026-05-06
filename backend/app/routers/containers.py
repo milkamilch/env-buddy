@@ -85,6 +85,14 @@ class StartStackRequest(BaseModel):
 def start(request: StartContainerRequest,
           current_user: UserDB = Depends(_get_required_user),
           db: Session = Depends(get_db)):
+    limit = int(os.getenv("MAX_CONTAINERS_PER_USER", "10"))
+    if limit > 0:
+        running = [c for c in docker_service.list_containers(user_id=current_user.id) if c["status"] == "running"]
+        if len(running) >= limit:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Limit erreicht: maximal {limit} laufende Container pro User."
+            )
     try:
         if request.template.startswith("team:"):
             tmpl_id = int(request.template.split(":")[1])
@@ -206,7 +214,8 @@ def remove_stack(stack_id: str, current_user: UserDB = Depends(_get_required_use
 def system_info():
     info = docker_service.client.info()
     total_ram_mb = info["MemTotal"] // (1024 * 1024)
-    return {"total_ram_mb": total_ram_mb}
+    limit = int(os.getenv("MAX_CONTAINERS_PER_USER", "10"))
+    return {"total_ram_mb": total_ram_mb, "max_containers_per_user": limit}
 
 
 @router.get("/templates")

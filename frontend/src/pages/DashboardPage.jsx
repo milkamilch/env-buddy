@@ -24,11 +24,15 @@ export default function DashboardPage({
   const [activeStatus, setActiveStatus] = useState("alle");
   const [viewMode, setViewMode] = useState("grid");
   const [systemTotalRamMb, setSystemTotalRamMb] = useState(0);
+  const [maxContainers, setMaxContainers] = useState(0);
   const [startingAll, setStartingAll] = useState(false);
 
   useEffect(() => {
     fetchSystemInfo()
-      .then((info) => setSystemTotalRamMb(info.total_ram_mb))
+      .then((info) => {
+        setSystemTotalRamMb(info.total_ram_mb);
+        setMaxContainers(info.max_containers_per_user || 0);
+      })
       .catch(() => {});
   }, []);
 
@@ -105,7 +109,7 @@ export default function DashboardPage({
         </div>
 
         {!loading && (containers.length > 0 || stacks.length > 0) && (
-          <DashboardStats containers={containers} stacks={stacks} systemTotalRamMb={systemTotalRamMb} />
+          <DashboardStats containers={containers} stacks={stacks} systemTotalRamMb={systemTotalRamMb} maxContainers={maxContainers} />
         )}
 
         <div className="toolbar">
