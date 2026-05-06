@@ -5,6 +5,8 @@ import ContainerLogsModal from "./ContainerLogsModal";
 import { useToast } from "./Toast";
 import "./ContainerCard.css";
 
+const EXTEND_MINUTES = [15, 30, 60];
+
 const TEMPLATE_ICONS = {
   postgres: "🐘", mysql: "🐬", mariadb: "🐬", mongo: "🍃", redis: "⚡",
   cockroachdb: "🪳", neo4j: "🕸️", influxdb: "📈", couchdb: "🛋️", timescaledb: "⏱️",
@@ -48,7 +50,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [logsOpen, setLogsOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [extendOpen, setExtendOpen] = useState(false);
-  const [extending, setExtending]   = useState(false);
+  const [extending, setExtending] = useState(false);
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
@@ -141,7 +143,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {[15, 30, 60].map((m) => (
+              {EXTEND_MINUTES.map((m) => (
                 <button
                   key={m}
                   className="btn-restart"
