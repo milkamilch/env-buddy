@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { fetchMe, updateNotificationPrefs, sendTestNotification } from "../services/api";
 import "./ProfileModal.css";
 
@@ -27,6 +27,9 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult]   = useState(null);
 
+  const saveTimerRef = useRef(null);
+  const testTimerRef = useRef(null);
+
   useEffect(() => {
     fetchMe().then((me) => setPrefs({
       notify_on_start:   me.notify_on_start,
@@ -36,13 +39,20 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
     })).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    return () => {
+      clearTimeout(saveTimerRef.current);
+      clearTimeout(testTimerRef.current);
+    };
+  }, []);
+
   async function handleTestEmail() {
     setTestSending(true);
     setTestResult(null);
     try {
       await sendTestNotification();
       setTestResult("ok");
-      setTimeout(() => setTestResult(null), 4000);
+      testTimerRef.current = setTimeout(() => setTestResult(null), 4000);
     } catch (e) {
       setTestResult("error: " + e.message);
     } finally {
@@ -58,7 +68,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
       const updated = await updateNotificationPrefs(prefs);
       onUpdate(updated);
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      saveTimerRef.current = setTimeout(() => setSaved(false), 2000);
     } catch (e) {
       setError(e.message);
     } finally {
