@@ -42,7 +42,7 @@ function formatCountdown(seconds) {
   return `${s}s`;
 }
 
-export default function ContainerCard({ container, onStopped, onRemoved, viewMode = "grid" }) {
+export default function ContainerCard({ container, onStopped, onRemoved, viewMode = "grid", selectMode = false, isSelected = false, onToggleSelect }) {
   const toast = useToast();
   const [restarting, setRestarting] = useState(false);
   const [acting, setActing] = useState(false);
@@ -184,7 +184,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
       <>
         <div
           className={`container-row ${!isRunning ? "card-stopped" : ""}`}
-          onClick={() => setEditOpen(true)}
+          onClick={() => selectMode ? onToggleSelect(container.id) : setEditOpen(true)}
           title="Konfiguration bearbeiten"
         >
           <span className="row-icon-sm">{icon}</span>
@@ -210,6 +210,15 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
               </div>
               <span className="row-stat-label" style={{ color: ramColor }}>{container.ram_mb} MB</span>
             </div>
+          )}
+          {selectMode && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => { e.stopPropagation(); onToggleSelect(container.id); }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: "1.1rem", height: "1.1rem", cursor: "pointer", accentColor: "var(--accent, #89b4fa)" }}
+            />
           )}
           {actions}
         </div>
@@ -237,7 +246,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     <>
       <div
         className={`container-card ${!isRunning ? "card-stopped" : ""}`}
-        onClick={() => setEditOpen(true)}
+        onClick={() => selectMode ? onToggleSelect(container.id) : setEditOpen(true)}
         style={{ cursor: "pointer" }}
         title="Konfiguration bearbeiten"
       >
@@ -247,6 +256,15 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
             <span className="card-name">{container.name}</span>
             <span className={`card-status status-${container.status}`}>{container.status}</span>
           </div>
+          {selectMode && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => { e.stopPropagation(); onToggleSelect(container.id); }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: "1.1rem", height: "1.1rem", cursor: "pointer", accentColor: "var(--accent, #89b4fa)" }}
+            />
+          )}
           {actions}
         </div>
 

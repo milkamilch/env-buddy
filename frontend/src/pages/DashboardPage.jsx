@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { fetchSystemInfo, startStoppedContainer } from "../services/api";
+import { fetchSystemInfo, startStoppedContainer, stopContainer, removeContainer } from "../services/api";
 import StartForm from "../components/StartForm";
 import ContainerCard from "../components/ContainerCard";
 import StackCard from "../components/StackCard";
@@ -26,6 +26,9 @@ export default function DashboardPage({
   const [systemTotalRamMb, setSystemTotalRamMb] = useState(0);
   const [maxContainers, setMaxContainers] = useState(0);
   const [startingAll, setStartingAll] = useState(false);
+  const [selectMode, setSelectMode]   = useState(false);
+  const [selected, setSelected]       = useState(new Set());
+  const [bulkWorking, setBulkWorking] = useState(false);
 
   useEffect(() => {
     fetchSystemInfo()
@@ -49,6 +52,59 @@ export default function DashboardPage({
     } finally {
       setStartingAll(false);
     }
+  }
+
+  function toggleSelectMode() {
+    setSelectMode((m) => { if (m) setSelected(new Set()); return !m; });
+  }
+
+  function toggleSelect(id) {
+    setSelected((s) => {
+      const n = new Set(s);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+  }
+
+  async function handleBulkStop() {
+    setBulkWorking(true);
+    try {
+      const ids = [...selected].filter((id) => {
+        const c = containers.find((c) => c.id === id);
+        return c && c.status === "running";
+      });
+      await Promise.all(ids.map(stopContainer));
+      setSelected(new Set());
+      onStopped();
+      toast.success(`${ids.length} Container gestoppt`);
+    } catch (err) { toast.error(err.message); }
+    finally { setBulkWorking(false); }
+  }
+
+  async function handleBulkRemove() {
+    setBulkWorking(true);
+    try {
+      await Promise.all([...selected].map(removeContainer));
+      [...selected].forEach(onRemoved);
+      setSelected(new Set());
+      toast.success(`${selected.size} Container gelöscht`);
+    } catch (err) { toast.error(err.message); }
+    finally { setBulkWorking(false); }
+  }
+
+  async function handleCleanupExited() {
+    setBulkWorking(true);
+    try {
+      const exitedIds = containers
+        .filter((c) => c.status === "exited" || c.status === "stopped")
+        .map((c) => c.id);
+      await Promise.all(exitedIds.map(removeContainer));
+      exitedIds.forEach(onRemoved);
+      setSelectMode(false);
+      setSelected(new Set());
+      toast.success(`${exitedIds.length} Container aufgeräumt`);
+    } catch (err) { toast.error(err.message); }
+    finally { setBulkWorking(false); }
   }
 
   const templateFilterOptions = [
@@ -153,6 +209,13 @@ export default function DashboardPage({
             ))}
           </div>
 
+          <button
+            className={`btn-view-toggle ${selectMode ? "active" : ""}`}
+            onClick={toggleSelectMode}
+          >
+            {selectMode ? "✕ Abbrechen" : "Auswählen"}
+          </button>
+
           <div className="view-toggle">
             <button className={`view-btn ${viewMode === "grid" ? "active" : ""}`} onClick={() => setViewMode("grid")} title="Kachelansicht">⊞</button>
             <button className={`view-btn ${viewMode === "list" ? "active" : ""}`} onClick={() => setViewMode("list")} title="Listenansicht">☰</button>
@@ -197,7 +260,7 @@ export default function DashboardPage({
                 <div className="section-label">Container <span className="section-count">{filtered.length}</span></div>
                 <div className={`container-grid ${viewMode === "list" ? "grid-list" : ""}`}>
                   {filtered.map((c) => (
-                    <ContainerCard key={c.id} container={c} onStopped={onStopped} onRemoved={onRemoved} viewMode={viewMode} />
+                    <ContainerCard key={c.id} container={c} onStopped={onStopped} onRemoved={onRemoved} viewMode={viewMode} selectMode={selectMode} isSelected={selected.has(c.id)} onToggleSelect={toggleSelect} />
                   ))}
                 </div>
               </div>
@@ -205,6 +268,28 @@ export default function DashboardPage({
           </>
         )}
       </section>
+      {selectMode && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 200,
+          background: "var(--surface1, #181825)",
+          borderTop: "1px solid var(--border, #45475a)",
+          padding: "0.75rem 1.5rem",
+          display: "flex", gap: "0.75rem", alignItems: "center",
+        }}>
+          <span style={{ color: "var(--text-muted, #6c7086)", fontSize: "0.85rem", marginRight: "0.5rem" }}>
+            {selected.size} ausgewählt
+          </span>
+          <button className="btn-stop" disabled={bulkWorking || selected.size === 0} onClick={handleBulkStop}>
+            ⏹ Stoppen
+          </button>
+          <button className="btn-remove" disabled={bulkWorking || selected.size === 0} onClick={handleBulkRemove}>
+            🗑 Löschen
+          </button>
+          <button className="btn-restart" disabled={bulkWorking} onClick={handleCleanupExited} style={{ marginLeft: "auto" }}>
+            🧹 Exited aufräumen
+          </button>
+        </div>
+      )}
     </main>
   );
 }
