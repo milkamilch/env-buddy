@@ -418,3 +418,9 @@ def health_probe(container_id: str, current_user: UserDB = Depends(_get_required
         return docker_service.probe_container_health(container_id)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{container_id}/stats/history")
+def stats_history(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
+    return docker_service.get_stats_history(container_id)
