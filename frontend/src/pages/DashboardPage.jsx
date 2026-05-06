@@ -82,12 +82,13 @@ export default function DashboardPage({
   }
 
   async function handleBulkRemove() {
+    const count = selected.size;
     setBulkWorking(true);
     try {
       await Promise.all([...selected].map(removeContainer));
       [...selected].forEach(onRemoved);
       setSelected(new Set());
-      toast.success(`${selected.size} Container gelöscht`);
+      toast.success(`${count} Container gelöscht`);
     } catch (err) { toast.error(err.message); }
     finally { setBulkWorking(false); }
   }
