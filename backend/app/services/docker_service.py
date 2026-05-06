@@ -206,6 +206,7 @@ def get_free_port(start=10000,end=11000):
 def start_container(template_name: str, duration_minutes: int = 60,
                     env_overrides: dict = {}, host_port: int | None = None,
                     container_name: str | None = None, mem_limit: str | None = None,
+                    cpu_limit: float | None = None,
                     extra_labels: dict = {}, user_id: int | None = None):
     if template_name not in TEMPLATES:
         raise ValueError(f"Template '{template_name}' not found")
@@ -233,6 +234,8 @@ def start_container(template_name: str, duration_minutes: int = 60,
     )
     if mem_limit:
         run_kwargs["mem_limit"] = mem_limit
+    if cpu_limit and cpu_limit > 0:
+        run_kwargs["nano_cpus"] = int(cpu_limit * 1e9)
 
     try:
         container = client.containers.run(**run_kwargs)
@@ -686,6 +689,9 @@ def get_container_config(container_id: str):
         mb = mem_bytes // (1024 * 1024)
         mem_limit = f"{mb // 1024}g" if mb >= 1024 and mb % 1024 == 0 else f"{mb}m"
 
+    nano_cpus = c.attrs["HostConfig"].get("NanoCpus", 0)
+    cpu_limit = round(nano_cpus / 1e9, 2) if nano_cpus and nano_cpus > 0 else None
+
     return {
         "id": c.short_id,
         "name": c.name,
@@ -694,11 +700,12 @@ def get_container_config(container_id: str):
         "duration_minutes": int(labels.get("duration-minutes", 60)),
         "env": env_dict,
         "mem_limit": mem_limit,
+        "cpu_limit": cpu_limit,
     }
 
 def update_container_config(container_id: str, env_overrides: dict,
                              host_port: int | None, container_name: str | None,
-                             mem_limit: str | None):
+                             mem_limit: str | None, cpu_limit: float | None = None):
     c = client.containers.get(container_id)
     labels = c.labels
     template_name = labels.get("template")
@@ -714,5 +721,6 @@ def update_container_config(container_id: str, env_overrides: dict,
                            host_port=host_port,
                            container_name=container_name,
                            mem_limit=mem_limit,
+                           cpu_limit=cpu_limit,
                            extra_labels=extra_labels,
                            user_id=user_id)

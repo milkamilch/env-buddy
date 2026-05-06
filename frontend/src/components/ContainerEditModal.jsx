@@ -14,6 +14,15 @@ const ALL_MEM_STEPS = [
   { label: "32 GB",      apiValue: "32g",  mb: 32768 },
 ];
 
+const CPU_STEPS = [
+  { label: "kein Limit", value: null  },
+  { label: "0.25 CPUs",  value: 0.25  },
+  { label: "0.5 CPUs",   value: 0.5   },
+  { label: "1 CPU",      value: 1.0   },
+  { label: "2 CPUs",     value: 2.0   },
+  { label: "4 CPUs",     value: 4.0   },
+];
+
 export default function ContainerEditModal({ containerId, onClose, onSaved, maxRamMb }) {
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose(); }
@@ -26,6 +35,7 @@ export default function ContainerEditModal({ containerId, onClose, onSaved, maxR
   const [hostPort, setHostPort] = useState("");
   const [containerName, setContainerName] = useState("");
   const [memStep, setMemStep] = useState(0);
+  const [cpuStep, setCpuStep] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -42,6 +52,8 @@ export default function ContainerEditModal({ containerId, onClose, onSaved, maxR
         const currentMem = cfg.mem_limit || "";
         const idx = memSteps.findIndex((s) => s.apiValue === currentMem);
         setMemStep(idx >= 0 ? idx : 0);
+        const cpuIdx = CPU_STEPS.findIndex((s) => s.value === cfg.cpu_limit);
+        setCpuStep(cpuIdx >= 0 ? cpuIdx : 0);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -68,11 +80,13 @@ export default function ContainerEditModal({ containerId, onClose, onSaved, maxR
         envVars.filter((e) => e.key).map((e) => [e.key, e.value])
       );
       const memValue = memSteps[Math.min(memStep, memSteps.length - 1)].apiValue;
+      const cpuValue = CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].value;
       await updateContainerConfig(containerId, {
         env_overrides,
         host_port: hostPort ? parseInt(hostPort, 10) : null,
         container_name: containerName || null,
         mem_limit: memValue || null,
+        cpu_limit: cpuValue,
       });
       onSaved();
     } catch (e) {
@@ -120,6 +134,20 @@ export default function ContainerEditModal({ containerId, onClose, onSaved, maxR
                 </div>
               </div>
               <span className="modal-mem-value">{memSteps[Math.min(memStep, memSteps.length - 1)].label}</span>
+            </div>
+
+            <div className="modal-row">
+              <label className="modal-label">CPU-Limit</label>
+              <div className="modal-mem-slider">
+                <input type="range" min={0} max={CPU_STEPS.length - 1} step={1}
+                  value={Math.min(cpuStep, CPU_STEPS.length - 1)}
+                  onChange={(e) => setCpuStep(Number(e.target.value))} />
+                <div className="modal-mem-labels">
+                  <span>kein Limit</span>
+                  <span>{CPU_STEPS[CPU_STEPS.length - 1].label}</span>
+                </div>
+              </div>
+              <span className="modal-mem-value">{CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].label}</span>
             </div>
 
             <div className="modal-section-label">Umgebungsvariablen</div>

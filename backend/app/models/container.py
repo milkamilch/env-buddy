@@ -8,6 +8,7 @@ class StartContainerRequest(BaseModel):
     host_port: Optional[int] = None
     container_name: Optional[str] = None
     mem_limit: Optional[str] = None  # e.g. "512m", "1g"
+    cpu_limit: Optional[float] = None  # e.g. 0.5 = 50% of one CPU core
 
 class StackContainerSpec(BaseModel):
     service_name:   str

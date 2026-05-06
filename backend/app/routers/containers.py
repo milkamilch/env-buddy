@@ -144,6 +144,7 @@ def start(request: StartContainerRequest,
                 host_port=request.host_port,
                 container_name=request.container_name,
                 mem_limit=request.mem_limit,
+                cpu_limit=request.cpu_limit,
                 user_id=current_user.id,
             )
         name = result.get("name") or (result.get("containers") or [{}])[0].get("name", "")
@@ -280,6 +281,7 @@ class UpdateConfigRequest(BaseModel):
     host_port: int | None = None
     container_name: str | None = None
     mem_limit: str | None = None
+    cpu_limit: float | None = None
 
 
 @router.put("/{container_id}/config")
@@ -292,6 +294,7 @@ def update_config(container_id: str, request: UpdateConfigRequest, current_user:
             host_port=request.host_port,
             container_name=request.container_name,
             mem_limit=request.mem_limit,
+            cpu_limit=request.cpu_limit,
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
