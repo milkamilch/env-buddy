@@ -395,6 +395,33 @@ export async function fetchTeamScopedTemplates(teamId) {
   return json;
 }
 
+export async function fetchInvitations() {
+  const res = await apiFetch(`${BASE}/api/invitations/`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function acceptInvitation(invitationId) {
+  const res = await apiFetch(`${BASE}/api/invitations/${invitationId}/accept`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Annehmen");
+  return json;
+}
+
+export async function declineInvitation(invitationId) {
+  const res = await apiFetch(`${BASE}/api/invitations/${invitationId}/decline`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Ablehnen");
+  return json;
+}
+
 export async function fetchContainerLogs(containerId, tail = 200) {
   const res = await apiFetch(`${BASE}/api/containers/${containerId}/logs?tail=${tail}`, { headers: authHeaders() });
   if (!res.ok) throw new Error("Failed to fetch logs");

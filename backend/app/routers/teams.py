@@ -9,6 +9,7 @@ from app.models.user import UserDB
 from app.models.team import TeamDB, TeamMemberDB, CreateTeamRequest, TeamResponse, TeamMemberResponse, AddMemberRequest, UpdateRoleRequest
 from app.models.template import ContainerConfig
 from app.models.team_template import TeamTemplateDB, CreateTeamTemplateRequest, TeamTemplateResponse
+from app.models.invitation import TeamInvitationDB
 
 router = APIRouter(prefix="/api/teams", tags=["Teams"])
 
@@ -122,7 +123,7 @@ def list_members(
 
 
 @router.post("/{team_id}/members", status_code=201)
-def add_member(
+def invite_member(
     team_id: int,
     req: AddMemberRequest,
     current_user: UserDB = Depends(get_current_user),
@@ -139,13 +140,19 @@ def add_member(
     ).first()
     if existing:
         raise HTTPException(status_code=409, detail="Benutzer ist bereits Mitglied")
-    member = TeamMemberDB(team_id=team_id, user_id=user.id, role="member")
-    db.add(member)
+    pending = db.query(TeamInvitationDB).filter(
+        TeamInvitationDB.team_id == team_id,
+        TeamInvitationDB.invitee_id == user.id,
+        TeamInvitationDB.status == "pending",
+    ).first()
+    if pending:
+        raise HTTPException(status_code=409, detail="Einladung bereits ausstehend")
+    if hasattr(user, "allow_invitations") and user.allow_invitations is False:
+        raise HTTPException(status_code=403, detail="Dieser Nutzer akzeptiert keine Einladungen")
+    inv = TeamInvitationDB(team_id=team_id, inviter_id=current_user.id, invitee_id=user.id)
+    db.add(inv)
     db.commit()
-    return TeamMemberResponse(
-        user_id=user.id, username=user.username,
-        first_name=user.first_name, last_name=user.last_name, role="member",
-    )
+    return {"message": f"Einladung an {user.username} gesendet"}
 
 
 @router.delete("/{team_id}/members/{user_id}", status_code=200)

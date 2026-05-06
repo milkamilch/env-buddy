@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, fetchTeamTemplates } from "./services/api";
+import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, fetchTeamTemplates, fetchInvitations, acceptInvitation, declineInvitation } from "./services/api";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import TemplatesPage from "./pages/TemplatesPage";
@@ -49,6 +49,8 @@ function getStoredUser() {
 export default function App() {
   const [user, setUser] = useState(getStoredUser);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [invitations, setInvitations] = useState([]);
+  const [inboxOpen, setInboxOpen] = useState(false);
   const [page, setPage] = useState("dashboard");
   const [containers, setContainers] = useState([]);
   const [stacks, setStacks] = useState([]);
@@ -120,6 +122,16 @@ export default function App() {
     window.addEventListener("auth:logout", onAuthLogout);
     return () => window.removeEventListener("auth:logout", onAuthLogout);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    function loadInvitations() {
+      fetchInvitations().then(setInvitations).catch(() => {});
+    }
+    loadInvitations();
+    const id = setInterval(loadInvitations, 30000);
+    return () => clearInterval(id);
+  }, [user]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", user?.theme || "dark");
@@ -195,6 +207,17 @@ export default function App() {
           {error ? "Offline" : "Backend verbunden"}
         </div>
         <div className="header-user">
+          <button
+            className="btn-inbox"
+            onClick={() => setInboxOpen(true)}
+            title="Team-Einladungen"
+            style={{ position: "relative" }}
+          >
+            ✉
+            {invitations.length > 0 && (
+              <span className="inbox-badge">{invitations.length}</span>
+            )}
+          </button>
           <button className="btn-profile" onClick={() => setProfileOpen(true)}>
             <UserAvatar user={user} />
             <div>
@@ -243,6 +266,64 @@ export default function App() {
             localStorage.setItem("user", JSON.stringify(newUser));
           }}
         />
+      )}
+
+      {inboxOpen && (
+        <div className="modal-overlay" onClick={() => setInboxOpen(false)}>
+          <div className="modal-box" style={{ maxWidth: "32rem" }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">Einladungen</span>
+              <button className="modal-close" onClick={() => setInboxOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              {invitations.length === 0 ? (
+                <p style={{ color: "var(--subtext0)", fontSize: "0.875rem" }}>Keine ausstehenden Einladungen.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  {invitations.map((inv) => (
+                    <div key={inv.id} style={{
+                      background: "var(--surface1, #1e1e2e)", borderRadius: "8px",
+                      padding: "0.75rem 1rem", display: "flex", alignItems: "center", gap: "1rem",
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600 }}>{inv.team_name}</div>
+                        <div style={{ fontSize: "0.8rem", color: "var(--subtext0)" }}>
+                          Eingeladen von @{inv.inviter_name}
+                        </div>
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await acceptInvitation(inv.id);
+                          setInvitations((p) => p.filter((i) => i.id !== inv.id));
+                        }}
+                        style={{
+                          padding: "0.3rem 0.7rem", borderRadius: "6px",
+                          border: "1px solid #a6e3a1", color: "#a6e3a1", background: "transparent",
+                          cursor: "pointer", fontSize: "0.82rem",
+                        }}
+                      >
+                        Annehmen
+                      </button>
+                      <button
+                        onClick={async () => {
+                          await declineInvitation(inv.id);
+                          setInvitations((p) => p.filter((i) => i.id !== inv.id));
+                        }}
+                        style={{
+                          padding: "0.3rem 0.7rem", borderRadius: "6px",
+                          border: "1px solid var(--overlay1)", color: "var(--subtext0)", background: "transparent",
+                          cursor: "pointer", fontSize: "0.82rem",
+                        }}
+                      >
+                        Ablehnen
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
