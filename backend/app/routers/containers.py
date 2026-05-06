@@ -409,3 +409,12 @@ def get_dotenv(container_id: str, current_user: UserDB = Depends(_get_required_u
                                  headers={"Content-Disposition": f'attachment; filename=".env"'})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{container_id}/health")
+def health_probe(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
+    try:
+        return docker_service.probe_container_health(container_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
