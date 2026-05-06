@@ -20,6 +20,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
     notify_on_stop:    user.notify_on_stop    ?? true,
     notify_on_warning: user.notify_on_warning ?? true,
     theme:             user.theme ?? "dark",
+    webhook_url:       user.webhook_url ?? "",
   });
   const [editProfile, setEditProfile] = useState({
     first_name: user.first_name || "",
@@ -48,6 +49,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
       notify_on_stop:    me.notify_on_stop,
       notify_on_warning: me.notify_on_warning,
       theme:             me.theme ?? "dark",
+      webhook_url:       me.webhook_url ?? "",
     })).catch(() => {});
   }, []);
 
@@ -182,6 +184,19 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
               </label>
             ))}
           </div>
+
+          <div className="profile-section-label" style={{ marginTop: "1.25rem" }}>Webhook</div>
+          <input
+            className="profile-edit-input"
+            type="url"
+            placeholder="https://example.com/webhook (optional)"
+            value={prefs.webhook_url}
+            onChange={(e) => setPrefs((p) => ({ ...p, webhook_url: e.target.value }))}
+            style={{ width: "100%", marginBottom: "0.5rem" }}
+          />
+          <p style={{ fontSize: "0.78rem", color: "var(--subtext0)", margin: "0 0 0.75rem" }}>
+            POST-Request bei container.started / container.stopped / container.auto_stopped
+          </p>
 
           <div style={{ marginTop: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <button

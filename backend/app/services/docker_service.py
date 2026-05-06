@@ -622,6 +622,12 @@ def auto_stop_expired_containers():
                 if user and user.notify_on_stop:
                     threading.Thread(target=notify_container_stopped,
                                      args=(user.email, c.name), daemon=True).start()
+                if user and user.webhook_url:
+                    from app.services.webhook_service import call_webhook
+                    threading.Thread(target=call_webhook,
+                                     args=(user.webhook_url, "container.auto_stopped",
+                                           {"name": c.name, "template": labels.get("template")}),
+                                     daemon=True).start()
                 c.stop()
                 try:
                     from app.models.audit import AuditLogDB

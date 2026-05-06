@@ -195,6 +195,7 @@ def update_notifications(req: NotificationPrefsRequest, current_user: UserDB = D
     current_user.notify_on_stop    = req.notify_on_stop
     current_user.notify_on_warning = req.notify_on_warning
     current_user.theme             = req.theme
+    current_user.webhook_url       = req.webhook_url or None
     db.commit()
     db.refresh(current_user)
     return UserResponse.model_validate(current_user)

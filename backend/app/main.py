@@ -56,6 +56,12 @@ def _run_migrations():
             conn.commit()
         except Exception:
             pass
+        # webhook_url column
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN webhook_url TEXT"))
+            conn.commit()
+        except Exception:
+            pass
 
 async def _auto_stop_loop():
     while True:

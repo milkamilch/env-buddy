@@ -13,6 +13,7 @@ from app.models.template import UserTemplateDB
 from app.models.team_template import TeamTemplateDB
 from app.services import docker_service
 from app.services.notification_service import notify_container_started
+from app.services.webhook_service import call_webhook
 from app.models.audit import AuditLogDB
 
 
@@ -152,6 +153,13 @@ def start(request: StartContainerRequest,
             threading.Thread(
                 target=notify_container_started,
                 args=(current_user.email, name, request.template, port, request.duration_minutes),
+                daemon=True,
+            ).start()
+        if current_user.webhook_url:
+            threading.Thread(
+                target=call_webhook,
+                args=(current_user.webhook_url, "container.started",
+                      {"name": name, "template": request.template, "port": port}),
                 daemon=True,
             ).start()
         return result
@@ -299,6 +307,12 @@ def stop(container_id: str, current_user: UserDB = Depends(_get_required_user),
         tpl = c.labels.get("template")
         result = docker_service.stop_container(container_id)
         _log(db, current_user, "stopped", name, template=tpl)
+        if current_user.webhook_url:
+            threading.Thread(
+                target=call_webhook,
+                args=(current_user.webhook_url, "container.stopped", {"name": name, "template": tpl}),
+                daemon=True,
+            ).start()
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
