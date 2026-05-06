@@ -46,6 +46,61 @@
 }
 .modal-close:hover { color: var(--red); }
 
+.modal-view-toggle {
+  display: flex;
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 0;
+  margin-left: auto;
+  margin-right: 0.75rem;
+}
+
+.modal-view-btn {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--subtext0);
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.modal-view-btn.active { background: var(--overlay0); color: var(--text); }
+.modal-view-btn:hover:not(.active) { color: var(--text); }
+
+.modal-json-hint {
+  font-size: 0.78rem;
+  color: var(--subtext0);
+  margin: 0 0 0.5rem;
+}
+.modal-json-hint code {
+  background: var(--mantle);
+  border-radius: 3px;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.75rem;
+  color: var(--mauve);
+}
+
+.modal-json-editor {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--mantle);
+  border: 1px solid var(--overlay0);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  padding: 0.75rem;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.modal-json-editor:focus { border-color: var(--blue); }
+
 .modal-body {
   padding: 1rem 1.25rem;
   overflow-y: auto;
