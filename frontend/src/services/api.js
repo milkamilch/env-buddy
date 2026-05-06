@@ -613,6 +613,18 @@ export async function importMarketplaceTemplate(id) {
   return json;
 }
 
+export async function updateContainerImage(containerId) {
+  const res = await apiFetch(`${BASE}/api/containers/${containerId}/update-image`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Image-Update fehlgeschlagen");
+  }
+  return res.json();
+}
+
 // ── Audit ─────────────────────────────────────────────────────────────────
 
 export async function fetchAuditLog() {

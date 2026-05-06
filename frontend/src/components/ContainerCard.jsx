@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth } from "../services/api";
+import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth, updateContainerImage } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import ResourceGraphModal from "./ResourceGraphModal";
@@ -85,6 +85,8 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [extending, setExtending] = useState(false);
   const [cloning, setCloning] = useState(false);
   const [tcpReachable, setTcpReachable] = useState(null);
+  const [updateConfirm, setUpdateConfirm] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
@@ -205,6 +207,22 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     finally { setConfirmDelete(false); }
   }
 
+  async function handleUpdate(e) {
+    e.stopPropagation();
+    if (!updateConfirm) { setUpdateConfirm(true); return; }
+    setUpdating(true);
+    setUpdateConfirm(false);
+    try {
+      await updateContainerImage(container.id);
+      onStopped();
+      toast.success("Image aktualisiert, Container neu gestartet");
+    } catch (err) {
+      toast.error("Update fehlgeschlagen: " + err.message);
+    } finally {
+      setUpdating(false);
+    }
+  }
+
   const actions = (
     <div className="card-actions" onClick={(e) => e.stopPropagation()}>
       <button className="btn-logs" onClick={(e) => { e.stopPropagation(); setLogsOpen(true); }} title="Logs anzeigen">▤</button>
@@ -265,14 +283,32 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           {acting ? "…" : "▶"}
         </button>
       )}
-      {confirmDelete ? (
+      {updateConfirm ? (
+        <>
+          <span className="confirm-label">Neu starten?</span>
+          <button className="btn-confirm-yes" onClick={handleUpdate} title="Ja, aktualisieren">✓</button>
+          <button className="btn-confirm-no" onClick={(e) => { e.stopPropagation(); setUpdateConfirm(false); }} title="Abbrechen">✕</button>
+        </>
+      ) : confirmDelete ? (
         <>
           <span className="confirm-label">Sicher?</span>
           <button className="btn-confirm-yes" onClick={handleRemove} title="Ja, löschen">✓</button>
           <button className="btn-confirm-no" onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }} title="Abbrechen">✕</button>
         </>
       ) : (
-        <button className="btn-remove" onClick={handleRemove} title="Löschen">🗑</button>
+        <>
+          {isRunning && (
+            <button
+              className="btn-restart"
+              onClick={handleUpdate}
+              disabled={updating}
+              title="Neuestes Image pullen und Container neu starten"
+            >
+              {updating ? "…" : "↑ Update"}
+            </button>
+          )}
+          <button className="btn-remove" onClick={handleRemove} title="Löschen">🗑</button>
+        </>
       )}
     </div>
   );
