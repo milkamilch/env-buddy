@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchMe, updateNotificationPrefs } from "../services/api";
+import { fetchMe, updateNotificationPrefs, sendTestNotification } from "../services/api";
 import "./ProfileModal.css";
 
 const PREFS = [
@@ -24,6 +24,8 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
+  const [testSending, setTestSending] = useState(false);
+  const [testResult, setTestResult]   = useState(null);
 
   useEffect(() => {
     fetchMe().then((me) => setPrefs({
@@ -33,6 +35,20 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
       theme:             me.theme ?? "dark",
     })).catch(() => {});
   }, []);
+
+  async function handleTestEmail() {
+    setTestSending(true);
+    setTestResult(null);
+    try {
+      await sendTestNotification();
+      setTestResult("ok");
+      setTimeout(() => setTestResult(null), 4000);
+    } catch (e) {
+      setTestResult("error: " + e.message);
+    } finally {
+      setTestSending(false);
+    }
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -102,6 +118,30 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
                 </div>
               </label>
             ))}
+          </div>
+
+          <div style={{ marginTop: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <button
+              style={{
+                padding: "0.35rem 0.85rem",
+                borderRadius: "0.5rem",
+                border: "1px solid var(--border, #45475a)",
+                background: "transparent",
+                color: "var(--text-primary, #cdd6f4)",
+                cursor: testSending ? "not-allowed" : "pointer",
+                fontSize: "0.8rem",
+              }}
+              onClick={handleTestEmail}
+              disabled={testSending}
+            >
+              {testSending ? "Sendet…" : "Test-E-Mail senden"}
+            </button>
+            {testResult === "ok" && (
+              <span style={{ color: "#a6e3a1", fontSize: "0.8rem" }}>✓ Gesendet!</span>
+            )}
+            {testResult && testResult !== "ok" && (
+              <span style={{ color: "#f38ba8", fontSize: "0.8rem" }}>{testResult}</span>
+            )}
           </div>
 
           {error && <p className="modal-error">{error}</p>}

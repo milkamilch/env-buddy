@@ -1,27 +1,45 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
+import threading
+import os
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Security
+from jose import jwt, JWTError
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.models.user import UserDB
 from app.services import notification_service
+
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
+ALGORITHM  = "HS256"
+_bearer    = HTTPBearer(auto_error=False)
 
 router = APIRouter(prefix="/api/notifications", tags=["Notifications"])
 
-class TestMailRequest(BaseModel):
-    to: str
-    container_name: str = "testbuddy-postgres-abc123"
-    template: str = "postgres"
-    port: int = 10001
-    duration_minutes: int = 60
+
+def _get_required_user(creds: HTTPAuthorizationCredentials = Security(_bearer),
+                        db: Session = Depends(get_db)):
+    if not creds:
+        raise HTTPException(status_code=401, detail="Nicht angemeldet")
+    try:
+        payload = jwt.decode(creds.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+        user = db.query(UserDB).filter(UserDB.id == int(payload["sub"])).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="Ungültiger Token")
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Ungültiger Token")
+
 
 @router.post("/test")
-def send_test_mail(request: TestMailRequest):
-    """Sendet eine Test-E-Mail um das Setup zu prüfen."""
+def send_test_mail(current_user: UserDB = Depends(_get_required_user)):
+    """Sendet eine Test-E-Mail an die eigene Adresse."""
     try:
-        notification_service.notify_container_started(
-            to=request.to,
-            container_name=request.container_name,
-            template=request.template,
-            port=request.port,
-            duration_minutes=request.duration_minutes,
-        )
-        return {"message": f"Test-Mail erfolgreich an {request.to} gesendet!"}
+        threading.Thread(
+            target=notification_service.notify_container_started,
+            args=(current_user.email, "testbuddy-postgres-demo", "postgres", 10001, 60),
+            daemon=True,
+        ).start()
+        return {"message": f"Test-Mail wird gesendet an {current_user.email}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -413,6 +413,16 @@ export async function updateNotificationPrefs(prefs) {
   return json;
 }
 
+export async function sendTestNotification() {
+  const res = await apiFetch(`${BASE}/api/notifications/test`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Senden");
+  return json;
+}
+
 // ── Marketplace ───────────────────────────────────────────────────────────────
 
 export async function fetchMarketplace({ search = "", sort = "newest" } = {}) {
