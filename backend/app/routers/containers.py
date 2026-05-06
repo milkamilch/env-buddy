@@ -13,6 +13,15 @@ from app.models.template import UserTemplateDB
 from app.models.team_template import TeamTemplateDB
 from app.services import docker_service
 from app.services.notification_service import notify_container_started
+from app.models.audit import AuditLogDB
+
+
+def _container_limit() -> int:
+    try:
+        return int(os.getenv("MAX_CONTAINERS_PER_USER", "10"))
+    except ValueError:
+        return 10
+
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 ALGORITHM = "HS256"
@@ -58,6 +67,19 @@ def _assert_stack_owner(stack_id: str, user: UserDB):
         raise HTTPException(status_code=403, detail="Kein Zugriff auf diesen Stack")
 
 
+def _log(db: Session, user: UserDB, action: str, container_name: str,
+         template: str = None, extra: str = None):
+    try:
+        db.add(AuditLogDB(
+            user_id=user.id, username=user.username,
+            action=action, container_name=container_name,
+            template=template, extra=extra,
+        ))
+        db.commit()
+    except Exception:
+        pass
+
+
 router = APIRouter(prefix="/api/containers", tags=["Containers"])
 
 
@@ -71,6 +93,14 @@ class StartStackRequest(BaseModel):
 def start(request: StartContainerRequest,
           current_user: UserDB = Depends(_get_required_user),
           db: Session = Depends(get_db)):
+    limit = _container_limit()
+    if limit > 0:
+        running = [c for c in docker_service.list_containers(user_id=current_user.id) if c["status"] == "running"]
+        if len(running) >= limit:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Limit erreicht: maximal {limit} laufende Container pro User."
+            )
     try:
         if request.template.startswith("team:"):
             tmpl_id = int(request.template.split(":")[1])
@@ -115,9 +145,10 @@ def start(request: StartContainerRequest,
                 mem_limit=request.mem_limit,
                 user_id=current_user.id,
             )
+        name = result.get("name") or (result.get("containers") or [{}])[0].get("name", "")
+        port = result.get("port") or 0
+        _log(db, current_user, "started", name, template=request.template)
         if current_user.notify_on_start:
-            name = result.get("name") or (result.get("containers") or [{}])[0].get("name", "")
-            port = result.get("port") or 0
             threading.Thread(
                 target=notify_container_started,
                 args=(current_user.email, name, request.template, port, request.duration_minutes),
@@ -135,6 +166,14 @@ def start(request: StartContainerRequest,
 @router.post("/stacks/start")
 def start_stack(request: StartStackRequest,
                 current_user: UserDB = Depends(_get_required_user)):
+    limit = _container_limit()
+    if limit > 0:
+        running = [c for c in docker_service.list_containers(user_id=current_user.id) if c["status"] == "running"]
+        if len(running) >= limit:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Limit erreicht: maximal {limit} laufende Container pro User."
+            )
     try:
         return docker_service.start_stack_from_configs(
             [c.model_dump() for c in request.containers],
@@ -191,7 +230,8 @@ def remove_stack(stack_id: str, current_user: UserDB = Depends(_get_required_use
 def system_info():
     info = docker_service.client.info()
     total_ram_mb = info["MemTotal"] // (1024 * 1024)
-    return {"total_ram_mb": total_ram_mb}
+    limit = _container_limit()
+    return {"total_ram_mb": total_ram_mb, "max_containers_per_user": limit}
 
 
 @router.get("/templates")
@@ -250,19 +290,31 @@ def update_config(container_id: str, request: UpdateConfigRequest, current_user:
 
 
 @router.post("/{container_id}/stop")
-def stop(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+def stop(container_id: str, current_user: UserDB = Depends(_get_required_user),
+         db: Session = Depends(get_db)):
     _assert_owner(container_id, current_user)
     try:
-        return docker_service.stop_container(container_id)
+        c = docker_service.client.containers.get(container_id)
+        name = c.name
+        tpl = c.labels.get("template")
+        result = docker_service.stop_container(container_id)
+        _log(db, current_user, "stopped", name, template=tpl)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/{container_id}")
-def remove(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+def remove(container_id: str, current_user: UserDB = Depends(_get_required_user),
+           db: Session = Depends(get_db)):
     _assert_owner(container_id, current_user)
     try:
-        return docker_service.remove_container(container_id)
+        c = docker_service.client.containers.get(container_id)
+        name = c.name
+        tpl = c.labels.get("template")
+        result = docker_service.remove_container(container_id)
+        _log(db, current_user, "removed", name, template=tpl)
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -277,10 +329,37 @@ def start_stopped(container_id: str, current_user: UserDB = Depends(_get_require
 
 
 @router.post("/{container_id}/restart")
-def restart(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+def restart(container_id: str, current_user: UserDB = Depends(_get_required_user),
+            db: Session = Depends(get_db)):
     _assert_owner(container_id, current_user)
     try:
-        return docker_service.restart_container(container_id)
+        c = docker_service.client.containers.get(container_id)
+        name = c.name
+        tpl = c.labels.get("template")
+        result = docker_service.restart_container(container_id)
+        _log(db, current_user, "restarted", name, template=tpl)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class ExtendRequest(BaseModel):
+    extra_minutes: int = 30
+
+
+@router.post("/{container_id}/extend")
+def extend(container_id: str, request: ExtendRequest,
+           current_user: UserDB = Depends(_get_required_user),
+           db: Session = Depends(get_db)):
+    _assert_owner(container_id, current_user)
+    try:
+        c = docker_service.client.containers.get(container_id)
+        name = c.name
+        tpl = c.labels.get("template")
+        result = docker_service.extend_container(container_id, request.extra_minutes)
+        _log(db, current_user, "extended", name, template=tpl,
+             extra=f"+{request.extra_minutes}min")
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

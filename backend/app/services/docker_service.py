@@ -5,6 +5,7 @@ from datetime import datetime, timezone, timedelta
 client = docker.from_env()
 
 _warned_containers: set = set()
+_extensions: dict[str, int] = {}  # short_id -> extra minutes added by user
 
 TEMPLATES = {
     # Datenbanken
@@ -359,7 +360,8 @@ def list_containers(user_id: int | None = None):
         cpu_percent, ram_mb, ram_percent = _container_stats(c)
         started_at = labels.get("started-at")
         duration = int(labels.get("duration-minutes", 60))
-        stops_at = _stops_at(started_at, duration)
+        extra = _extensions.get(c.short_id, 0)
+        stops_at = _stops_at(started_at, duration + extra)
         result.append({
             "id": c.short_id,
             "name": c.name,
@@ -435,7 +437,8 @@ def list_stacks(user_id: int | None = None):
         cpu_percent, ram_mb, ram_percent = _container_stats(c)
         started_at = labels.get("started-at")
         duration = int(labels.get("duration-minutes", 60))
-        stops_at = _stops_at(started_at, duration)
+        extra = _extensions.get(c.short_id, 0)
+        stops_at = _stops_at(started_at, duration + extra)
         container_info = {
             "id": c.short_id,
             "name": c.name,
@@ -567,7 +570,8 @@ def auto_stop_expired_containers():
             started_at = datetime.fromisoformat(started_at_str)
             if started_at.tzinfo is None:
                 started_at = started_at.replace(tzinfo=timezone.utc)
-            stops_at = started_at + timedelta(minutes=int(duration_str))
+            extra = _extensions.get(c.short_id, 0)
+            stops_at = started_at + timedelta(minutes=int(duration_str) + extra)
 
             user = None
             if user_id_str:
@@ -587,13 +591,39 @@ def auto_stop_expired_containers():
             # Auto-stop
             if now >= stops_at:
                 _warned_containers.discard(c.id)
+                _extensions.pop(c.short_id, None)
                 if user and user.notify_on_stop:
                     threading.Thread(target=notify_container_stopped,
                                      args=(user.email, c.name), daemon=True).start()
                 c.stop()
+                try:
+                    from app.models.audit import AuditLogDB
+                    log = AuditLogDB(
+                        user_id=user.id if user else None,
+                        username=user.username if user else None,
+                        action="auto_stopped",
+                        container_name=c.name,
+                        template=labels.get("template"),
+                    )
+                    db.add(log)
+                    db.commit()
+                except Exception:
+                    pass
         except Exception:
             continue
     db.close()
+
+def extend_container(container_id: str, extra_minutes: int = 30) -> dict:
+    c = client.containers.get(container_id)
+    _extensions[c.short_id] = _extensions.get(c.short_id, 0) + extra_minutes
+    _warned_containers.discard(c.id)  # allow re-warning after extension
+    labels = c.labels
+    started_at = labels.get("started-at")
+    duration = int(labels.get("duration-minutes", 60))
+    total_extra = _extensions[c.short_id]
+    new_stops_at = _stops_at(started_at, duration + total_extra)
+    return {"extended_by": extra_minutes, "total_extra": total_extra, "stops_at": new_stops_at}
+
 
 def get_container_logs(container_id: str, tail: int = 200) -> list[str]:
     import re

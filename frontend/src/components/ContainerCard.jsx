@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { stopContainer, removeContainer, restartContainer, startStoppedContainer } from "../services/api";
+import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import { useToast } from "./Toast";
 import "./ContainerCard.css";
+
+const EXTEND_MINUTES = [15, 30, 60];
 
 const TEMPLATE_ICONS = {
   postgres: "🐘", mysql: "🐬", mariadb: "🐬", mongo: "🍃", redis: "⚡",
@@ -40,13 +42,16 @@ function formatCountdown(seconds) {
   return `${s}s`;
 }
 
-export default function ContainerCard({ container, onStopped, onRemoved, viewMode = "grid" }) {
+export default function ContainerCard({ container, onStopped, onRemoved, viewMode = "grid", selectMode = false, isSelected = false, onToggleSelect, onClone }) {
   const toast = useToast();
   const [restarting, setRestarting] = useState(false);
   const [acting, setActing] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [extendOpen, setExtendOpen] = useState(false);
+  const [extending, setExtending] = useState(false);
+  const [cloning, setCloning] = useState(false);
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
@@ -56,6 +61,13 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const icon = TEMPLATE_ICONS[templateBase] || "📦";
   const cpuColor = container.cpu_percent > 80 ? "#f38ba8" : container.cpu_percent > 50 ? "#fab387" : "#a6e3a1";
   const ramColor = container.ram_percent > 80 ? "#f38ba8" : container.ram_percent > 50 ? "#fab387" : "#a6e3a1";
+
+  useEffect(() => {
+    if (!extendOpen) return;
+    function close() { setExtendOpen(false); }
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [extendOpen]);
 
   async function handleStop(e) {
     e.stopPropagation();
@@ -81,6 +93,34 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     finally { setRestarting(false); }
   }
 
+  async function handleExtend(e, minutes) {
+    e.stopPropagation();
+    setExtending(true);
+    try {
+      await extendContainer(container.id, minutes);
+      setExtendOpen(false);
+      onStopped();
+      toast.success(`+${minutes} Min. hinzugefügt`);
+    } catch (err) {
+      toast.error("Fehler: " + err.message);
+    } finally {
+      setExtending(false);
+    }
+  }
+
+  async function handleClone(e) {
+    e.stopPropagation();
+    setCloning(true);
+    try {
+      const config = await fetchContainerConfig(container.id);
+      onClone?.(config);
+    } catch (err) {
+      toast.error("Fehler beim Klonen: " + err.message);
+    } finally {
+      setCloning(false);
+    }
+  }
+
   async function handleRemove(e) {
     e.stopPropagation();
     if (!confirmDelete) { setConfirmDelete(true); return; }
@@ -95,6 +135,46 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
       {isRunning && (
         <button className="btn-restart" onClick={handleRestart} disabled={restarting} title="Neustart">
           {restarting ? "…" : "↺ Neustart"}
+        </button>
+      )}
+      {isRunning && (
+        <div style={{ position: "relative", display: "inline-block" }}>
+          <button
+            className="btn-restart"
+            onClick={(e) => { e.stopPropagation(); setExtendOpen((o) => !o); }}
+            disabled={extending}
+            title="Laufzeit verlängern"
+          >
+            ⏱+
+          </button>
+          {extendOpen && (
+            <div
+              style={{
+                position: "absolute", top: "110%", right: 0, zIndex: 100,
+                background: "var(--surface1)", border: "1px solid var(--border)",
+                borderRadius: "0.5rem", padding: "0.4rem", display: "flex",
+                flexDirection: "column", gap: "0.3rem", minWidth: "7rem",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {EXTEND_MINUTES.map((m) => (
+                <button
+                  key={m}
+                  className="btn-restart"
+                  style={{ width: "100%", justifyContent: "center" }}
+                  onClick={(e) => handleExtend(e, m)}
+                  disabled={extending}
+                >
+                  +{m} Min.
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {isRunning && onClone && (
+        <button className="btn-restart" onClick={handleClone} disabled={cloning} title="Mit gleicher Konfiguration neu starten">
+          {cloning ? "…" : "⧉"}
         </button>
       )}
       {isRunning ? (
@@ -123,7 +203,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
       <>
         <div
           className={`container-row ${!isRunning ? "card-stopped" : ""}`}
-          onClick={() => setEditOpen(true)}
+          onClick={() => selectMode ? onToggleSelect(container.id) : setEditOpen(true)}
           title="Konfiguration bearbeiten"
         >
           <span className="row-icon-sm">{icon}</span>
@@ -149,6 +229,15 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
               </div>
               <span className="row-stat-label" style={{ color: ramColor }}>{container.ram_mb} MB</span>
             </div>
+          )}
+          {selectMode && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => { e.stopPropagation(); onToggleSelect(container.id); }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: "1.1rem", height: "1.1rem", cursor: "pointer", accentColor: "var(--accent, #89b4fa)" }}
+            />
           )}
           {actions}
         </div>
@@ -176,7 +265,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     <>
       <div
         className={`container-card ${!isRunning ? "card-stopped" : ""}`}
-        onClick={() => setEditOpen(true)}
+        onClick={() => selectMode ? onToggleSelect(container.id) : setEditOpen(true)}
         style={{ cursor: "pointer" }}
         title="Konfiguration bearbeiten"
       >
@@ -186,6 +275,15 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
             <span className="card-name">{container.name}</span>
             <span className={`card-status status-${container.status}`}>{container.status}</span>
           </div>
+          {selectMode && (
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={(e) => { e.stopPropagation(); onToggleSelect(container.id); }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ width: "1.1rem", height: "1.1rem", cursor: "pointer", accentColor: "var(--accent, #89b4fa)" }}
+            />
+          )}
           {actions}
         </div>
 

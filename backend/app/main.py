@@ -5,7 +5,7 @@ from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
-from app.routers import containers, notifications, auth, user_templates, team_templates, teams, marketplace
+from app.routers import containers, notifications, auth, user_templates, team_templates, teams, marketplace, audit
 from app.database import engine
 from app.models import user as user_model
 from app.models import template as template_model
@@ -19,6 +19,8 @@ template_model.Base.metadata.create_all(bind=engine)
 team_model.Base.metadata.create_all(bind=engine)
 team_template_model.Base.metadata.create_all(bind=engine)
 marketplace_model.Base.metadata.create_all(bind=engine)
+from app.models import audit as audit_model
+audit_model.Base.metadata.create_all(bind=engine)
 
 def _run_migrations():
     user_cols = [
@@ -83,6 +85,7 @@ app.include_router(user_templates.router)
 app.include_router(team_templates.router)
 app.include_router(teams.router)
 app.include_router(marketplace.router)
+app.include_router(audit.router)
 
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads", "marketplace"))
 os.makedirs(UPLOAD_DIR, exist_ok=True)

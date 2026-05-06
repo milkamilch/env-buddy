@@ -1,6 +1,6 @@
 import "./DashboardStats.css";
 
-export default function DashboardStats({ containers, stacks, systemTotalRamMb }) {
+export default function DashboardStats({ containers, stacks, systemTotalRamMb, maxContainers = 0 }) {
   const allContainers = [
     ...containers,
     ...stacks.flatMap((s) => s.containers),
@@ -41,7 +41,9 @@ export default function DashboardStats({ containers, stacks, systemTotalRamMb })
     <div className="dash-stats">
       {/* Status-Zahlen */}
       <div className="stat-card">
-        <span className="stat-card-value stat-green">{running.length}</span>
+        <span className="stat-card-value stat-green">
+          {running.length}{maxContainers > 0 ? ` / ${maxContainers}` : ""}
+        </span>
         <span className="stat-card-label">Running</span>
       </div>
       <div className="stat-card">

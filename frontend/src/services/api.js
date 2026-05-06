@@ -163,6 +163,16 @@ export async function restartContainer(containerId) {
   return res.json();
 }
 
+export async function extendContainer(containerId, extraMinutes = 30) {
+  const res = await apiFetch(`${BASE}/api/containers/${containerId}/extend`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ extra_minutes: extraMinutes }),
+  });
+  if (!res.ok) throw new Error("Failed to extend container");
+  return res.json();
+}
+
 export async function startStack(containers, stackName, duration_minutes) {
   const res = await apiFetch(`${BASE}/api/containers/stacks/start`, {
     method: "POST",
@@ -403,6 +413,16 @@ export async function updateNotificationPrefs(prefs) {
   return json;
 }
 
+export async function sendTestNotification() {
+  const res = await apiFetch(`${BASE}/api/notifications/test`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Senden");
+  return json;
+}
+
 // ── Marketplace ───────────────────────────────────────────────────────────────
 
 export async function fetchMarketplace({ search = "", sort = "newest" } = {}) {
@@ -520,4 +540,12 @@ export async function importMarketplaceTemplate(id) {
   const json = await res.json();
   if (!res.ok) throw new Error(json.detail || "Fehler beim Importieren");
   return json;
+}
+
+// ── Audit ─────────────────────────────────────────────────────────────────
+
+export async function fetchAuditLog() {
+  const res = await apiFetch(`${BASE}/api/audit/`, { headers: authHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch audit log");
+  return res.json();
 }
