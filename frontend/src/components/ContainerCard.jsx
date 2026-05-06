@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer } from "../services/api";
+import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import { useToast } from "./Toast";
@@ -42,7 +42,7 @@ function formatCountdown(seconds) {
   return `${s}s`;
 }
 
-export default function ContainerCard({ container, onStopped, onRemoved, viewMode = "grid", selectMode = false, isSelected = false, onToggleSelect }) {
+export default function ContainerCard({ container, onStopped, onRemoved, viewMode = "grid", selectMode = false, isSelected = false, onToggleSelect, onClone }) {
   const toast = useToast();
   const [restarting, setRestarting] = useState(false);
   const [acting, setActing] = useState(false);
@@ -51,6 +51,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [extendOpen, setExtendOpen] = useState(false);
   const [extending, setExtending] = useState(false);
+  const [cloning, setCloning] = useState(false);
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
@@ -107,6 +108,19 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     }
   }
 
+  async function handleClone(e) {
+    e.stopPropagation();
+    setCloning(true);
+    try {
+      const config = await fetchContainerConfig(container.id);
+      onClone?.(config);
+    } catch (err) {
+      toast.error("Fehler beim Klonen: " + err.message);
+    } finally {
+      setCloning(false);
+    }
+  }
+
   async function handleRemove(e) {
     e.stopPropagation();
     if (!confirmDelete) { setConfirmDelete(true); return; }
@@ -157,6 +171,11 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
             </div>
           )}
         </div>
+      )}
+      {isRunning && onClone && (
+        <button className="btn-restart" onClick={handleClone} disabled={cloning} title="Mit gleicher Konfiguration neu starten">
+          {cloning ? "…" : "⧉"}
+        </button>
       )}
       {isRunning ? (
         <button className="btn-stop" onClick={handleStop} disabled={acting} title="Stoppen">

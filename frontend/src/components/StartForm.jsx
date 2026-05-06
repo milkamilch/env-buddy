@@ -18,7 +18,7 @@ function buildMemSteps(totalRamMb) {
   return ALL_MEM_STEPS.filter((s) => s.mb === 0 || s.mb <= totalRamMb);
 }
 
-export default function StartForm({ templates, onStarted }) {
+export default function StartForm({ templates, onStarted, prefill, onPrefillConsumed }) {
   const [mode, setMode] = useState("single");
 
   // ── Single mode ──────────────────────────────────────────────────────────
@@ -46,6 +46,17 @@ export default function StartForm({ templates, onStarted }) {
   useEffect(() => {
     if (templates.length > 0) setTemplate(templates[0].key);
   }, [templates]);
+
+  useEffect(() => {
+    if (!prefill) return;
+    if (prefill.template) setTemplate(prefill.template);
+    if (prefill.env) setEnvVars(Object.entries(prefill.env).map(([key, val]) => ({ key, value: val })));
+    if (prefill.port) setHostPort(String(prefill.port));
+    if (prefill.duration_minutes) setDuration(prefill.duration_minutes);
+    setContainerName("");
+    setShowConfig(true);
+    onPrefillConsumed?.();
+  }, [prefill]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchSystemInfo()

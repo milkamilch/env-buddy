@@ -29,6 +29,7 @@ export default function DashboardPage({
   const [selectMode, setSelectMode]   = useState(false);
   const [selected, setSelected]       = useState(new Set());
   const [bulkWorking, setBulkWorking] = useState(false);
+  const [clonePrefill, setClonePrefill] = useState(null);
 
   useEffect(() => {
     fetchSystemInfo()
@@ -143,7 +144,7 @@ export default function DashboardPage({
     <main className="app-main">
       <aside className="app-sidebar">
         {startFormTemplates.length > 0 && (
-          <StartForm templates={startFormTemplates} onStarted={onStarted} />
+          <StartForm templates={startFormTemplates} onStarted={onStarted} prefill={clonePrefill} onPrefillConsumed={() => setClonePrefill(null)} />
         )}
       </aside>
 
@@ -261,7 +262,7 @@ export default function DashboardPage({
                 <div className="section-label">Container <span className="section-count">{filtered.length}</span></div>
                 <div className={`container-grid ${viewMode === "list" ? "grid-list" : ""}`}>
                   {filtered.map((c) => (
-                    <ContainerCard key={c.id} container={c} onStopped={onStopped} onRemoved={onRemoved} viewMode={viewMode} selectMode={selectMode} isSelected={selected.has(c.id)} onToggleSelect={toggleSelect} />
+                    <ContainerCard key={c.id} container={c} onStopped={onStopped} onRemoved={onRemoved} viewMode={viewMode} selectMode={selectMode} isSelected={selected.has(c.id)} onToggleSelect={toggleSelect} onClone={setClonePrefill} />
                   ))}
                 </div>
               </div>
