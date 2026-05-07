@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig } from "../services/api";
+import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import { useToast } from "./Toast";
@@ -99,6 +99,27 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const icon = TEMPLATE_ICONS[templateBase] || "📦";
   const cpuColor = container.cpu_percent > 80 ? "#f38ba8" : container.cpu_percent > 50 ? "#fab387" : "#a6e3a1";
   const ramColor = container.ram_percent > 80 ? "#f38ba8" : container.ram_percent > 50 ? "#fab387" : "#a6e3a1";
+
+  async function handleCopyConnectionString(e) {
+    e.stopPropagation();
+    if (!container.connection_string) return;
+    try {
+      await navigator.clipboard.writeText(container.connection_string);
+      toast.success("Connection String kopiert");
+    } catch {
+      toast.error("Kopieren fehlgeschlagen");
+    }
+  }
+
+  async function handleDownloadDotenv(e) {
+    e.stopPropagation();
+    try {
+      await downloadContainerDotenv(container.id, container.name);
+      toast.success(".env heruntergeladen");
+    } catch (err) {
+      toast.error("Fehler: " + err.message);
+    }
+  }
 
   useEffect(() => {
     if (!extendOpen) return;
@@ -349,6 +370,16 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
             </span>
           )}
         </div>
+
+        {container.connection_string && (
+          <div className="card-connection" onClick={(e) => e.stopPropagation()}>
+            <code className="card-conn-str" title={container.connection_string}>
+              {container.connection_string}
+            </code>
+            <button className="btn-copy-conn" onClick={handleCopyConnectionString} title="Connection String kopieren">⧉</button>
+            <button className="btn-copy-conn" onClick={handleDownloadDotenv} title=".env herunterladen">.env</button>
+          </div>
+        )}
 
         {isRunning && (
           <div className="card-stats">
