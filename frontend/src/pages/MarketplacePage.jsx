@@ -131,6 +131,8 @@ function DetailModal({ tmpl, user, onClose, onImported, onDeleted }) {
     try {
       await importMarketplaceTemplate(tmpl.id);
       toast.success("Template in deine Templates importiert");
+      const updated = await fetchMarketplaceTemplate(tmpl.id);
+      setDetail(updated);
       onImported?.();
     } catch (e) {
       toast.error(e.message);
