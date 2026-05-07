@@ -195,13 +195,16 @@ def _stops_at(started_at_str: str | None, duration_minutes: int) -> str | None:
         dt = dt.replace(tzinfo=timezone.utc)
     return (dt + timedelta(minutes=duration_minutes)).isoformat()
 
-def get_free_port(start=10000,end=11000):
+def get_free_port(start=10000, end=11000):
     import socket
     for port in range(start, end):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            if s.connect_ex(("localhost", port)) != 0:
+            try:
+                s.bind(("", port))
                 return port
-    raise RuntimeError("No free port fund, bruh!")
+            except OSError:
+                continue
+    raise RuntimeError(f"Kein freier Port im Bereich {start}-{end} gefunden.")
 
 def start_container(template_name: str, duration_minutes: int = 60,
                     env_overrides: dict = {}, host_port: int | None = None,
@@ -234,10 +237,18 @@ def start_container(template_name: str, duration_minutes: int = 60,
     if mem_limit:
         run_kwargs["mem_limit"] = mem_limit
 
-    try:
-        container = client.containers.run(**run_kwargs)
-    except docker.errors.APIError as e:
-        _handle_docker_api_error(e, actual_port)
+    for attempt in range(3):
+        try:
+            container = client.containers.run(**run_kwargs)
+            break
+        except docker.errors.APIError as e:
+            msg = str(e).lower()
+            if attempt < 2 and ("port is already allocated" in msg or "bind for" in msg):
+                actual_port = get_free_port(actual_port + 1)
+                run_kwargs["ports"] = {f"{template['port']}/tcp": actual_port}
+                run_kwargs["labels"]["port"] = str(actual_port)
+            else:
+                _handle_docker_api_error(e, actual_port)
 
     return {
         "id": container.id[:12],
