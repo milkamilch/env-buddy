@@ -122,6 +122,22 @@
 }
 .btn-profile:hover { background: var(--overlay0); }
 
+.btn-theme-toggle {
+  background: transparent;
+  border: 1px solid var(--overlay1);
+  border-radius: 6px;
+  color: var(--subtext1);
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1;
+}
+
+.btn-theme-toggle:hover {
+  border-color: var(--yellow, #f9e2af);
+}
+
 .btn-inbox {
   background: transparent;
   border: 1px solid var(--overlay1);

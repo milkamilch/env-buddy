@@ -4,19 +4,10 @@ import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import ResourceGraphModal from "./ResourceGraphModal";
 import { useToast } from "./Toast";
+import TEMPLATE_ICONS from "../templateIcons";
 import "./ContainerCard.css";
 
 const EXTEND_MINUTES = [15, 30, 60];
-
-const TEMPLATE_ICONS = {
-  postgres: "🐘", mysql: "🐬", mariadb: "🐬", mongo: "🍃", redis: "⚡",
-  cockroachdb: "🪳", neo4j: "🕸️", influxdb: "📈", couchdb: "🛋️", timescaledb: "⏱️",
-  elasticsearch: "🔍", cassandra: "💎", rabbitmq: "🐰", kafka: "📨", nats: "🚀", mosquitto: "🦟",
-  nginx: "🌐", httpd: "🌐", traefik: "🔀",
-  mailhog: "📬", adminer: "🗄️", minio: "🪣", vault: "🔐", keycloak: "🗝️",
-  gitea: "🐱", prometheus: "🔥", grafana: "📊", jaeger: "🔭", sonarqube: "🧹",
-  registry: "📦", verdaccio: "📦",
-};
 
 const HISTORY_MAX = 30;
 

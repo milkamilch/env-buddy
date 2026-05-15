@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, fetchTeamTemplates, fetchInvitations, acceptInvitation, declineInvitation } from "./services/api";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, fetchTeamTemplates, fetchInvitations, acceptInvitation, declineInvitation, updateNotificationPrefs } from "./services/api";
+import TEMPLATE_ICONS from "./templateIcons";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import TemplatesPage from "./pages/TemplatesPage";
@@ -32,15 +34,6 @@ function UserAvatar({ user }) {
   );
 }
 
-const DEFAULT_ICONS = {
-  postgres: "🐘", mysql: "🐬", mariadb: "🐬", mongo: "🍃", redis: "⚡",
-  cockroachdb: "🪳", neo4j: "🕸️", influxdb: "📈", couchdb: "🛋️", timescaledb: "⏱️",
-  elasticsearch: "🔍", cassandra: "💎", rabbitmq: "🐰", kafka: "📨", nats: "🚀", mosquitto: "🦟",
-  nginx: "🌐", httpd: "🌐", traefik: "🔀",
-  mailhog: "📬", adminer: "🗄️", minio: "🪣", vault: "🔐", keycloak: "🗝️",
-  gitea: "🐱", prometheus: "🔥", grafana: "📊", jaeger: "🔭", sonarqube: "🧹",
-  registry: "📦", verdaccio: "📦",
-};
 
 function getStoredUser() {
   try { return JSON.parse(localStorage.getItem("user")); } catch { return null; }
@@ -51,24 +44,26 @@ export default function App() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
   const [inboxOpen, setInboxOpen] = useState(false);
-  const [page, setPage] = useState("dashboard");
   const [containers, setContainers] = useState([]);
   const [stacks, setStacks] = useState([]);
   const [startFormTemplates, setStartFormTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
+    navigate("/");
   }
 
   async function loadStartFormTemplates() {
     try {
       const defaults = await fetchDefaultTemplates();
       const defaultMap = Object.fromEntries(
-        defaults.map((k) => [k, { key: k, label: k, icon: DEFAULT_ICONS[k] || "📦" }])
+        defaults.map((k) => [k, { key: k, label: k, icon: TEMPLATE_ICONS[k] || "📦" }])
       );
 
       let customs = [], teamTpls = [], favKeys = [];
@@ -160,8 +155,10 @@ export default function App() {
   }, [user]);
 
   if (!user) {
-    return <AuthPage onAuth={(u) => setUser(u)} />;
+    return <AuthPage onAuth={(u) => { setUser(u); navigate("/"); }} />;
   }
+
+  const path = location.pathname.replace(/^\//, "") || "dashboard";
 
   return (
     <div className="app">
@@ -173,30 +170,30 @@ export default function App() {
         </div>
 
         <nav className="app-nav">
-          <button className={`nav-btn ${page === "dashboard" ? "active" : ""}`} onClick={() => setPage("dashboard")}>
+          <button className={`nav-btn ${path === "dashboard" ? "active" : ""}`} onClick={() => navigate("/dashboard")}>
             Dashboard
           </button>
           <button
-            className={`nav-btn ${page === "templates" ? "active" : ""}`}
-            onClick={() => { setPage("templates"); loadStartFormTemplates(); }}
+            className={`nav-btn ${path === "templates" ? "active" : ""}`}
+            onClick={() => { navigate("/templates"); loadStartFormTemplates(); }}
           >
             Templates
           </button>
           <button
-            className={`nav-btn ${page === "teams" ? "active" : ""}`}
-            onClick={() => setPage("teams")}
+            className={`nav-btn ${path === "teams" ? "active" : ""}`}
+            onClick={() => navigate("/teams")}
           >
             Teams
           </button>
           <button
-            className={`nav-btn ${page === "marketplace" ? "active" : ""}`}
-            onClick={() => setPage("marketplace")}
+            className={`nav-btn ${path === "marketplace" ? "active" : ""}`}
+            onClick={() => navigate("/marketplace")}
           >
             Marketplace
           </button>
           <button
-            className={`nav-btn ${page === "audit" ? "active" : ""}`}
-            onClick={() => setPage("audit")}
+            className={`nav-btn ${path === "audit" ? "active" : ""}`}
+            onClick={() => navigate("/audit")}
           >
             Verlauf
           </button>
@@ -207,6 +204,26 @@ export default function App() {
           {error ? "Offline" : "Backend verbunden"}
         </div>
         <div className="header-user">
+          <button
+            className="btn-theme-toggle"
+            title={user.theme === "dark" ? "Light Mode" : "Dark Mode"}
+            onClick={async () => {
+              const newTheme = user.theme === "dark" ? "light" : "dark";
+              const updated = await updateNotificationPrefs({
+                notify_on_start:   user.notify_on_start   ?? true,
+                notify_on_stop:    user.notify_on_stop    ?? true,
+                notify_on_warning: user.notify_on_warning ?? true,
+                theme:             newTheme,
+                webhook_url:       user.webhook_url       ?? null,
+                allow_invitations: user.allow_invitations ?? true,
+              });
+              const newUser = { ...user, ...updated };
+              setUser(newUser);
+              localStorage.setItem("user", JSON.stringify(newUser));
+            }}
+          >
+            {user.theme === "dark" ? "☀️" : "🌙"}
+          </button>
           <button
             className="btn-inbox"
             onClick={() => setInboxOpen(true)}
@@ -235,26 +252,26 @@ export default function App() {
         </div>
       )}
 
-      {page === "templates" ? (
-        <TemplatesPage />
-      ) : page === "teams" ? (
-        <TeamsPage user={user} />
-      ) : page === "marketplace" ? (
-        <MarketplacePage user={user} />
-      ) : page === "audit" ? (
-        <AuditPage />
-      ) : (
-        <DashboardPage
-          containers={containers}
-          stacks={stacks}
-          loading={loading}
-          startFormTemplates={startFormTemplates}
-          onStarted={loadAll}
-          onStopped={handleStopped}
-          onRemoved={handleRemoved}
-          onStackStopped={handleStackStopped}
-        />
-      )}
+      <Routes>
+        <Route path="/templates" element={<TemplatesPage />} />
+        <Route path="/teams" element={<TeamsPage user={user} />} />
+        <Route path="/marketplace" element={<MarketplacePage user={user} />} />
+        <Route path="/audit" element={<AuditPage />} />
+        <Route path="/dashboard" element={
+          <DashboardPage
+            containers={containers}
+            stacks={stacks}
+            loading={loading}
+            startFormTemplates={startFormTemplates}
+            onStarted={loadAll}
+            onStopped={handleStopped}
+            onRemoved={handleRemoved}
+            onStackStopped={handleStackStopped}
+          />
+        } />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
 
       {profileOpen && (
         <ProfileModal
