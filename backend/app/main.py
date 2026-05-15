@@ -62,6 +62,17 @@ def _run_migrations():
             conn.commit()
         except Exception:
             pass
+        # avatar_url and bio columns
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN avatar_url TEXT"))
+            conn.commit()
+        except Exception:
+            pass
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN bio TEXT"))
+            conn.commit()
+        except Exception:
+            pass
 
 async def _auto_stop_loop():
     while True:
@@ -96,6 +107,10 @@ app.include_router(audit.router)
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads", "marketplace"))
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads/marketplace", StaticFiles(directory=UPLOAD_DIR), name="marketplace-uploads")
+
+AVATAR_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads", "avatars"))
+os.makedirs(AVATAR_DIR, exist_ok=True)
+app.mount("/uploads/avatars", StaticFiles(directory=AVATAR_DIR), name="avatar-uploads")
 
 @app.get("/health")
 def health():
