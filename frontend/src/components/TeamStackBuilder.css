@@ -346,6 +346,21 @@
 .tsb-item-btn:hover { color: var(--mauve); }
 .tsb-item-remove:hover { color: var(--red) !important; }
 
+.tsb-item-drag-handle {
+  cursor: grab;
+  color: var(--overlay1);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  user-select: none;
+  transition: color 0.12s;
+}
+.tsb-item:hover .tsb-item-drag-handle { color: var(--subtext0); }
+.tsb-item-dragging { opacity: 0.4; }
+.tsb-item-drag-over {
+  border-color: var(--mauve);
+  box-shadow: 0 -2px 0 var(--mauve);
+}
+
 /* ── Item expanded config ────────────────────────────────────────────────── */
 
 .tsb-item-config {
