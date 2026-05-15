@@ -23,6 +23,15 @@ const CPU_STEPS = [
   { label: "4 CPUs",     value: 4.0   },
 ];
 
+function formToJson(hostPort, containerName, memStep, memSteps, envVars) {
+  return JSON.stringify({
+    container_name: containerName || null,
+    host_port: hostPort ? parseInt(hostPort, 10) : null,
+    mem_limit: memSteps[Math.min(memStep, memSteps.length - 1)].apiValue || null,
+    env: Object.fromEntries(envVars.filter((e) => e.key).map((e) => [e.key, e.value])),
+  }, null, 2);
+}
+
 export default function ContainerEditModal({ containerId, onClose, onSaved, maxRamMb }) {
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose(); }
@@ -40,13 +49,18 @@ export default function ContainerEditModal({ containerId, onClose, onSaved, maxR
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  const [jsonMode, setJsonMode] = useState(false);
+  const [jsonText, setJsonText] = useState("");
+  const [jsonError, setJsonError] = useState(null);
+
   const memSteps = ALL_MEM_STEPS.filter((s) => s.mb === 0 || !maxRamMb || s.mb <= maxRamMb);
 
   useEffect(() => {
     fetchContainerConfig(containerId)
       .then((cfg) => {
         setConfig(cfg);
-        setEnvVars(Object.entries(cfg.env).map(([key, value]) => ({ key, value })));
+        const vars = Object.entries(cfg.env).map(([key, value]) => ({ key, value }));
+        setEnvVars(vars);
         setHostPort(cfg.port ? String(cfg.port) : "");
         setContainerName(cfg.name || "");
         const currentMem = cfg.mem_limit || "";
@@ -58,6 +72,31 @@ export default function ContainerEditModal({ containerId, onClose, onSaved, maxR
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [containerId]);
+
+  function switchToJson() {
+    setJsonText(formToJson(hostPort, containerName, memStep, memSteps, envVars));
+    setJsonError(null);
+    setJsonMode(true);
+  }
+
+  function switchToForm() {
+    try {
+      const parsed = JSON.parse(jsonText);
+      if (parsed.env && typeof parsed.env === "object") {
+        setEnvVars(Object.entries(parsed.env).map(([key, value]) => ({ key, value: String(value) })));
+      }
+      if (parsed.host_port !== undefined) setHostPort(parsed.host_port ? String(parsed.host_port) : "");
+      if (parsed.container_name !== undefined) setContainerName(parsed.container_name || "");
+      if (parsed.mem_limit !== undefined) {
+        const idx = memSteps.findIndex((s) => s.apiValue === (parsed.mem_limit || ""));
+        setMemStep(idx >= 0 ? idx : 0);
+      }
+      setJsonError(null);
+      setJsonMode(false);
+    } catch {
+      setJsonError("Ungültiges JSON — bitte korrigieren");
+    }
+  }
 
   function updateEnvKey(i, key) {
     setEnvVars((prev) => prev.map((e, idx) => idx === i ? { ...e, key } : e));
@@ -76,21 +115,30 @@ export default function ContainerEditModal({ containerId, onClose, onSaved, maxR
     setSaving(true);
     setError(null);
     try {
-      const env_overrides = Object.fromEntries(
-        envVars.filter((e) => e.key).map((e) => [e.key, e.value])
-      );
-      const memValue = memSteps[Math.min(memStep, memSteps.length - 1)].apiValue;
-      const cpuValue = CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].value;
-      await updateContainerConfig(containerId, {
-        env_overrides,
-        host_port: hostPort ? parseInt(hostPort, 10) : null,
-        container_name: containerName || null,
-        mem_limit: memValue || null,
-        cpu_limit: cpuValue,
-      });
+      let env_overrides, host_port, container_name, mem_limit, cpu_limit;
+
+      if (jsonMode) {
+        const parsed = JSON.parse(jsonText);
+        env_overrides = parsed.env && typeof parsed.env === "object"
+          ? Object.fromEntries(Object.entries(parsed.env).map(([k, v]) => [k, String(v)]))
+          : {};
+        host_port = parsed.host_port ? parseInt(parsed.host_port, 10) : null;
+        container_name = parsed.container_name || null;
+        mem_limit = parsed.mem_limit || null;
+        cpu_limit = parsed.cpu_limit ?? null;
+      } else {
+        env_overrides = Object.fromEntries(envVars.filter((e) => e.key).map((e) => [e.key, e.value]));
+        const memValue = memSteps[Math.min(memStep, memSteps.length - 1)].apiValue;
+        host_port = hostPort ? parseInt(hostPort, 10) : null;
+        container_name = containerName || null;
+        mem_limit = memValue || null;
+        cpu_limit = CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].value;
+      }
+
+      await updateContainerConfig(containerId, { env_overrides, host_port, container_name, mem_limit, cpu_limit });
       onSaved();
     } catch (e) {
-      setError(e.message);
+      setError(e.message || "Ungültiges JSON");
     } finally {
       setSaving(false);
     }
@@ -103,11 +151,42 @@ export default function ContainerEditModal({ containerId, onClose, onSaved, maxR
           <span className="modal-title">
             {config ? `${config.template} konfigurieren` : "Konfiguration"}
           </span>
+          <div className="modal-view-toggle">
+            <button
+              className={`modal-view-btn ${!jsonMode ? "active" : ""}`}
+              onClick={() => jsonMode ? switchToForm() : undefined}
+              title="Formular-Ansicht"
+            >
+              Formular
+            </button>
+            <button
+              className={`modal-view-btn ${jsonMode ? "active" : ""}`}
+              onClick={() => !jsonMode ? switchToJson() : undefined}
+              title="JSON-Ansicht"
+            >
+              JSON
+            </button>
+          </div>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
         {loading ? (
           <p className="modal-hint">Lade Konfiguration…</p>
+        ) : jsonMode ? (
+          <div className="modal-body">
+            <p className="modal-json-hint">
+              Bearbeite die Konfiguration als JSON. Felder: <code>container_name</code>, <code>host_port</code>, <code>mem_limit</code>, <code>env</code>.
+            </p>
+            <textarea
+              className="modal-json-editor"
+              value={jsonText}
+              onChange={(e) => { setJsonText(e.target.value); setJsonError(null); }}
+              spellCheck={false}
+              rows={16}
+            />
+            {jsonError && <p className="modal-error">{jsonError}</p>}
+            {error && <p className="modal-error">{error}</p>}
+          </div>
         ) : (
           <div className="modal-body">
             <div className="modal-row">
