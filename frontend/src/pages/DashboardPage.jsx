@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { fetchSystemInfo, startStoppedContainer, stopContainer, removeContainer } from "../services/api";
 import StartForm from "../components/StartForm";
 import ContainerCard from "../components/ContainerCard";
 import StackCard from "../components/StackCard";
 import DashboardStats from "../components/DashboardStats";
+import ImportContainerModal from "../components/ImportContainerModal";
 import { useToast } from "../components/Toast";
 
 const STATUS_FILTERS = ["alle", "running", "paused", "exited"];
@@ -30,6 +32,21 @@ export default function DashboardPage({
   const [selected, setSelected]       = useState(new Set());
   const [bulkWorking, setBulkWorking] = useState(false);
   const [clonePrefill, setClonePrefill] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // #50: Decode shared config from URL ?start=base64
+  useEffect(() => {
+    const encoded = searchParams.get("start");
+    if (!encoded) return;
+    try {
+      const config = JSON.parse(atob(encoded));
+      setClonePrefill(config);
+      setSearchParams({}, { replace: true });
+    } catch {
+      // ignore malformed share links
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchSystemInfo()
@@ -164,6 +181,14 @@ export default function DashboardPage({
               {startingAll ? "…" : `▶ Alle starten (${stoppedContainers.length})`}
             </button>
           )}
+          <button
+            className="btn-start-all"
+            onClick={() => setImportOpen(true)}
+            title="Container aus JSON importieren"
+            style={{ background: "var(--overlay1)" }}
+          >
+            ↑ Importieren
+          </button>
         </div>
 
         {!loading && (containers.length > 0 || stacks.length > 0) && (
@@ -291,6 +316,12 @@ export default function DashboardPage({
             🧹 Exited aufräumen
           </button>
         </div>
+      )}
+      {importOpen && (
+        <ImportContainerModal
+          onImport={(config) => setClonePrefill(config)}
+          onClose={() => setImportOpen(false)}
+        />
       )}
     </main>
   );

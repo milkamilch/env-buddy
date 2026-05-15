@@ -439,6 +439,81 @@ async def stream_logs(
             pass
 
 
+@router.websocket("/{container_id}/terminal")
+async def terminal(
+    websocket: WebSocket,
+    container_id: str,
+    token: str = Query(...),
+    db=Depends(get_db),
+):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload["sub"])
+        user = db.query(UserDB).filter(UserDB.id == user_id).first()
+        if not user:
+            await websocket.close(code=4001)
+            return
+    except JWTError:
+        await websocket.close(code=4001)
+        return
+
+    try:
+        _assert_owner(container_id, user)
+    except HTTPException:
+        await websocket.close(code=4003)
+        return
+
+    await websocket.accept()
+    loop = asyncio.get_event_loop()
+    try:
+        container = docker_service.client.containers.get(container_id)
+        exec_id = container.client.api.exec_create(
+            container.id,
+            cmd=["/bin/sh", "-c", "TERM=xterm-256color exec $(which bash || which sh)"],
+            stdin=True, stdout=True, stderr=True, tty=True,
+        )
+        sock = container.client.api.exec_start(exec_id["Id"], tty=True, socket=True)
+        sock._sock.setblocking(False)
+
+        async def read_docker():
+            while True:
+                try:
+                    data = await loop.run_in_executor(None, sock._sock.recv, 4096)
+                    if not data:
+                        break
+                    await websocket.send_bytes(data)
+                except BlockingIOError:
+                    await asyncio.sleep(0.02)
+                except Exception:
+                    break
+
+        read_task = asyncio.create_task(read_docker())
+        try:
+            while True:
+                msg = await websocket.receive()
+                if msg["type"] == "websocket.disconnect":
+                    break
+                if "bytes" in msg and msg["bytes"]:
+                    await loop.run_in_executor(None, sock._sock.sendall, msg["bytes"])
+                elif "text" in msg and msg["text"]:
+                    await loop.run_in_executor(None, sock._sock.sendall, msg["text"].encode())
+        finally:
+            read_task.cancel()
+            try:
+                sock._sock.close()
+            except Exception:
+                pass
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        try:
+            await websocket.close()
+        except Exception:
+            pass
+
+
 @router.get("/{container_id}/stats")
 def stats(container_id: str, current_user: UserDB = Depends(_get_required_user)):
     _assert_owner(container_id, current_user)

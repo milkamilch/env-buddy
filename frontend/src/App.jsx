@@ -9,6 +9,7 @@ import TeamsPage from "./pages/TeamsPage";
 import MarketplacePage from "./pages/MarketplacePage";
 import AuditPage from "./pages/AuditPage";
 import ProfileModal from "./components/ProfileModal";
+import CommandPalette from "./components/CommandPalette";
 import "./App.css";
 
 const AVATAR_COLORS = ["#89b4fa","#a6e3a1","#fab387","#f38ba8","#cba6f7","#89dceb","#f9e2af"];
@@ -51,6 +52,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -116,6 +118,17 @@ export default function App() {
     function onAuthLogout() { handleLogout(); }
     window.addEventListener("auth:logout", onAuthLogout);
     return () => window.removeEventListener("auth:logout", onAuthLogout);
+  }, []);
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   useEffect(() => {
@@ -282,6 +295,13 @@ export default function App() {
             setUser(newUser);
             localStorage.setItem("user", JSON.stringify(newUser));
           }}
+        />
+      )}
+
+      {paletteOpen && (
+        <CommandPalette
+          templates={startFormTemplates}
+          onClose={() => setPaletteOpen(false)}
         />
       )}
 

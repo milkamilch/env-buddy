@@ -3,6 +3,7 @@ import { stopContainer, removeContainer, restartContainer, startStoppedContainer
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import ResourceGraphModal from "./ResourceGraphModal";
+import ContainerTerminalModal from "./ContainerTerminalModal";
 import { useToast } from "./Toast";
 import TEMPLATE_ICONS from "../templateIcons";
 import "./ContainerCard.css";
@@ -71,6 +72,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [editOpen, setEditOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
   const [graphOpen, setGraphOpen] = useState(false);
+  const [terminalOpen, setTerminalOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [extendOpen, setExtendOpen] = useState(false);
   const [extending, setExtending] = useState(false);
@@ -222,6 +224,32 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
       {isRunning && (
         <button className="btn-logs" onClick={(e) => { e.stopPropagation(); setGraphOpen(true); }} title="Ressourcen-Verlauf">📊</button>
       )}
+      {isRunning && (
+        <button className="btn-logs" onClick={(e) => { e.stopPropagation(); setTerminalOpen(true); }} title="Terminal öffnen">⌨</button>
+      )}
+      <button
+        className="btn-logs"
+        title="Konfiguration teilen (Link kopieren)"
+        onClick={async (e) => {
+          e.stopPropagation();
+          try {
+            const config = await fetchContainerConfig(container.id);
+            const payload = {
+              template:       container.template || config.name,
+              env:            config.env || {},
+              port:           config.port || null,
+              container_name: "",
+              duration_minutes: config.duration_minutes || 60,
+            };
+            const encoded = btoa(JSON.stringify(payload));
+            const url = `${window.location.origin}/dashboard?start=${encoded}`;
+            await navigator.clipboard.writeText(url);
+            toast.success("Link kopiert");
+          } catch {
+            toast.error("Fehler beim Erstellen des Links");
+          }
+        }}
+      >🔗</button>
       <button
         className="btn-logs"
         title="Als Template speichern"
@@ -494,6 +522,13 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           containerId={container.id}
           containerName={container.name || container.id.slice(0, 12)}
           onClose={() => setGraphOpen(false)}
+        />
+      )}
+      {terminalOpen && (
+        <ContainerTerminalModal
+          containerId={container.id}
+          containerName={container.name || container.id.slice(0, 12)}
+          onClose={() => setTerminalOpen(false)}
         />
       )}
       {saveTemplateOpen && (
