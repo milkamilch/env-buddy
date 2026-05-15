@@ -23,6 +23,7 @@ class UserDB(Base):
     webhook_url       = Column(String, nullable=True)
     avatar_url        = Column(String, nullable=True)
     bio               = Column(Text, nullable=True)
+    allow_invitations = Column(Boolean, default=True)
 
 
 class RegisterRequest(BaseModel):
@@ -49,6 +50,7 @@ class UserResponse(BaseModel):
     webhook_url:       str | None = None
     avatar_url:        str | None = None
     bio:               str | None = None
+    allow_invitations: bool = True
 
     model_config = {"from_attributes": True}
 
@@ -63,6 +65,7 @@ class NotificationPrefsRequest(BaseModel):
     notify_on_warning: bool
     theme:             str = "dark"
     webhook_url:       str | None = None
+    allow_invitations: bool = True
 
 class UpdateProfileRequest(BaseModel):
     first_name:   str | None = None

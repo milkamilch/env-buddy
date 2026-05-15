@@ -8,6 +8,7 @@ const PREFS = [
   { key: "notify_on_start",   label: "E-Mail bei Container-Start",              desc: "Wenn du einen Container oder Stack startest" },
   { key: "notify_on_stop",    label: "E-Mail bei automatischem Stop",            desc: "Wenn ein Container durch den Timer gestoppt wird" },
   { key: "notify_on_warning", label: "Warnung 5 Min. vor Ablauf",                desc: "5 Minuten bevor ein Container automatisch stoppt" },
+  { key: "allow_invitations", label: "Team-Einladungen erlauben",                desc: "Andere können dich in ihre Teams einladen" },
 ];
 
 export default function ProfileModal({ user, onClose, onUpdate }) {
@@ -23,6 +24,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
     notify_on_warning: user.notify_on_warning ?? true,
     theme:             user.theme ?? "dark",
     webhook_url:       user.webhook_url ?? "",
+    allow_invitations: user.allow_invitations ?? true,
   });
   const [editProfile, setEditProfile] = useState({
     first_name: user.first_name || "",
@@ -55,6 +57,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
       notify_on_warning: me.notify_on_warning,
       theme:             me.theme ?? "dark",
       webhook_url:       me.webhook_url ?? "",
+      allow_invitations: me.allow_invitations ?? true,
     })).catch(() => {});
   }, []);
 

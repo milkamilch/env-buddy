@@ -5,7 +5,7 @@ from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
-from app.routers import containers, notifications, auth, user_templates, team_templates, teams, marketplace, audit
+from app.routers import containers, notifications, auth, user_templates, team_templates, teams, marketplace, audit, invitations
 from app.database import engine
 from app.models import user as user_model
 from app.models import template as template_model
@@ -21,6 +21,8 @@ team_template_model.Base.metadata.create_all(bind=engine)
 marketplace_model.Base.metadata.create_all(bind=engine)
 from app.models import audit as audit_model
 audit_model.Base.metadata.create_all(bind=engine)
+from app.models import invitation as invitation_model
+invitation_model.Base.metadata.create_all(bind=engine)
 
 def _run_migrations():
     user_cols = [
@@ -73,6 +75,12 @@ def _run_migrations():
             conn.commit()
         except Exception:
             pass
+        # allow_invitations column
+        try:
+            conn.execute(text("ALTER TABLE users ADD COLUMN allow_invitations INTEGER DEFAULT 1 NOT NULL"))
+            conn.commit()
+        except Exception:
+            pass
 
 async def _auto_stop_loop():
     while True:
@@ -103,6 +111,7 @@ app.include_router(team_templates.router)
 app.include_router(teams.router)
 app.include_router(marketplace.router)
 app.include_router(audit.router)
+app.include_router(invitations.router)
 
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads", "marketplace"))
 os.makedirs(UPLOAD_DIR, exist_ok=True)
