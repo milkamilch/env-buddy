@@ -620,3 +620,13 @@ export async function fetchAuditLog() {
   if (!res.ok) throw new Error("Failed to fetch audit log");
   return res.json();
 }
+
+// ── Resource history ──────────────────────────────────────────────────────
+
+export async function fetchStatsHistory(containerId) {
+  const res = await apiFetch(`${BASE}/api/containers/${containerId}/stats/history`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Stats nicht verfügbar");
+  return res.json();
+}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
+import ResourceGraphModal from "./ResourceGraphModal";
 import { useToast } from "./Toast";
 import "./ContainerCard.css";
 
@@ -78,6 +79,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [acting, setActing] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [logsOpen, setLogsOpen] = useState(false);
+  const [graphOpen, setGraphOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [extendOpen, setExtendOpen] = useState(false);
   const [extending, setExtending] = useState(false);
@@ -206,6 +208,9 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const actions = (
     <div className="card-actions" onClick={(e) => e.stopPropagation()}>
       <button className="btn-logs" onClick={(e) => { e.stopPropagation(); setLogsOpen(true); }} title="Logs anzeigen">▤</button>
+      {isRunning && (
+        <button className="btn-logs" onClick={(e) => { e.stopPropagation(); setGraphOpen(true); }} title="Ressourcen-Verlauf">📊</button>
+      )}
       {isRunning && (
         <button className="btn-restart" onClick={handleRestart} disabled={restarting} title="Neustart">
           {restarting ? "…" : "↺ Neustart"}
@@ -444,6 +449,13 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           containerName={container.name}
           isRunning={isRunning}
           onClose={() => setLogsOpen(false)}
+        />
+      )}
+      {graphOpen && (
+        <ResourceGraphModal
+          containerId={container.id}
+          containerName={container.name || container.id.slice(0, 12)}
+          onClose={() => setGraphOpen(false)}
         />
       )}
     </>

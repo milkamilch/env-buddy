@@ -87,12 +87,19 @@ async def _auto_stop_loop():
         await asyncio.sleep(30)
         docker_service.auto_stop_expired_containers()
 
+async def _stats_collect_loop():
+    while True:
+        await asyncio.sleep(15)
+        docker_service.collect_stats_snapshot()
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     _run_migrations()
-    task = asyncio.create_task(_auto_stop_loop())
+    task1 = asyncio.create_task(_auto_stop_loop())
+    task2 = asyncio.create_task(_stats_collect_loop())
     yield
-    task.cancel()
+    task1.cancel()
+    task2.cancel()
 
 app = FastAPI(title="Env-Buddy API", version="0.1.0", lifespan=lifespan)
 

@@ -1,5 +1,6 @@
 import docker
 import uuid
+from collections import deque
 from datetime import datetime, timezone, timedelta
 
 
@@ -13,6 +14,8 @@ def _handle_docker_api_error(e: docker.errors.APIError, port: int | None = None)
 client = docker.from_env()
 
 _warned_containers: set = set()
+# Rolling 15-minute history (60 × 15s) per container
+_stats_history: dict[str, deque] = {}
 _extensions: dict[str, int] = {}  # short_id -> extra minutes added by user
 
 TEMPLATES = {
@@ -649,6 +652,35 @@ def get_container_stats(container_id: str):
         "ram_limit_mb": round(ram_limit / 1024 / 1024, 1),
         "ram_percent": round((ram_usage / ram_limit) * 100, 2),
     }
+
+def collect_stats_snapshot():
+    """Periodically called to record a stats snapshot for all running managed containers."""
+    try:
+        containers = client.containers.list(
+            filters={"label": "managed-by=test-buddy", "status": "running"}
+        )
+        ts = datetime.now(timezone.utc).timestamp()
+        for c in containers:
+            try:
+                cpu_pct, ram_mb, ram_pct = _container_stats(c)
+                if c.id not in _stats_history:
+                    _stats_history[c.id] = deque(maxlen=60)
+                _stats_history[c.id].append({
+                    "ts": ts,
+                    "cpu": cpu_pct,
+                    "ram_mb": ram_mb,
+                    "ram_percent": ram_pct,
+                })
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+
+def get_stats_history(container_id: str):
+    history = list(_stats_history.get(container_id, []))
+    return {"id": container_id, "history": history}
+
 
 def auto_stop_expired_containers():
     from app.database import SessionLocal
