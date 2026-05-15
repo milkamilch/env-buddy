@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv } from "../services/api";
+import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import { useToast } from "./Toast";
@@ -82,6 +82,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [extendOpen, setExtendOpen] = useState(false);
   const [extending, setExtending] = useState(false);
   const [cloning, setCloning] = useState(false);
+  const [tcpReachable, setTcpReachable] = useState(null);
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
@@ -120,6 +121,20 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
       toast.error("Fehler: " + err.message);
     }
   }
+
+  useEffect(() => {
+    if (!isRunning) { setTcpReachable(null); return; }
+    let cancelled = false;
+    async function probe() {
+      try {
+        const result = await probeContainerHealth(container.id);
+        if (!cancelled) setTcpReachable(result.reachable);
+      } catch { if (!cancelled) setTcpReachable(null); }
+    }
+    probe();
+    const id = setInterval(probe, 10000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [container.id, isRunning]);
 
   useEffect(() => {
     if (!extendOpen) return;
@@ -338,13 +353,23 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           <span className="card-icon">{icon}</span>
           <div className="card-title">
             <span className="card-name">{container.name}</span>
-            <span className={`card-status status-${container.status}`}>{container.status}</span>
-            {health !== "none" && (
-              <span title={`Health: ${healthTitle}`} style={{
-                width: "0.55rem", height: "0.55rem", borderRadius: "50%",
-                background: healthColor, display: "inline-block", flexShrink: 0,
-              }} />
-            )}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span className={`card-status status-${container.status}`}>{container.status}</span>
+              {health !== "none" && (
+                <span title={`Docker Health: ${healthTitle}`} style={{
+                  width: "0.55rem", height: "0.55rem", borderRadius: "50%",
+                  background: healthColor, display: "inline-block", flexShrink: 0,
+                }} />
+              )}
+              {isRunning && tcpReachable !== null && (
+                <span
+                  className={`health-badge ${tcpReachable ? "health-up" : "health-down"}`}
+                  title={tcpReachable ? "Dienst erreichbar" : "Dienst antwortet nicht"}
+                >
+                  {tcpReachable ? "● erreichbar" : "● nicht erreichbar"}
+                </span>
+              )}
+            </div>
           </div>
           {selectMode && (
             <input

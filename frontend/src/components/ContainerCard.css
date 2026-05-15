@@ -305,3 +305,21 @@
 .btn-copy-conn:hover {
   background: var(--overlay1);
 }
+
+.health-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+
+.health-up {
+  color: #a6e3a1;
+  background: rgba(166, 227, 161, 0.12);
+}
+
+.health-down {
+  color: #f38ba8;
+  background: rgba(243, 139, 168, 0.12);
+}

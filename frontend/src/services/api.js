@@ -163,6 +163,12 @@ export async function restartContainer(containerId) {
   return res.json();
 }
 
+export async function probeContainerHealth(containerId) {
+  const res = await apiFetch(`${BASE}/api/containers/${containerId}/health`, { headers: authHeaders() });
+  if (!res.ok) throw new Error("Health-Probe fehlgeschlagen");
+  return res.json();
+}
+
 export async function extendContainer(containerId, extraMinutes = 30) {
   const res = await apiFetch(`${BASE}/api/containers/${containerId}/extend`, {
     method: "POST",

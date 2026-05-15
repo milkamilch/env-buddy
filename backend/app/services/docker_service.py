@@ -411,6 +411,23 @@ def _health_status(c) -> str:
         return "none"
 
 
+def probe_container_health(container_id: str) -> dict:
+    """TCP probe: checks if the container's exposed port accepts connections."""
+    import socket as _socket
+    c = client.containers.get(container_id)
+    if c.status != "running":
+        return {"reachable": False, "reason": "not running"}
+    port_label = c.labels.get("port")
+    if not port_label:
+        return {"reachable": False, "reason": "no port"}
+    port = int(port_label)
+    try:
+        with _socket.create_connection(("localhost", port), timeout=2):
+            return {"reachable": True, "port": port}
+    except OSError:
+        return {"reachable": False, "reason": "connection refused", "port": port}
+
+
 def _container_stats(c):
     if c.status != "running":
         return 0.0, 0.0, 0.0
