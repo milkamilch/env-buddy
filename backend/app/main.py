@@ -5,7 +5,7 @@ from sqlalchemy import text
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.staticfiles import StaticFiles
-from app.routers import containers, notifications, auth, user_templates, team_templates, teams, marketplace, audit, invitations
+from app.routers import containers, notifications, auth, user_templates, team_templates, teams, marketplace, audit, invitations, api_keys, snapshots, shared_access, github_actions
 from app.database import engine
 from app.models import user as user_model
 from app.models import template as template_model
@@ -23,6 +23,12 @@ from app.models import audit as audit_model
 audit_model.Base.metadata.create_all(bind=engine)
 from app.models import invitation as invitation_model
 invitation_model.Base.metadata.create_all(bind=engine)
+from app.models import api_key as api_key_model
+api_key_model.Base.metadata.create_all(bind=engine)
+from app.models import snapshot as snapshot_model
+snapshot_model.Base.metadata.create_all(bind=engine)
+from app.models import shared_access as shared_access_model
+shared_access_model.Base.metadata.create_all(bind=engine)
 
 def _run_migrations():
     user_cols = [
@@ -81,6 +87,12 @@ def _run_migrations():
             conn.commit()
         except Exception:
             pass
+        # is_public column for user_templates
+        try:
+            conn.execute(text("ALTER TABLE user_templates ADD COLUMN is_public INTEGER DEFAULT 0 NOT NULL"))
+            conn.commit()
+        except Exception:
+            pass
 
 async def _auto_stop_loop():
     while True:
@@ -120,6 +132,10 @@ app.include_router(teams.router)
 app.include_router(marketplace.router)
 app.include_router(audit.router)
 app.include_router(invitations.router)
+app.include_router(api_keys.router)
+app.include_router(snapshots.router)
+app.include_router(shared_access.router)
+app.include_router(github_actions.router)
 
 UPLOAD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads", "marketplace"))
 os.makedirs(UPLOAD_DIR, exist_ok=True)

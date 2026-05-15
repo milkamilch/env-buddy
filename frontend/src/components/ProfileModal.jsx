@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { fetchMe, updateNotificationPrefs, updateProfile, sendTestNotification, uploadAvatar } from "../services/api";
+import { fetchMe, updateNotificationPrefs, updateProfile, sendTestNotification, uploadAvatar, fetchApiKeys, createApiKey, revokeApiKey, fetchSnapshots, deleteSnapshot, fetchWorkflowExample } from "../services/api";
 import "./ProfileModal.css";
 
 const BASE = import.meta.env.VITE_API_URL || "";
@@ -47,8 +47,22 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult]   = useState(null);
 
+  const [apiKeys, setApiKeys] = useState([]);
+  const [newKeyName, setNewKeyName] = useState("");
+  const [createdKey, setCreatedKey] = useState(null);
+  const [keyCreating, setKeyCreating] = useState(false);
+
+  const [snapshots, setSnapshots] = useState([]);
+  const [workflowYaml, setWorkflowYaml] = useState(null);
+
   const saveTimerRef = useRef(null);
   const testTimerRef = useRef(null);
+
+  useEffect(() => {
+    fetchApiKeys().then(setApiKeys).catch(() => {});
+    fetchSnapshots().then(setSnapshots).catch(() => {});
+    fetchWorkflowExample().then((r) => setWorkflowYaml(r.yaml)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetchMe().then((me) => setPrefs({
@@ -272,6 +286,102 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
           </div>
 
           {error && <p className="modal-error">{error}</p>}
+
+          <div className="profile-section-label" style={{ marginTop: "1.25rem" }}>API-Keys</div>
+          <p style={{ fontSize: "0.78rem", color: "var(--subtext0)", margin: "0 0 0.75rem" }}>
+            Für CI/CD und externe Skripte. Nur beim Erstellen sichtbar.
+          </p>
+          {apiKeys.map((k) => (
+            <div key={k.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
+              <code style={{ fontSize: "0.8rem", flex: 1, color: "var(--subtext1)" }}>{k.key_prefix}…</code>
+              <span style={{ fontSize: "0.78rem", color: "var(--subtext0)" }}>{k.name}</span>
+              <button
+                style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "#f38ba8", cursor: "pointer" }}
+                onClick={async () => {
+                  await revokeApiKey(k.id).catch(() => {});
+                  setApiKeys((prev) => prev.filter((x) => x.id !== k.id));
+                }}
+              >
+                Widerrufen
+              </button>
+            </div>
+          ))}
+          {createdKey && (
+            <div style={{ background: "var(--surface1)", border: "1px solid #a6e3a1", borderRadius: "0.5rem", padding: "0.75rem", marginBottom: "0.5rem" }}>
+              <p style={{ fontSize: "0.78rem", color: "#a6e3a1", margin: "0 0 0.4rem" }}>Kopiere den Key jetzt — er wird nicht mehr angezeigt:</p>
+              <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                <code style={{ fontSize: "0.8rem", flex: 1, wordBreak: "break-all" }}>{createdKey}</code>
+                <button
+                  style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "var(--text-primary)", cursor: "pointer" }}
+                  onClick={() => { navigator.clipboard.writeText(createdKey); }}
+                >
+                  ⧉
+                </button>
+              </div>
+              <button style={{ marginTop: "0.4rem", fontSize: "0.75rem", color: "var(--subtext0)", background: "none", border: "none", cursor: "pointer", padding: 0 }} onClick={() => setCreatedKey(null)}>Schließen</button>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+            <input
+              className="profile-edit-input"
+              style={{ flex: 1 }}
+              placeholder="Key-Name (z.B. GitHub CI)"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && newKeyName.trim() && !keyCreating && document.getElementById("create-key-btn").click()}
+            />
+            <button
+              id="create-key-btn"
+              className="modal-btn-save"
+              disabled={!newKeyName.trim() || keyCreating || apiKeys.length >= 10}
+              onClick={async () => {
+                setKeyCreating(true);
+                try {
+                  const k = await createApiKey(newKeyName.trim());
+                  setApiKeys((prev) => [...prev, k]);
+                  setCreatedKey(k.raw_key);
+                  setNewKeyName("");
+                } catch (e) {
+                  setError(e.message);
+                } finally {
+                  setKeyCreating(false);
+                }
+              }}
+            >
+              {keyCreating ? "…" : "Erstellen"}
+            </button>
+          </div>
+
+          {workflowYaml && (
+            <>
+              <div className="profile-section-label" style={{ marginTop: "1.25rem" }}>GitHub Actions Beispiel</div>
+              <pre style={{ fontSize: "0.72rem", background: "var(--surface1)", borderRadius: "0.5rem", padding: "0.75rem", overflowX: "auto", maxHeight: "14rem", color: "var(--subtext1)", margin: 0 }}>{workflowYaml}</pre>
+            </>
+          )}
+
+          <div className="profile-section-label" style={{ marginTop: "1.25rem" }}>Snapshots</div>
+          <p style={{ fontSize: "0.78rem", color: "var(--subtext0)", margin: "0 0 0.75rem" }}>
+            Gespeicherte Konfigurationen für schnellen Re-Start.
+          </p>
+          {snapshots.length === 0 ? (
+            <p style={{ fontSize: "0.82rem", color: "var(--subtext0)" }}>Keine Snapshots. Nutze ⊕ auf einem Container um einen zu speichern.</p>
+          ) : (
+            snapshots.map((s) => (
+              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
+                <span style={{ flex: 1, fontSize: "0.85rem" }}>{s.name}</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--subtext0)" }}>{new Date(s.created_at).toLocaleDateString()}</span>
+                <button
+                  style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "#f38ba8", cursor: "pointer" }}
+                  onClick={async () => {
+                    await deleteSnapshot(s.id).catch(() => {});
+                    setSnapshots((prev) => prev.filter((x) => x.id !== s.id));
+                  }}
+                >
+                  Löschen
+                </button>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="modal-footer">

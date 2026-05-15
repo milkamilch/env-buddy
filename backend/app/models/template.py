@@ -1,5 +1,5 @@
 import json
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, Boolean
 from sqlalchemy.sql import func
 from pydantic import BaseModel
 from typing import List, Dict
@@ -15,6 +15,7 @@ class UserTemplateDB(Base):
     description    = Column(String, default="")
     icon           = Column(String, default="📦")
     containers_json = Column(Text, nullable=False)  # JSON array of container configs
+    is_public      = Column(Boolean, default=False, nullable=False)
     created_at     = Column(DateTime(timezone=True), server_default=func.now())
 
     @property
@@ -41,5 +42,6 @@ class TemplateResponse(BaseModel):
     description: str
     icon:        str
     containers:  List[ContainerConfig]
+    is_public:   bool = False
 
     model_config = {"from_attributes": True}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth, updateContainerImage, createTemplate } from "../services/api";
+import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth, updateContainerImage, createTemplate, createSnapshot, fetchContainerShares, grantContainerAccess, revokeContainerAccess } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import ResourceGraphModal from "./ResourceGraphModal";
@@ -82,6 +82,10 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [updating, setUpdating] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [templateName, setTemplateName] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareUsername, setShareUsername] = useState("");
+  const [shares, setShares] = useState([]);
+  const [shareLoading, setShareLoading] = useState(false);
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
@@ -250,6 +254,44 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           }
         }}
       >🔗</button>
+      <button
+        className="btn-logs"
+        title="Zugriff teilen"
+        onClick={async (e) => {
+          e.stopPropagation();
+          const label = container.id.slice(0, 12);
+          setShareLoading(true);
+          try {
+            const list = await fetchContainerShares(label);
+            setShares(list);
+          } catch { setShares([]); }
+          finally { setShareLoading(false); }
+          setShareUsername("");
+          setShareOpen(true);
+        }}
+      >👥</button>
+      <button
+        className="btn-logs"
+        title="Als Snapshot speichern"
+        onClick={async (e) => {
+          e.stopPropagation();
+          try {
+            const config = await fetchContainerConfig(container.id);
+            await createSnapshot({
+              name: container.name || container.id.slice(0, 12),
+              template: container.template || config.name || "",
+              env: config.env || {},
+              port: config.port || null,
+              mem_limit: config.mem_limit || null,
+              cpu_limit: config.cpu_limit || null,
+              duration_minutes: config.duration_minutes || 60,
+            });
+            toast.success("Snapshot gespeichert");
+          } catch (err) {
+            toast.error("Fehler: " + err.message);
+          }
+        }}
+      >📷</button>
       <button
         className="btn-logs"
         title="Als Template speichern"
@@ -581,6 +623,71 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
               >
                 Speichern
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {shareOpen && (
+        <div className="modal-overlay" onClick={() => setShareOpen(false)}>
+          <div className="modal-box" style={{ maxWidth: "26rem" }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">Zugriff teilen — {container.name}</span>
+              <button className="modal-close" onClick={() => setShareOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {shares.length > 0 && (
+                <div>
+                  <div style={{ fontSize: "0.78rem", color: "var(--subtext0)", marginBottom: "0.4rem" }}>Geteilter Zugriff:</div>
+                  {shares.map((s) => (
+                    <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.3rem" }}>
+                      <span style={{ flex: 1, fontSize: "0.85rem" }}>👤 {s.grantee_username}</span>
+                      <button
+                        style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "#f38ba8", cursor: "pointer" }}
+                        onClick={async () => {
+                          await revokeContainerAccess(s.id).catch(() => {});
+                          setShares((prev) => prev.filter((x) => x.id !== s.id));
+                        }}
+                      >
+                        Entfernen
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label style={{ fontSize: "0.85rem", color: "var(--subtext1)" }}>
+                Benutzername
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.3rem" }}>
+                  <input
+                    className="modal-input"
+                    style={{ flex: 1 }}
+                    placeholder="z.B. max"
+                    value={shareUsername}
+                    onChange={(e) => setShareUsername(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && shareUsername.trim() && document.getElementById("share-btn").click()}
+                  />
+                  <button
+                    id="share-btn"
+                    className="btn-primary"
+                    disabled={!shareUsername.trim() || shareLoading}
+                    onClick={async () => {
+                      const label = container.id.slice(0, 12);
+                      setShareLoading(true);
+                      try {
+                        const s = await grantContainerAccess(label, shareUsername.trim());
+                        setShares((prev) => [...prev, s]);
+                        setShareUsername("");
+                        toast.success(`Zugriff für ${shareUsername} gewährt`);
+                      } catch (err) {
+                        toast.error(err.message);
+                      } finally {
+                        setShareLoading(false);
+                      }
+                    }}
+                  >
+                    {shareLoading ? "…" : "Teilen"}
+                  </button>
+                </div>
+              </label>
             </div>
           </div>
         </div>

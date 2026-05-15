@@ -633,6 +633,125 @@ export async function fetchAuditLog() {
   return res.json();
 }
 
+// ── API Keys ──────────────────────────────────────────────────────────────
+
+export async function fetchApiKeys() {
+  const res = await apiFetch(`${BASE}/api/api-keys/`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function createApiKey(name) {
+  const res = await apiFetch(`${BASE}/api/api-keys/`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ name }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Erstellen");
+  return json;
+}
+
+export async function revokeApiKey(id) {
+  const res = await apiFetch(`${BASE}/api/api-keys/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Widerrufen");
+  return json;
+}
+
+// ── Snapshots ─────────────────────────────────────────────────────────────
+
+export async function fetchSnapshots() {
+  const res = await apiFetch(`${BASE}/api/snapshots/`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function createSnapshot(data) {
+  const res = await apiFetch(`${BASE}/api/snapshots/`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Erstellen");
+  return json;
+}
+
+export async function deleteSnapshot(id) {
+  const res = await apiFetch(`${BASE}/api/snapshots/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Löschen");
+  return json;
+}
+
+// ── Public Templates ──────────────────────────────────────────────────────
+
+export async function fetchPublicTemplates() {
+  const res = await apiFetch(`${BASE}/api/user-templates/public`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function setTemplateVisibility(id, isPublic) {
+  const res = await apiFetch(`${BASE}/api/user-templates/${id}/visibility`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    body: JSON.stringify({ is_public: isPublic }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Ändern");
+  return json;
+}
+
+// ── Shared Access ─────────────────────────────────────────────────────────
+
+export async function fetchContainerShares(containerLabel) {
+  const res = await apiFetch(`${BASE}/api/shared-access/${containerLabel}`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
+export async function grantContainerAccess(containerLabel, username) {
+  const res = await apiFetch(`${BASE}/api/shared-access/${containerLabel}`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ username }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Teilen");
+  return json;
+}
+
+export async function revokeContainerAccess(shareId) {
+  const res = await apiFetch(`${BASE}/api/shared-access/${shareId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Entfernen");
+  return json;
+}
+
+// ── GitHub Actions ────────────────────────────────────────────────────────
+
+export async function fetchWorkflowExample() {
+  const res = await apiFetch(`${BASE}/api/github-actions/workflow-example`, { headers: authHeaders() });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+  return json;
+}
+
 // ── Resource history ──────────────────────────────────────────────────────
 
 export async function fetchStatsHistory(containerId) {

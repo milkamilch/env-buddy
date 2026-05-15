@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, saveFavorites, deleteTemplate, fetchTeamTemplates } from "../services/api";
+import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, saveFavorites, deleteTemplate, fetchTeamTemplates, fetchPublicTemplates, setTemplateVisibility } from "../services/api";
 import CreateTemplateModal from "../components/CreateTemplateModal";
 import { useToast } from "../components/Toast";
 import TEMPLATE_ICONS from "../templateIcons";
@@ -12,6 +12,7 @@ export default function TemplatesPage() {
   const toast = useToast();
   const [customTemplates, setCustomTemplates] = useState([]);
   const [teamTemplates, setTeamTemplates] = useState([]);
+  const [publicTemplates, setPublicTemplates] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [dragItem, setDragItem] = useState(null);
@@ -24,6 +25,7 @@ export default function TemplatesPage() {
     fetchMyTemplates().then(setCustomTemplates).catch(() => {});
     fetchTeamTemplates().then(setTeamTemplates).catch(() => {});
     fetchFavorites().then(setFavorites).catch(() => {});
+    fetchPublicTemplates().then(setPublicTemplates).catch(() => {});
   }, []);
 
   // ── Favorites helpers ────────────────────────────────────────────────────
@@ -183,7 +185,8 @@ export default function TemplatesPage() {
             const filteredDefaults = defaultTemplates.filter((k) => !q || k.toLowerCase().includes(q));
             const filteredCustoms = customTemplates.filter((t) => !q || t.name.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q));
             const filteredTeams = teamTemplates.filter((t) => !q || t.name.toLowerCase().includes(q) || t.creator_name?.toLowerCase().includes(q));
-            const noResults = q && filteredDefaults.length === 0 && filteredCustoms.length === 0 && filteredTeams.length === 0;
+            const filteredPublic = publicTemplates.filter((t) => !q || t.name.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q));
+            const noResults = q && filteredDefaults.length === 0 && filteredCustoms.length === 0 && filteredTeams.length === 0 && filteredPublic.length === 0;
             return (
               <>
                 {noResults && (
@@ -245,6 +248,17 @@ export default function TemplatesPage() {
                                   ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
                                   : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
                                 }
+                                <button
+                                  className="tc-btn"
+                                  style={{ opacity: 0.85 }}
+                                  title={t.is_public ? "Öffentlich – klicken zum Verbergen" : "Privat – klicken zum Veröffentlichen"}
+                                  onClick={async () => {
+                                    const updated = await setTemplateVisibility(t.id, !t.is_public).catch(() => null);
+                                    if (updated) setCustomTemplates((prev) => prev.map((x) => x.id === t.id ? { ...x, is_public: updated.is_public } : x));
+                                  }}
+                                >
+                                  {t.is_public ? "🌐 Öffentlich" : "🔒 Privat"}
+                                </button>
                                 {confirmDeleteId === t.id ? (
                                   <>
                                     <span className="tc-confirm-label">Sicher?</span>
@@ -295,6 +309,26 @@ export default function TemplatesPage() {
                           </div>
                         );
                       })}
+                    </div>
+                  </>
+                )}
+                {filteredPublic.length > 0 && (
+                  <>
+                    <div className="library-section-header">
+                      <h3 className="library-section-title">🌐 Öffentliche Templates</h3>
+                      <span className="team-section-hint">Von anderen Benutzern geteilt</span>
+                    </div>
+                    <div className="template-grid">
+                      {filteredPublic.map((t) => (
+                        <div key={t.id} className="template-card">
+                          <div className="tc-icon">{t.icon}</div>
+                          <div className="tc-name">{t.name}</div>
+                          {t.description && <div className="tc-desc">{t.description}</div>}
+                          <div className="tc-containers">
+                            {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </>
                 )}

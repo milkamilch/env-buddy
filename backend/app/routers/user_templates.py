@@ -26,6 +26,7 @@ def get_my_templates(
             description=t.description,
             icon=t.icon,
             containers=[ContainerConfig(**c) for c in t.containers],
+            is_public=t.is_public,
         )
         for t in templates
     ]
@@ -76,6 +77,56 @@ def delete_template(
     db.delete(template)
     db.commit()
     return {"message": "Template gelöscht"}
+
+
+@router.get("/public", response_model=List[TemplateResponse])
+def get_public_templates(
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    templates = db.query(UserTemplateDB).filter(
+        UserTemplateDB.is_public == True,
+        UserTemplateDB.user_id != current_user.id,
+    ).all()
+    return [
+        TemplateResponse(
+            id=t.id,
+            user_id=t.user_id,
+            name=t.name,
+            description=t.description,
+            icon=t.icon,
+            containers=[ContainerConfig(**c) for c in t.containers],
+            is_public=True,
+        )
+        for t in templates
+    ]
+
+
+@router.patch("/{template_id}/visibility", response_model=TemplateResponse)
+def set_visibility(
+    template_id: int,
+    body: dict,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    template = db.query(UserTemplateDB).filter(
+        UserTemplateDB.id == template_id,
+        UserTemplateDB.user_id == current_user.id,
+    ).first()
+    if not template:
+        raise HTTPException(status_code=404, detail="Template nicht gefunden")
+    template.is_public = bool(body.get("is_public", False))
+    db.commit()
+    db.refresh(template)
+    return TemplateResponse(
+        id=template.id,
+        user_id=template.user_id,
+        name=template.name,
+        description=template.description,
+        icon=template.icon,
+        containers=[ContainerConfig(**c) for c in template.containers],
+        is_public=template.is_public,
+    )
 
 
 @router.get("/favorites")

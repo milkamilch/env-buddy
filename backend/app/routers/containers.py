@@ -45,13 +45,24 @@ def _get_required_user(creds: HTTPAuthorizationCredentials = Security(_bearer), 
         raise HTTPException(status_code=401, detail="Ungültiger Token")
 
 
-def _assert_owner(container_id: str, user: UserDB):
-    """Raises 403 if the container belongs to a different user."""
+def _assert_owner(container_id: str, user: UserDB, db: Session = None):
+    """Raises 403 if user is neither the owner nor a grantee of this container."""
     try:
         c = docker_service.client.containers.get(container_id)
         uid = c.labels.get("user-id", "")
-        if uid and uid != str(user.id):
-            raise HTTPException(status_code=403, detail="Kein Zugriff auf diesen Container")
+        if not uid or uid == str(user.id):
+            return
+        # Check shared access by container short ID (label)
+        if db is not None:
+            from app.models.shared_access import SharedAccessDB
+            short_id = c.short_id
+            share = db.query(SharedAccessDB).filter(
+                SharedAccessDB.container_label == short_id,
+                SharedAccessDB.grantee_id == user.id,
+            ).first()
+            if share:
+                return
+        raise HTTPException(status_code=403, detail="Kein Zugriff auf diesen Container")
     except HTTPException:
         raise
     except Exception:
