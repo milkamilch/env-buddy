@@ -682,6 +682,52 @@ def get_stats_history(container_id: str):
     return {"id": container_id, "history": history}
 
 
+def pull_and_update_container(container_id: str):
+    """Pull the latest image version and recreate the container with the same config."""
+    container = client.containers.get(container_id)
+    attrs = container.attrs
+
+    image_tags = container.image.tags
+    image_name = image_tags[0] if image_tags else attrs["Config"]["Image"]
+
+    labels = container.labels or {}
+    env_list = attrs["Config"].get("Env") or []
+    port_bindings = attrs["HostConfig"].get("PortBindings") or {}
+    host_ports = {}
+    for cport, bindings in port_bindings.items():
+        if bindings:
+            host_ports[cport] = int(bindings[0]["HostPort"])
+
+    mem_limit = attrs["HostConfig"].get("Memory") or 0
+    container_name = attrs["Name"].lstrip("/")
+
+    client.images.pull(image_name)
+
+    try:
+        container.stop(timeout=10)
+    except Exception:
+        pass
+    container.remove(force=True)
+
+    run_kwargs = dict(
+        image=image_name,
+        name=container_name,
+        environment=env_list,
+        ports=host_ports,
+        labels=labels,
+        detach=True,
+    )
+    if mem_limit and mem_limit > 0:
+        run_kwargs["mem_limit"] = mem_limit
+
+    new_container = client.containers.run(**run_kwargs)
+    return {
+        "id": new_container.id[:12],
+        "name": container_name,
+        "status": "running",
+    }
+
+
 def auto_stop_expired_containers():
     from app.database import SessionLocal
     from app.models.user import UserDB

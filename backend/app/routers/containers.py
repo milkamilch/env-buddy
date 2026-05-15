@@ -424,3 +424,12 @@ def health_probe(container_id: str, current_user: UserDB = Depends(_get_required
 def stats_history(container_id: str, current_user: UserDB = Depends(_get_required_user)):
     _assert_owner(container_id, current_user)
     return docker_service.get_stats_history(container_id)
+
+
+@router.post("/{container_id}/update-image")
+def update_image(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+    _assert_owner(container_id, current_user)
+    try:
+        return docker_service.pull_and_update_container(container_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
