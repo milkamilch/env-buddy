@@ -44,6 +44,35 @@
 
 .btn-new-template:hover { background: var(--sky); }
 
+.tp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.tp-search {
+  background: var(--surface1, #1e1e2e);
+  border: 1px solid var(--overlay0);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  width: 14rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.tp-search:focus { border-color: var(--blue); }
+.tp-search::placeholder { color: var(--subtext0); }
+
+.tp-no-results {
+  color: var(--subtext0);
+  font-size: 0.9rem;
+  padding: 2rem 0;
+  text-align: center;
+}
+
 .tp-layout {
   display: flex;
   gap: 1.5rem;

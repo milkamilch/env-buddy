@@ -64,6 +64,10 @@
   animation: pulse 2s infinite;
 }
 
+.logs-live-badge-polling {
+  color: var(--yellow, #f9e2af);
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.4; }

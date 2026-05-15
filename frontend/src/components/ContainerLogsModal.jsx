@@ -3,14 +3,17 @@ import { fetchContainerLogs } from "../services/api";
 import "./ContainerLogsModal.css";
 
 const TAIL_OPTIONS = [100, 200, 500, 1000];
+const WS_BASE = (import.meta.env.VITE_API_URL || "").replace(/^http/, "ws");
 
 export default function ContainerLogsModal({ containerId, containerName, isRunning, onClose }) {
   const [lines, setLines] = useState([]);
   const [tail, setTail] = useState(200);
   const [loading, setLoading] = useState(true);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [wsConnected, setWsConnected] = useState(false);
   const bottomRef = useRef(null);
   const bodyRef = useRef(null);
+  const wsRef = useRef(null);
 
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose(); }
@@ -18,46 +21,45 @@ export default function ContainerLogsModal({ containerId, containerName, isRunni
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  async function load() {
-    try {
-      const data = await fetchContainerLogs(containerId, tail);
-      setLines(data);
-    } catch {
-      // silently ignore fetch errors during polling
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  function openInNewTab() {
-    const text = lines.join("\n");
-    const blob = new Blob([text], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  }
-
-  function downloadLogs() {
-    const text = lines.join("\n");
-    const blob = new Blob([text], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${containerName}-logs.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
+  // Initial load via HTTP (works for stopped containers too)
   useEffect(() => {
     setLoading(true);
-    load();
+    setLines([]);
+    fetchContainerLogs(containerId, tail)
+      .then(setLines)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [containerId, tail]);
 
+  // WebSocket streaming for running containers
   useEffect(() => {
     if (!isRunning) return;
-    const id = setInterval(load, 3000);
-    return () => clearInterval(id);
-  }, [containerId, tail, isRunning]);
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const ws = new WebSocket(`${WS_BASE}/api/containers/${containerId}/logs/stream?token=${encodeURIComponent(token)}`);
+    wsRef.current = ws;
+
+    ws.onopen = () => setWsConnected(true);
+
+    ws.onmessage = (e) => {
+      const line = e.data;
+      setLines((prev) => {
+        const next = [...prev, line];
+        return next.length > 2000 ? next.slice(-2000) : next;
+      });
+    };
+
+    ws.onclose = () => setWsConnected(false);
+    ws.onerror = () => setWsConnected(false);
+
+    return () => {
+      ws.close();
+      wsRef.current = null;
+      setWsConnected(false);
+    };
+  }, [containerId, isRunning]);
 
   useEffect(() => {
     if (autoScroll && bottomRef.current) {
@@ -72,6 +74,23 @@ export default function ContainerLogsModal({ containerId, containerName, isRunni
     setAutoScroll(atBottom);
   }
 
+  function openInNewTab() {
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  }
+
+  function downloadLogs() {
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${containerName}-logs.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="logs-overlay" onClick={onClose}>
       <div className="logs-modal" onClick={(e) => e.stopPropagation()}>
@@ -79,7 +98,11 @@ export default function ContainerLogsModal({ containerId, containerName, isRunni
           <div className="logs-title">
             <span className="logs-icon">▤</span>
             <span className="logs-name">{containerName}</span>
-            {isRunning && <span className="logs-live-badge">● LIVE</span>}
+            {isRunning && (
+              <span className={`logs-live-badge ${wsConnected ? "" : "logs-live-badge-polling"}`}>
+                {wsConnected ? "● LIVE" : "● POLLING"}
+              </span>
+            )}
           </div>
           <div className="logs-controls">
             <span className="logs-tail-label">Zeilen:</span>

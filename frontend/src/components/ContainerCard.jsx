@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth, updateContainerImage } from "../services/api";
+import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth, updateContainerImage, createTemplate } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import ResourceGraphModal from "./ResourceGraphModal";
@@ -78,6 +78,8 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [tcpReachable, setTcpReachable] = useState(null);
   const [updateConfirm, setUpdateConfirm] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [templateName, setTemplateName] = useState("");
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
@@ -220,6 +222,15 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
       {isRunning && (
         <button className="btn-logs" onClick={(e) => { e.stopPropagation(); setGraphOpen(true); }} title="Ressourcen-Verlauf">📊</button>
       )}
+      <button
+        className="btn-logs"
+        title="Als Template speichern"
+        onClick={(e) => {
+          e.stopPropagation();
+          setTemplateName(container.name || "");
+          setSaveTemplateOpen(true);
+        }}
+      >⊕</button>
       {isRunning && (
         <button className="btn-restart" onClick={handleRestart} disabled={restarting} title="Neustart">
           {restarting ? "…" : "↺ Neustart"}
@@ -484,6 +495,60 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           containerName={container.name || container.id.slice(0, 12)}
           onClose={() => setGraphOpen(false)}
         />
+      )}
+      {saveTemplateOpen && (
+        <div className="modal-overlay" onClick={() => setSaveTemplateOpen(false)}>
+          <div className="modal-box" style={{ maxWidth: "22rem" }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">Als Template speichern</span>
+              <button className="modal-close" onClick={() => setSaveTemplateOpen(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <label style={{ fontSize: "0.85rem", color: "var(--subtext1)" }}>
+                Name
+                <input
+                  className="modal-input"
+                  style={{ display: "block", marginTop: "0.3rem", width: "100%", boxSizing: "border-box" }}
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  autoFocus
+                  onKeyDown={async (e) => {
+                    if (e.key === "Enter") e.currentTarget.form?.requestSubmit?.();
+                  }}
+                />
+              </label>
+              <button
+                className="btn-primary"
+                style={{ alignSelf: "flex-end" }}
+                disabled={!templateName.trim()}
+                onClick={async () => {
+                  try {
+                    const config = await fetchContainerConfig(container.id);
+                    const image = (container.template || "").split(":")[0] || container.name;
+                    const internalPort = config.port || 5432;
+                    await createTemplate({
+                      name: templateName.trim(),
+                      icon: icon,
+                      description: `Gespeichert von Container ${container.name}`,
+                      containers: [{
+                        service_name: image.split("/").pop().split(":")[0],
+                        image,
+                        internal_port: internalPort,
+                        env: config.env || {},
+                      }],
+                    });
+                    toast.success("Template gespeichert");
+                    setSaveTemplateOpen(false);
+                  } catch (err) {
+                    toast.error("Fehler: " + err.message);
+                  }
+                }}
+              >
+                Speichern
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

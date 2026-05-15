@@ -2,17 +2,10 @@ import { useState, useEffect } from "react";
 import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, saveFavorites, deleteTemplate, fetchTeamTemplates } from "../services/api";
 import CreateTemplateModal from "../components/CreateTemplateModal";
 import { useToast } from "../components/Toast";
+import TEMPLATE_ICONS from "../templateIcons";
 import "./TemplatesPage.css";
 
-const DEFAULT_ICONS = {
-  postgres: "🐘", mysql: "🐬", mariadb: "🐬", mongo: "🍃", redis: "⚡",
-  cockroachdb: "🪳", neo4j: "🕸️", influxdb: "📈", couchdb: "🛋️", timescaledb: "⏱️",
-  elasticsearch: "🔍", cassandra: "💎", rabbitmq: "🐰", kafka: "📨", nats: "🚀", mosquitto: "🦟",
-  nginx: "🌐", httpd: "🌐", traefik: "🔀",
-  mailhog: "📬", adminer: "🗄️", minio: "🪣", vault: "🔐", keycloak: "🗝️",
-  gitea: "🐱", prometheus: "🔥", grafana: "📊", jaeger: "🔭", sonarqube: "🧹",
-  registry: "📦", verdaccio: "📦",
-};
+const DEFAULT_ICONS = TEMPLATE_ICONS;
 
 export default function TemplatesPage() {
   const [defaultTemplates, setDefaultTemplates] = useState([]);
@@ -24,6 +17,7 @@ export default function TemplatesPage() {
   const [dragItem, setDragItem] = useState(null);
   const [dragOverFav, setDragOverFav] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     fetchDefaultTemplates().then(setDefaultTemplates).catch(() => {});
@@ -125,7 +119,16 @@ export default function TemplatesPage() {
           <h2>Templates</h2>
           <p className="tp-sub">Ziehe Templates in deine Schnellauswahl oder erstelle eigene.</p>
         </div>
-        <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Mein Template</button>
+        <div className="tp-header-actions">
+          <input
+            className="tp-search"
+            type="search"
+            placeholder="Suche…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Mein Template</button>
+        </div>
       </div>
 
       <div className="tp-layout">
@@ -175,111 +178,129 @@ export default function TemplatesPage() {
 
         {/* ── Template-Bibliothek ── */}
         <section className="tp-library">
-          {defaultTemplates.length > 0 && (
-            <>
-              <h3 className="library-section-title">Standard-Templates</h3>
-              <div className="template-grid">
-                {defaultTemplates.map((key) => (
-                  <div
-                    key={key}
-                    className={`template-card ${favorites.includes(key) ? "is-favorite" : ""}`}
-                    draggable
-                    onDragStart={(e) => onDragStartLibrary(e, key)}
-                  >
-                    <div className="tc-icon">{DEFAULT_ICONS[key] || "📦"}</div>
-                    <div className="tc-name">{key}</div>
-                    <div className="tc-type">Standard</div>
-                    {favorites.includes(key)
-                      ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
-                      : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
-                    }
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+          {(() => {
+            const q = search.toLowerCase();
+            const filteredDefaults = defaultTemplates.filter((k) => !q || k.toLowerCase().includes(q));
+            const filteredCustoms = customTemplates.filter((t) => !q || t.name.toLowerCase().includes(q) || t.description?.toLowerCase().includes(q));
+            const filteredTeams = teamTemplates.filter((t) => !q || t.name.toLowerCase().includes(q) || t.creator_name?.toLowerCase().includes(q));
+            const noResults = q && filteredDefaults.length === 0 && filteredCustoms.length === 0 && filteredTeams.length === 0;
+            return (
+              <>
+                {noResults && (
+                  <p className="tp-no-results">Keine Templates für „{search}" gefunden.</p>
+                )}
 
-          <h3 className="library-section-title">Meine Templates</h3>
-          {customTemplates.length === 0 ? (
-            <div className="empty-custom">
-              <p>Noch keine eigenen Templates. Erstelle dein erstes!</p>
-              <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Mein Template</button>
-            </div>
-          ) : (
-            <div className="template-grid">
-              {customTemplates.map((t) => {
-                const key = `custom:${t.id}`;
-                return (
-                  <div
-                    key={t.id}
-                    className={`template-card custom-card ${favorites.includes(key) ? "is-favorite" : ""}`}
-                    draggable
-                    onDragStart={(e) => onDragStartLibrary(e, key)}
-                  >
-                    <div className="tc-icon">{t.icon}</div>
-                    <div className="tc-name">{t.name}</div>
-                    <div className="tc-desc">{t.description}</div>
-                    <div className="tc-containers">
-                      {t.containers.length} Container{": "}
-                      {t.containers.map((c) => c.image).join(", ")}
+                {filteredDefaults.length > 0 && (
+                  <>
+                    <h3 className="library-section-title">Standard-Templates</h3>
+                    <div className="template-grid">
+                      {filteredDefaults.map((key) => (
+                        <div
+                          key={key}
+                          className={`template-card ${favorites.includes(key) ? "is-favorite" : ""}`}
+                          draggable
+                          onDragStart={(e) => onDragStartLibrary(e, key)}
+                        >
+                          <div className="tc-icon">{DEFAULT_ICONS[key] || "📦"}</div>
+                          <div className="tc-name">{key}</div>
+                          <div className="tc-type">Standard</div>
+                          {favorites.includes(key)
+                            ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
+                            : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
+                          }
+                        </div>
+                      ))}
                     </div>
-                    <div className="tc-actions">
-                      {favorites.includes(key)
-                        ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
-                        : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
-                      }
-                      {confirmDeleteId === t.id ? (
-                        <>
-                          <span className="tc-confirm-label">Sicher?</span>
-                          <button className="tc-btn-confirm-yes" onClick={() => handleDelete(t.id)}>✓</button>
-                          <button className="tc-btn-confirm-no" onClick={() => setConfirmDeleteId(null)}>✕</button>
-                        </>
-                      ) : (
-                        <button className="tc-btn-delete" onClick={() => handleDelete(t.id)}>Löschen</button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  </>
+                )}
 
-          {/* Team templates from all user's teams — drag to favorites */}
-          {teamTemplates.length > 0 && (
-            <>
-              <div className="library-section-header">
-                <h3 className="library-section-title">Team-Templates</h3>
-                <span className="team-section-hint">Von deinen Teams — ins Teams-Tab für Verwaltung</span>
-              </div>
-              <div className="template-grid">
-                {teamTemplates.map((t) => {
-                  const key = `team:${t.id}`;
-                  return (
-                    <div
-                      key={t.id}
-                      className={`template-card team-card ${favorites.includes(key) ? "is-favorite" : ""}`}
-                      draggable
-                      onDragStart={(e) => onDragStartLibrary(e, key)}
-                    >
-                      <div className="tc-icon">{t.icon}</div>
-                      <div className="tc-name">{t.name}</div>
-                      {t.description && <div className="tc-desc">{t.description}</div>}
-                      <div className="tc-creator">👤 {t.creator_name}</div>
-                      <div className="tc-containers">
-                        {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
+                {(!q || filteredCustoms.length > 0) && (
+                  <>
+                    <h3 className="library-section-title">Meine Templates</h3>
+                    {filteredCustoms.length === 0 && !q ? (
+                      <div className="empty-custom">
+                        <p>Noch keine eigenen Templates. Erstelle dein erstes!</p>
+                        <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Mein Template</button>
                       </div>
-                      <div className="tc-actions">
-                        {favorites.includes(key)
-                          ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
-                          : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
-                        }
+                    ) : (
+                      <div className="template-grid">
+                        {filteredCustoms.map((t) => {
+                          const key = `custom:${t.id}`;
+                          return (
+                            <div
+                              key={t.id}
+                              className={`template-card custom-card ${favorites.includes(key) ? "is-favorite" : ""}`}
+                              draggable
+                              onDragStart={(e) => onDragStartLibrary(e, key)}
+                            >
+                              <div className="tc-icon">{t.icon}</div>
+                              <div className="tc-name">{t.name}</div>
+                              <div className="tc-desc">{t.description}</div>
+                              <div className="tc-containers">
+                                {t.containers.length} Container{": "}
+                                {t.containers.map((c) => c.image).join(", ")}
+                              </div>
+                              <div className="tc-actions">
+                                {favorites.includes(key)
+                                  ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
+                                  : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
+                                }
+                                {confirmDeleteId === t.id ? (
+                                  <>
+                                    <span className="tc-confirm-label">Sicher?</span>
+                                    <button className="tc-btn-confirm-yes" onClick={() => handleDelete(t.id)}>✓</button>
+                                    <button className="tc-btn-confirm-no" onClick={() => setConfirmDeleteId(null)}>✕</button>
+                                  </>
+                                ) : (
+                                  <button className="tc-btn-delete" onClick={() => handleDelete(t.id)}>Löschen</button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
+                    )}
+                  </>
+                )}
+
+                {filteredTeams.length > 0 && (
+                  <>
+                    <div className="library-section-header">
+                      <h3 className="library-section-title">Team-Templates</h3>
+                      <span className="team-section-hint">Von deinen Teams — ins Teams-Tab für Verwaltung</span>
                     </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
+                    <div className="template-grid">
+                      {filteredTeams.map((t) => {
+                        const key = `team:${t.id}`;
+                        return (
+                          <div
+                            key={t.id}
+                            className={`template-card team-card ${favorites.includes(key) ? "is-favorite" : ""}`}
+                            draggable
+                            onDragStart={(e) => onDragStartLibrary(e, key)}
+                          >
+                            <div className="tc-icon">{t.icon}</div>
+                            <div className="tc-name">{t.name}</div>
+                            {t.description && <div className="tc-desc">{t.description}</div>}
+                            <div className="tc-creator">👤 {t.creator_name}</div>
+                            <div className="tc-containers">
+                              {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
+                            </div>
+                            <div className="tc-actions">
+                              {favorites.includes(key)
+                                ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
+                                : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
+                              }
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </>
+            );
+          })()}
         </section>
       </div>
 

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi import Security
 from jose import jwt, JWTError
+import asyncio
 import os
 import threading
 from app.database import get_db
@@ -389,6 +390,53 @@ def get_logs(container_id: str, tail: int = 200, current_user: UserDB = Depends(
         return docker_service.get_container_logs(container_id, tail)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.websocket("/{container_id}/logs/stream")
+async def stream_logs(
+    websocket: WebSocket,
+    container_id: str,
+    token: str = Query(...),
+    db=Depends(get_db),
+):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = int(payload["sub"])
+        from sqlalchemy.orm import Session
+        user = db.query(UserDB).filter(UserDB.id == user_id).first()
+        if not user:
+            await websocket.close(code=4001)
+            return
+    except JWTError:
+        await websocket.close(code=4001)
+        return
+
+    try:
+        _assert_owner(container_id, user)
+    except HTTPException:
+        await websocket.close(code=4003)
+        return
+
+    await websocket.accept()
+    try:
+        container = docker_service.client.containers.get(container_id)
+        log_gen = container.logs(stream=True, follow=True, timestamps=False)
+        loop = asyncio.get_event_loop()
+        while True:
+            chunk = await loop.run_in_executor(None, next, log_gen, None)
+            if chunk is None:
+                break
+            line = chunk.decode("utf-8", errors="replace").rstrip("\n")
+            await websocket.send_text(line)
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        try:
+            await websocket.close()
+        except Exception:
+            pass
 
 
 @router.get("/{container_id}/stats")
