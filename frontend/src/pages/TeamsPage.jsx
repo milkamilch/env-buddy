@@ -3,6 +3,7 @@ import {
   fetchMyTeams, createTeam, deleteTeam,
   fetchTeamMembers, addTeamMember, removeTeamMember, updateMemberRole,
   fetchTeamScopedTemplates, deleteTeamTemplate,
+  createTemplate, fetchFavorites, saveFavorites,
 } from "../services/api";
 import TeamStackBuilder from "../components/TeamStackBuilder";
 import { useToast } from "../components/Toast";
@@ -35,6 +36,14 @@ export default function TeamsPage({ user }) {
   // Delete confirmations
   const [confirmDeleteTmpl, setConfirmDeleteTmpl] = useState(null);
   const [confirmDeleteTeam, setConfirmDeleteTeam] = useState(false);
+
+  // Favorites (for Auswahl toggle)
+  const [favorites, setFavorites] = useState([]);
+  const [copyingTmpl, setCopyingTmpl] = useState(null);
+
+  useEffect(() => {
+    fetchFavorites().then(setFavorites).catch(() => {});
+  }, []);
 
   // Load teams on mount
   useEffect(() => {
@@ -177,6 +186,37 @@ export default function TeamsPage({ user }) {
       setConfirmDeleteTmpl(null);
     } catch (err) {
       toast.error(err.message);
+    }
+  }
+
+  async function handleToggleFavorite(t) {
+    const key = `team:${t.id}`;
+    const next = favorites.includes(key)
+      ? favorites.filter((k) => k !== key)
+      : [...favorites, key];
+    setFavorites(next);
+    try {
+      await saveFavorites(next);
+    } catch (err) {
+      setFavorites(favorites);
+      toast.error(err.message);
+    }
+  }
+
+  async function handleCopyTemplate(t) {
+    setCopyingTmpl(t.id);
+    try {
+      await createTemplate({
+        name: t.name,
+        description: t.description || "",
+        icon: t.icon,
+        containers: t.containers,
+      });
+      toast.success(`"${t.name}" als eigenes Template gespeichert`);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setCopyingTmpl(null);
     }
   }
 
@@ -361,16 +401,34 @@ export default function TeamsPage({ user }) {
                                 <button className="tc-btn-confirm-no" onClick={() => setConfirmDeleteTmpl(null)}>✕</button>
                               </>
                             ) : (
-                              canEdit && (
-                                <>
-                                  <button className="ttc-btn-edit" onClick={() => { setEditingTemplate(t); setShowTmplModal(true); }}>
-                                    Bearbeiten
+                              <>
+                                {favorites.includes(`team:${t.id}`) ? (
+                                  <button className="ttc-btn-fav ttc-btn-fav-active" onClick={() => handleToggleFavorite(t)}>
+                                    ✓ In Auswahl
                                   </button>
-                                  <button className="ttc-btn-delete" onClick={() => handleDeleteTemplate(t.id)}>
-                                    Löschen
+                                ) : (
+                                  <button className="ttc-btn-fav" onClick={() => handleToggleFavorite(t)}>
+                                    + Auswahl
                                   </button>
-                                </>
-                              )
+                                )}
+                                <button
+                                  className="ttc-btn-copy"
+                                  onClick={() => handleCopyTemplate(t)}
+                                  disabled={copyingTmpl === t.id}
+                                >
+                                  {copyingTmpl === t.id ? "…" : "Lokal kopieren"}
+                                </button>
+                                {canEdit && (
+                                  <>
+                                    <button className="ttc-btn-edit" onClick={() => { setEditingTemplate(t); setShowTmplModal(true); }}>
+                                      Bearbeiten
+                                    </button>
+                                    <button className="ttc-btn-delete" onClick={() => handleDeleteTemplate(t.id)}>
+                                      Löschen
+                                    </button>
+                                  </>
+                                )}
+                              </>
                             )}
                           </div>
                         </div>
