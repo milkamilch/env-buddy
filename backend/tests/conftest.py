@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from app.database import Base, get_db
 from app.models import user, template, team, team_template  # register all models with Base
+from app.models import api_key, snapshot, shared_access  # new strategic models
 
 
 @pytest.fixture

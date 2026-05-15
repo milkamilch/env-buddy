@@ -270,11 +270,27 @@ def get_template_details(name: str):
 
 
 @router.get("/")
-def list_all(current_user: UserDB = Depends(_get_required_user)):
+def list_all(current_user: UserDB = Depends(_get_required_user), db: Session = Depends(get_db)):
     try:
         containers = docker_service.list_containers(user_id=current_user.id)
         for c in containers:
             c["started_by"] = current_user.username
+
+        # Include containers shared with this user
+        from app.models.shared_access import SharedAccessDB
+        shares = db.query(SharedAccessDB).filter(SharedAccessDB.grantee_id == current_user.id).all()
+        for share in shares:
+            try:
+                raw = docker_service.client.containers.get(share.container_label)
+                owner = db.query(UserDB).filter(UserDB.id == share.owner_id).first()
+                info = docker_service._container_to_dict(raw)  # noqa: SLF001
+                info["started_by"] = owner.username if owner else "unknown"
+                info["shared_from"] = owner.username if owner else "unknown"
+                if not any(c["id"] == info["id"] for c in containers):
+                    containers.append(info)
+            except Exception:
+                pass
+
         return containers
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -319,16 +319,25 @@ export default function TemplatesPage() {
                       <span className="team-section-hint">Von anderen Benutzern geteilt</span>
                     </div>
                     <div className="template-grid">
-                      {filteredPublic.map((t) => (
-                        <div key={t.id} className="template-card">
-                          <div className="tc-icon">{t.icon}</div>
-                          <div className="tc-name">{t.name}</div>
-                          {t.description && <div className="tc-desc">{t.description}</div>}
-                          <div className="tc-containers">
-                            {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
+                      {filteredPublic.map((t) => {
+                        const key = `custom:${t.id}`;
+                        return (
+                          <div key={t.id} className="template-card" draggable onDragStart={(e) => onDragStartLibrary(e, key)}>
+                            <div className="tc-icon">{t.icon}</div>
+                            <div className="tc-name">{t.name}</div>
+                            {t.description && <div className="tc-desc">{t.description}</div>}
+                            <div className="tc-containers">
+                              {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
+                            </div>
+                            <div className="tc-actions">
+                              {favorites.includes(key)
+                                ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
+                                : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
+                              }
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </>
                 )}

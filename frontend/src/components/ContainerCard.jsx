@@ -407,6 +407,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           </div>
           {container.port && <span className="row-port-sm">:{container.port}</span>}
           {container.started_by && <span className="row-started-by">👤 {container.started_by}</span>}
+          {container.shared_from && <span className="row-started-by" style={{ color: "#89b4fa" }}>🔗 @{container.shared_from}</span>}
           {isRunning && remaining != null && (
             <span className={`row-countdown-sm ${isExpiringSoon ? "countdown-urgent" : ""}`}>
               ⏱ {formatCountdown(remaining)}
@@ -502,6 +503,9 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           <span>Template: <strong>{container.template}</strong></span>
           {container.started_by && (
             <span className="card-started-by">👤 {container.started_by}</span>
+          )}
+          {container.shared_from && (
+            <span className="card-started-by" style={{ color: "#89b4fa" }}>🔗 geteilt von @{container.shared_from}</span>
           )}
           {isRunning && remaining != null && (
             <span className={`card-countdown ${isExpiringSoon ? "countdown-urgent" : ""}`}>

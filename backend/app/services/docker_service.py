@@ -449,10 +449,35 @@ def _container_stats(c):
     except Exception:
         return 0.0, 0.0, 0.0
 
+def _container_to_dict(c) -> dict:
+    labels = c.labels
+    cpu_percent, ram_mb, ram_percent = _container_stats(c)
+    started_at = labels.get("started-at")
+    duration = int(labels.get("duration-minutes", 60))
+    extra = _extensions.get(c.short_id, 0)
+    stops_at = _stops_at(started_at, duration + extra)
+    tpl_name = labels.get("template", "unknown")
+    port_val = int(labels["port"]) if labels.get("port") else None
+    return {
+        "id": c.short_id,
+        "name": c.name,
+        "template": tpl_name,
+        "port": port_val,
+        "status": c.status,
+        "health": _health_status(c),
+        "started_at": started_at,
+        "stops_at": stops_at,
+        "cpu_percent": cpu_percent,
+        "ram_mb": ram_mb,
+        "ram_percent": ram_percent,
+        "connection_string": get_connection_string(tpl_name, port_val) if port_val else None,
+    }
+
+
 def list_containers(user_id: int | None = None):
     containers = client.containers.list(
         all=True,
-        filters = {"label": "managed-by=test-buddy"}
+        filters={"label": "managed-by=test-buddy"}
     )
 
     result = []
@@ -462,27 +487,7 @@ def list_containers(user_id: int | None = None):
             continue
         if user_id is not None and labels.get("user-id") != str(user_id):
             continue
-        cpu_percent, ram_mb, ram_percent = _container_stats(c)
-        started_at = labels.get("started-at")
-        duration = int(labels.get("duration-minutes", 60))
-        extra = _extensions.get(c.short_id, 0)
-        stops_at = _stops_at(started_at, duration + extra)
-        tpl_name = labels.get("template", "unknown")
-        port_val = int(labels["port"]) if labels.get("port") else None
-        result.append({
-            "id": c.short_id,
-            "name": c.name,
-            "template": tpl_name,
-            "port": port_val,
-            "status": c.status,
-            "health": _health_status(c),
-            "started_at": started_at,
-            "stops_at": stops_at,
-            "cpu_percent": cpu_percent,
-            "ram_mb": ram_mb,
-            "ram_percent": ram_percent,
-            "connection_string": get_connection_string(tpl_name, port_val) if port_val else None,
-        })
+        result.append(_container_to_dict(c))
 
     return result
 

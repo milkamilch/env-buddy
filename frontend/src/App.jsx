@@ -150,7 +150,7 @@ export default function App() {
       ...containers.filter((c) => c.status === "running"),
       ...stacks.flatMap((s) => s.containers).filter((c) => c.status === "running"),
     ].length;
-    document.title = running > 0 ? `(${running}) Test-Buddy` : "Test-Buddy";
+    document.title = running > 0 ? `(${running}) Env-Buddy` : "Env-Buddy";
   }, [containers, stacks]);
 
   useEffect(() => {
@@ -178,7 +178,7 @@ export default function App() {
       <header className="app-header">
         <div className="header-logo">🧪</div>
         <div>
-          <h1 className="header-title">Test-Buddy</h1>
+          <h1 className="header-title">Env-Buddy</h1>
           <p className="header-sub">On-Demand Testumgebungen</p>
         </div>
 

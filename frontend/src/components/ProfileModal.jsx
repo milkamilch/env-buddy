@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchMe, updateNotificationPrefs, updateProfile, sendTestNotification, uploadAvatar, fetchApiKeys, createApiKey, revokeApiKey, fetchSnapshots, deleteSnapshot, fetchWorkflowExample } from "../services/api";
 import "./ProfileModal.css";
 
@@ -12,6 +13,8 @@ const PREFS = [
 ];
 
 export default function ProfileModal({ user, onClose, onUpdate }) {
+  const navigate = useNavigate();
+
   useEffect(() => {
     function onKey(e) { if (e.key === "Escape") onClose(); }
     window.addEventListener("keydown", onKey);
@@ -364,12 +367,22 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
             Gespeicherte Konfigurationen für schnellen Re-Start.
           </p>
           {snapshots.length === 0 ? (
-            <p style={{ fontSize: "0.82rem", color: "var(--subtext0)" }}>Keine Snapshots. Nutze ⊕ auf einem Container um einen zu speichern.</p>
+            <p style={{ fontSize: "0.82rem", color: "var(--subtext0)" }}>Keine Snapshots. Nutze 📷 auf einem Container um einen zu speichern.</p>
           ) : (
             snapshots.map((s) => (
               <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
                 <span style={{ flex: 1, fontSize: "0.85rem" }}>{s.name}</span>
                 <span style={{ fontSize: "0.75rem", color: "var(--subtext0)" }}>{new Date(s.created_at).toLocaleDateString()}</span>
+                <button
+                  style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid #89b4fa", background: "transparent", color: "#89b4fa", cursor: "pointer" }}
+                  onClick={() => {
+                    const encoded = btoa(JSON.stringify(s.config));
+                    navigate(`/dashboard?start=${encoded}`);
+                    onClose();
+                  }}
+                >
+                  ▶ Starten
+                </button>
                 <button
                   style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "#f38ba8", cursor: "pointer" }}
                   onClick={async () => {
