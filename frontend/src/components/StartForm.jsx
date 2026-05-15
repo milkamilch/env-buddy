@@ -14,6 +14,15 @@ const ALL_MEM_STEPS = [
   { label: "32 GB",      apiValue: "32g",   mb: 32768 },
 ];
 
+const CPU_STEPS = [
+  { label: "kein Limit", value: null  },
+  { label: "0.25 CPUs",  value: 0.25  },
+  { label: "0.5 CPUs",   value: 0.5   },
+  { label: "1 CPU",      value: 1.0   },
+  { label: "2 CPUs",     value: 2.0   },
+  { label: "4 CPUs",     value: 4.0   },
+];
+
 function buildMemSteps(totalRamMb) {
   return ALL_MEM_STEPS.filter((s) => s.mb === 0 || s.mb <= totalRamMb);
 }
@@ -30,6 +39,7 @@ export default function StartForm({ templates, onStarted, prefill, onPrefillCons
   const [containerName, setContainerName] = useState("");
   const [memStep, setMemStep]             = useState(0);
   const [memSteps, setMemSteps]           = useState(ALL_MEM_STEPS.slice(0, 6));
+  const [cpuStep, setCpuStep]             = useState(0);
   const [defaultPort, setDefaultPort]     = useState(null);
 
   // ── Stack mode ───────────────────────────────────────────────────────────
@@ -103,6 +113,8 @@ export default function StartForm({ templates, onStarted, prefill, onPrefillCons
       if (containerName) config.container_name = containerName;
       const memValue = memSteps[Math.min(memStep, memSteps.length - 1)].apiValue;
       if (memValue) config.mem_limit = memValue;
+      const cpuValue = CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].value;
+      if (cpuValue) config.cpu_limit = cpuValue;
       onStarted(await startContainer(template, duration, config));
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
@@ -252,6 +264,18 @@ export default function StartForm({ templates, onStarted, prefill, onPrefillCons
                   </div>
                 </div>
                 <span className="config-mem-value">{memSteps[Math.min(memStep, memSteps.length - 1)].label}</span>
+              </div>
+              <div className="config-row">
+                <label className="config-label">CPU-Limit</label>
+                <div className="config-mem-slider">
+                  <input type="range" min={0} max={CPU_STEPS.length - 1} step={1}
+                    value={Math.min(cpuStep, CPU_STEPS.length - 1)}
+                    onChange={(e) => setCpuStep(Number(e.target.value))} />
+                  <div className="config-mem-labels">
+                    <span>kein Limit</span><span>{CPU_STEPS[CPU_STEPS.length - 1].label}</span>
+                  </div>
+                </div>
+                <span className="config-mem-value">{CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].label}</span>
               </div>
               {envVars.length > 0 && <div className="config-section-label">Umgebungsvariablen</div>}
               {envVars.map((e, i) => (
