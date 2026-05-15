@@ -21,6 +21,7 @@ function useStatsHistory(container) {
       { cpu: container.cpu_percent ?? 0, ram: container.ram_percent ?? 0 },
     ].slice(-HISTORY_MAX);
   }, [container.cpu_percent, container.ram_percent, container.status]);
+  // eslint-disable-next-line react-hooks/refs
   return histRef.current;
 }
 

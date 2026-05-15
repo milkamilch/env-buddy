@@ -70,10 +70,11 @@ export default function ResourceGraphModal({ containerId, containerName, onClose
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     intervalRef.current = setInterval(load, 15000);
     return () => clearInterval(intervalRef.current);
-  }, [containerId]);
+  }, [containerId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const cpuData    = history.map((p) => p.cpu);
   const ramData    = history.map((p) => p.ram_percent);

@@ -23,6 +23,7 @@ export default function ContainerLogsModal({ containerId, containerName, isRunni
 
   // Initial load via HTTP (works for stopped containers too)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setLines([]);
     fetchContainerLogs(containerId, tail)

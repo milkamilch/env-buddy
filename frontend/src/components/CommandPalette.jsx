@@ -31,6 +31,7 @@ export default function CommandPalette({ templates, onClose }) {
 
   const results = [...pageResults, ...templateResults];
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setActive(0); }, [query]);
 
   function execute(item) {
