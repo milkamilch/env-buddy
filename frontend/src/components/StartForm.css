@@ -1,6 +1,6 @@
 .start-form {
-  background: var(--surface);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 12px;
   padding: 1.5rem;
   display: flex;
@@ -11,7 +11,7 @@
 .start-form h2 {
   margin: 0;
   font-size: 1.1rem;
-  color: var(--text);
+  color: var(--fg-text);
 }
 
 .form-group {
@@ -22,14 +22,14 @@
 
 .form-group label {
   font-size: 0.85rem;
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
 }
 
 .form-group select {
-  background: var(--mantle);
-  border: 1px solid var(--overlay1);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay1);
   border-radius: 8px;
-  color: var(--text);
+  color: var(--fg-text);
   padding: 0.5rem 0.75rem;
   font-size: 0.95rem;
   cursor: pointer;
@@ -37,11 +37,11 @@
 
 .form-group select:focus {
   outline: none;
-  border-color: var(--blue);
+  border-color: var(--accent-blue);
 }
 
 .form-group input[type="range"] {
-  accent-color: var(--blue);
+  accent-color: var(--accent-blue);
   width: 100%;
   cursor: pointer;
 }
@@ -50,32 +50,32 @@
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
 }
 
 .custom-multi-hint {
   font-size: 0.78rem;
-  color: var(--subtext0);
-  background: var(--mantle);
-  border: 1px solid var(--overlay0);
+  color: var(--fg-subtext0);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 6px;
   padding: 0.4rem 0.65rem;
   margin: 0;
 }
 
 .form-error {
-  color: var(--red);
+  color: var(--accent-red);
   font-size: 0.85rem;
   margin: 0;
-  background: var(--surface);
-  border: 1px solid var(--red);
+  background: var(--bg-surface);
+  border: 1px solid var(--accent-red);
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
 }
 
 .btn-start {
-  background: var(--blue);
-  color: var(--surface);
+  background: var(--accent-blue);
+  color: var(--bg-surface);
   border: none;
   border-radius: 8px;
   padding: 0.6rem 1.2rem;
@@ -86,7 +86,7 @@
 }
 
 .btn-start:hover:not(:disabled) {
-  background: var(--sky);
+  background: var(--accent-sky);
 }
 
 .btn-start:disabled {
@@ -98,8 +98,8 @@
 .mode-tabs {
   display: flex;
   gap: 0;
-  background: var(--mantle);
-  border: 1px solid var(--overlay1);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay1);
   border-radius: 8px;
   padding: 3px;
 }
@@ -109,7 +109,7 @@
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   padding: 0.35rem 0;
   font-size: 0.85rem;
   font-weight: 600;
@@ -118,20 +118,20 @@
 }
 
 .mode-tab.active {
-  background: var(--overlay0);
-  color: var(--text);
+  background: var(--bg-overlay0);
+  color: var(--fg-text);
 }
 
 .mode-tab:hover:not(.active) {
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
 }
 
 /* Stack name input */
 .stack-name-input {
-  background: var(--mantle);
-  border: 1px solid var(--overlay1);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay1);
   border-radius: 8px;
-  color: var(--text);
+  color: var(--fg-text);
   padding: 0.5rem 0.75rem;
   font-size: 0.9rem;
   width: 100%;
@@ -140,16 +140,16 @@
 
 .stack-name-input:focus {
   outline: none;
-  border-color: var(--blue);
+  border-color: var(--accent-blue);
 }
 
 .stack-name-input::placeholder {
-  color: var(--overlay1);
+  color: var(--bg-overlay1);
 }
 
 /* Service chip grid */
 .label-hint {
-  color: var(--blue);
+  color: var(--accent-blue);
   font-size: 0.78rem;
 }
 
@@ -166,10 +166,10 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  background: var(--mantle);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 6px;
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
   padding: 0.3rem 0.6rem;
   font-size: 0.78rem;
   cursor: pointer;
@@ -179,13 +179,13 @@
 
 .service-chip:hover {
   border-color: var(--blue-a-lg);
-  color: var(--text);
+  color: var(--fg-text);
 }
 
 .service-chip.selected {
-  border-color: var(--blue);
-  background: var(--blue)18;
-  color: var(--blue);
+  border-color: var(--accent-blue);
+  background: var(--accent-blue)18;
+  color: var(--accent-blue);
 }
 
 .chip-label {
@@ -198,10 +198,10 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  background: var(--mantle);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 8px;
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
   padding: 0.45rem 0.75rem;
   font-size: 0.85rem;
   cursor: pointer;
@@ -210,17 +210,17 @@
 .btn-config-toggle:hover,
 .btn-config-toggle.open {
   border-color: var(--blue-a-lg);
-  color: var(--text);
+  color: var(--fg-text);
 }
 .toggle-arrow {
   font-size: 0.7rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
 }
 
 /* Config panel */
 .config-panel {
-  background: var(--mantle);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 8px;
   padding: 1rem 1.1rem;
   display: flex;
@@ -230,7 +230,7 @@
 
 .config-section-label {
   font-size: 0.75rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-top: 0.3rem;
@@ -244,27 +244,27 @@
 
 .config-label {
   font-size: 0.82rem;
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
   width: 6.5rem;
   flex-shrink: 0;
 }
 
 .config-input {
   flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--overlay1);
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-overlay1);
   border-radius: 6px;
-  color: var(--text);
+  color: var(--fg-text);
   padding: 0.4rem 0.7rem;
   font-size: 0.88rem;
   min-width: 0;
 }
 .config-input:focus {
   outline: none;
-  border-color: var(--blue);
+  border-color: var(--accent-blue);
 }
 .config-input::placeholder {
-  color: var(--overlay1);
+  color: var(--bg-overlay1);
 }
 .config-input-sm {
   max-width: 7.5rem;
@@ -280,19 +280,19 @@
 }
 .config-mem-slider input[type="range"] {
   width: 100%;
-  accent-color: var(--blue);
+  accent-color: var(--accent-blue);
   cursor: pointer;
 }
 .config-mem-labels {
   display: flex;
   justify-content: space-between;
   font-size: 0.7rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
 }
 .config-mem-value {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--blue);
+  color: var(--accent-blue);
   text-align: right;
   min-width: 4.5rem;
   flex-shrink: 0;
@@ -315,14 +315,14 @@
   font-size: 0.8rem;
 }
 .config-env-sep {
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   font-size: 0.9rem;
   flex-shrink: 0;
 }
 .btn-env-remove {
   background: transparent;
   border: none;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   cursor: pointer;
   font-size: 0.75rem;
   padding: 0.2rem 0.3rem;
@@ -330,14 +330,14 @@
   flex-shrink: 0;
 }
 .btn-env-remove:hover {
-  color: var(--red);
+  color: var(--accent-red);
 }
 
 .btn-add-env {
   background: transparent;
-  border: 1px dashed var(--overlay1);
+  border: 1px dashed var(--bg-overlay1);
   border-radius: 6px;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   padding: 0.3rem 0.6rem;
   font-size: 0.8rem;
   cursor: pointer;
@@ -347,7 +347,7 @@
 }
 .btn-add-env:hover {
   border-color: var(--blue-a-lg);
-  color: var(--blue);
+  color: var(--accent-blue);
 }
 
 /* ── Stack 2-step UI ─────────────────────────────────────────────── */
@@ -360,7 +360,7 @@
 
 .stack-step-label {
   font-size: 0.7rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -368,12 +368,12 @@
 .stack-step-title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text);
+  color: var(--fg-text);
 }
 
 .chip-multi {
-  background: var(--overlay0);
-  color: var(--subtext1);
+  background: var(--bg-overlay0);
+  color: var(--fg-subtext1);
   font-size: 0.65rem;
   border-radius: 99px;
   padding: 0.05rem 0.35rem;
@@ -390,8 +390,8 @@
 }
 
 .stack-container-block {
-  background: var(--mantle);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 8px;
   padding: 0.75rem;
   display: flex;
@@ -409,13 +409,13 @@
 .scb-image {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--blue);
+  color: var(--accent-blue);
   font-family: monospace;
 }
 
 .scb-from {
   font-size: 0.7rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
 }
 
 .scb-row {
@@ -426,29 +426,29 @@
 
 .scb-label {
   font-size: 0.75rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   width: 5.5rem;
   flex-shrink: 0;
 }
 
 .scb-input {
   flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 6px;
-  color: var(--text);
+  color: var(--fg-text);
   font-size: 0.82rem;
   padding: 0.3rem 0.5rem;
   outline: none;
   transition: border-color 0.15s;
 }
 
-.scb-input:focus { border-color: var(--blue); }
+.scb-input:focus { border-color: var(--accent-blue); }
 .scb-input-sm { max-width: 140px; }
 
 .scb-env-label {
   font-size: 0.72rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-top: 0.1rem;
@@ -460,10 +460,10 @@
 }
 
 .btn-back {
-  background: var(--mantle);
-  border: 1px solid var(--overlay1);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay1);
   border-radius: 8px;
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
   font-size: 0.875rem;
   padding: 0.6rem 0.9rem;
   cursor: pointer;
@@ -471,13 +471,13 @@
   flex-shrink: 0;
 }
 
-.btn-back:hover { border-color: var(--overlay2); color: var(--text); }
+.btn-back:hover { border-color: #585b70; color: var(--fg-text); }
 
 /* ── Drag & Drop Stack Builder ───────────────────────────────────────────── */
 
 .stack-palette-label {
   font-size: 0.72rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -492,10 +492,10 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  background: var(--mantle);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 6px;
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
   padding: 0.28rem 0.55rem;
   font-size: 0.78rem;
   cursor: grab;
@@ -505,9 +505,9 @@
 }
 
 .palette-chip:hover {
-  border-color: var(--blue);
-  color: var(--text);
-  background: var(--surface);
+  border-color: var(--accent-blue);
+  color: var(--fg-text);
+  background: var(--bg-surface);
 }
 
 .palette-chip:active {
@@ -519,8 +519,8 @@
 }
 
 .palette-multi {
-  background: var(--overlay0);
-  color: var(--subtext1);
+  background: var(--bg-overlay0);
+  color: var(--fg-subtext1);
   font-size: 0.62rem;
   border-radius: 99px;
   padding: 0.05rem 0.3rem;
@@ -531,7 +531,7 @@
 /* Drop zone */
 .stack-drop-zone {
   min-height: 72px;
-  border: 1.5px dashed var(--overlay1);
+  border: 1.5px dashed var(--bg-overlay1);
   border-radius: 10px;
   padding: 0.5rem;
   display: flex;
@@ -541,8 +541,8 @@
 }
 
 .stack-drop-zone.dz-over {
-  border-color: var(--blue);
-  background: color-mix(in srgb, var(--blue) 6%, transparent);
+  border-color: var(--accent-blue);
+  background: color-mix(in srgb, var(--accent-blue) 6%, transparent);
 }
 
 .dz-empty {
@@ -555,13 +555,13 @@
 
 .dz-hint {
   font-size: 0.8rem;
-  color: var(--overlay2);
+  color: #585b70;
 }
 
 /* Stack items */
 .si-block {
-  background: var(--mantle);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -581,7 +581,7 @@
 .si-name {
   font-size: 0.82rem;
   font-weight: 600;
-  color: var(--text);
+  color: var(--fg-text);
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -591,7 +591,7 @@
 
 .si-image {
   font-size: 0.72rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   font-family: monospace;
   flex-shrink: 0;
   max-width: 7rem;
@@ -613,24 +613,24 @@
 }
 
 .si-btn-expand {
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
 }
 
 .si-btn-expand:hover {
-  color: var(--blue);
+  color: var(--accent-blue);
 }
 
 .si-btn-remove {
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
 }
 
 .si-btn-remove:hover {
-  color: var(--red);
+  color: var(--accent-red);
 }
 
 /* Expanded config */
 .si-config {
-  border-top: 1px solid var(--overlay0);
+  border-top: 1px solid var(--bg-overlay0);
   padding: 0.6rem 0.75rem;
   display: flex;
   flex-direction: column;
@@ -645,17 +645,17 @@
 
 .si-label {
   font-size: 0.75rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   width: 5.5rem;
   flex-shrink: 0;
 }
 
 .si-input {
   flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 6px;
-  color: var(--text);
+  color: var(--fg-text);
   font-size: 0.82rem;
   padding: 0.3rem 0.5rem;
   outline: none;
@@ -664,7 +664,7 @@
 }
 
 .si-input:focus {
-  border-color: var(--blue);
+  border-color: var(--accent-blue);
 }
 
 .si-input-sm {
@@ -674,7 +674,7 @@
 
 .si-env-title {
   font-size: 0.7rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-top: 0.15rem;

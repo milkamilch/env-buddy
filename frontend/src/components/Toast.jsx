@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useMemo } from "react";
+import { X } from "lucide-react";
 import "./Toast.css";
 
 const ToastContext = createContext(null);
@@ -12,24 +13,41 @@ export function ToastProvider({ children }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const toast = useCallback((message, type = "error") => {
-    const id = ++_id;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => dismiss(id), 4000);
+  const toast = useMemo(() => {
+    const fn = (message, type = "error", opts = {}) => {
+      const id = ++_id;
+      setToasts((prev) => [...prev.slice(-2), { id, message, type, action: opts.action }]);
+      const delay = opts.persistent ? null : (type === "success" ? 4000 : type === "warning" ? 5000 : 6000);
+      if (delay) setTimeout(() => dismiss(id), delay);
+    };
+    fn.error   = (msg, opts) => fn(msg, "error",   opts);
+    fn.success = (msg, opts) => fn(msg, "success",  opts);
+    fn.warning = (msg, opts) => fn(msg, "warning",  opts);
+    fn.info    = (msg, opts) => fn(msg, "info",     opts);
+    return fn;
   }, [dismiss]);
-
-  toast.error   = (msg) => toast(msg, "error");
-  toast.success = (msg) => toast(msg, "success");
-  toast.warning = (msg) => toast(msg, "warning");
 
   return (
     <ToastContext.Provider value={toast}>
       {children}
       <div className="toast-container">
         {toasts.map((t) => (
-          <div key={t.id} className={`toast toast-${t.type}`}>
-            <span className="toast-msg">{t.message}</span>
-            <button className="toast-close" onClick={() => dismiss(t.id)}>✕</button>
+          <div
+            key={t.id}
+            className={`toast toast-${t.type}`}
+          >
+            <span className={`toast-strip toast-strip-${t.type}`} />
+            <div className="toast-body">
+              <span className="toast-msg">{t.message}</span>
+              {t.action && (
+                <button className="toast-action" onClick={() => { t.action.fn(); dismiss(t.id); }}>
+                  {t.action.label}
+                </button>
+              )}
+            </div>
+            <button className="toast-close" onClick={() => dismiss(t.id)} aria-label="Toast schließen">
+              <X size={12} />
+            </button>
           </div>
         ))}
       </div>
