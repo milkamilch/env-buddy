@@ -1,94 +1,204 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-}
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
 
+/* =========================================================
+   Catppuccin Tokens
+   ========================================================= */
+
+/* Dark — Mocha (default) */
 :root {
-  /* Catppuccin Mocha (dark) */
-  --base:         #11111b;
-  --surface:      #1e1e2e;
-  --mantle:       #181825;
-  --overlay0:     #313244;
-  --overlay1:     #45475a;
+  color-scheme: dark;
+
+  --bg-base:     #11111b;
+  --bg-mantle:   #181825;
+  --bg-surface:  #1e1e2e;
+  --bg-surface2: #232336;
+  --bg-overlay0: #313244;
+  --bg-overlay1: #45475a;
+
+  --fg-subtext0: #6c7086;
+  --fg-subtext1: #a6adc8;
+  --fg-text:     #cdd6f4;
+
+  --accent-blue:   #89b4fa;
+  --accent-mauve:  #cba6f7;
+  --accent-green:  #a6e3a1;
+  --accent-peach:  #fab387;
+  --accent-red:    #f38ba8;
+  --accent-sky:    #74c7ec;
+  --accent-yellow: #f9e2af;
+
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  --border-thin:   1px solid var(--bg-overlay0);
+  --border-strong: 1px solid var(--bg-overlay1);
+
+  --shadow-modal:   0 24px 48px -12px rgba(0,0,0,.6), 0 2px 4px rgba(0,0,0,.4);
+  --shadow-popover: 0 8px 24px -8px rgba(0,0,0,.5);
+
+  /* Backward-compat aliases — removed in Phase 4 */
+  --base:         var(--bg-base);
+  --mantle:       var(--bg-mantle);
+  --surface:      var(--bg-surface);
+  --overlay0:     var(--bg-overlay0);
+  --overlay1:     var(--bg-overlay1);
   --overlay2:     #585b70;
-  --subtext0:     #6c7086;
-  --subtext1:     #a6adc8;
-  --text:         #cdd6f4;
-  --blue:         #89b4fa;
-  --red:          #f38ba8;
-  --green:        #a6e3a1;
-  --peach:        #fab387;
-  --sky:          #74c7ec;
-  --mauve:        #cba6f7;
+  --subtext0:     var(--fg-subtext0);
+  --subtext1:     var(--fg-subtext1);
+  --text:         var(--fg-text);
+  --blue:         var(--accent-blue);
+  --red:          var(--accent-red);
+  --green:        var(--accent-green);
+  --peach:        var(--accent-peach);
+  --sky:          var(--accent-sky);
+  --mauve:        var(--accent-mauve);
   --red-surface:  #2d1b22;
   --green-surface:#1a2b1a;
   --peach-surface:#2b2418;
-  --red-a:        #f38ba822;
-  --green-a:      #a6e3a122;
-  --blue-a:       #89b4fa22;
-  --blue-a-sm:    #89b4fa11;
-  --blue-a-lg:    #89b4fa55;
+  --red-a:        color-mix(in oklch, var(--accent-red) 12%, transparent);
+  --green-a:      color-mix(in oklch, var(--accent-green) 12%, transparent);
+  --blue-a:       color-mix(in oklch, var(--accent-blue) 12%, transparent);
+  --blue-a-sm:    color-mix(in oklch, var(--accent-blue) 8%, transparent);
+  --blue-a-lg:    color-mix(in oklch, var(--accent-blue) 30%, transparent);
 }
 
+/* Light — Latte */
 [data-theme="light"] {
-  /* Catppuccin Latte (light) */
   color-scheme: light;
-  --base:         #eff1f5;
-  --surface:      #e6e9ef;
-  --mantle:       #dce0e8;
-  --overlay0:     #bcc0cc;
-  --overlay1:     #acb0be;
+
+  --bg-base:     #eff1f5;
+  --bg-mantle:   #e6e9ef;
+  --bg-surface:  #ffffff;
+  --bg-surface2: #dce0e8;
+  --bg-overlay0: #ccd0da;
+  --bg-overlay1: #bcc0cc;
+
+  --fg-subtext0: #8c8fa1;
+  --fg-subtext1: #6c6f85;
+  --fg-text:     #4c4f69;
+
+  --accent-blue:   #1e66f5;
+  --accent-mauve:  #8839ef;
+  --accent-green:  #40a02b;
+  --accent-peach:  #fe640b;
+  --accent-red:    #d20f39;
+  --accent-sky:    #04a5e5;
+  --accent-yellow: #df8e1d;
+
+  /* Backward-compat light aliases */
+  --base:         var(--bg-base);
+  --mantle:       var(--bg-mantle);
+  --surface:      var(--bg-surface);
+  --overlay0:     var(--bg-overlay0);
+  --overlay1:     var(--bg-overlay1);
   --overlay2:     #9ca0b0;
-  --subtext0:     #6c6f85;
-  --subtext1:     #5c5f77;
-  --text:         #4c4f69;
-  --blue:         #1e66f5;
-  --red:          #d20f39;
-  --green:        #40a02b;
-  --peach:        #fe640b;
-  --sky:          #209fb5;
-  --mauve:        #8839ef;
+  --subtext0:     var(--fg-subtext0);
+  --subtext1:     var(--fg-subtext1);
+  --text:         var(--fg-text);
+  --blue:         var(--accent-blue);
+  --red:          var(--accent-red);
+  --green:        var(--accent-green);
+  --peach:        var(--accent-peach);
+  --sky:          var(--accent-sky);
+  --mauve:        var(--accent-mauve);
   --red-surface:  #fce5e8;
   --green-surface:#e5f5e5;
   --peach-surface:#fff3e8;
-  --red-a:        #d20f3922;
-  --green-a:      #40a02b22;
-  --blue-a:       #1e66f522;
-  --blue-a-sm:    #1e66f511;
-  --blue-a-lg:    #1e66f555;
+  --red-a:        color-mix(in oklch, var(--accent-red) 12%, transparent);
+  --green-a:      color-mix(in oklch, var(--accent-green) 12%, transparent);
+  --blue-a:       color-mix(in oklch, var(--accent-blue) 12%, transparent);
+  --blue-a-sm:    color-mix(in oklch, var(--accent-blue) 8%, transparent);
+  --blue-a-lg:    color-mix(in oklch, var(--accent-blue) 30%, transparent);
 }
 
-:root {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: dark;
-  color: var(--text);
-  background-color: var(--base);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+/* =========================================================
+   Tailwind @theme — maps CSS vars to utility classes
+   ========================================================= */
+
+@theme {
+  --font-sans: var(--font-display);
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --color-base:     var(--bg-base);
+  --color-mantle:   var(--bg-mantle);
+  --color-surface:  var(--bg-surface);
+  --color-surface2: var(--bg-surface2);
+  --color-overlay0: var(--bg-overlay0);
+  --color-overlay1: var(--bg-overlay1);
+  --color-subtext0: var(--fg-subtext0);
+  --color-subtext1: var(--fg-subtext1);
+  --color-text:     var(--fg-text);
+  --color-blue:     var(--accent-blue);
+  --color-mauve:    var(--accent-mauve);
+  --color-green:    var(--accent-green);
+  --color-peach:    var(--accent-peach);
+  --color-red:      var(--accent-red);
+  --color-sky:      var(--accent-sky);
+  --color-yellow:   var(--accent-yellow);
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 }
+
+/* =========================================================
+   Global Resets
+   ========================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0;
   min-height: 100vh;
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg-text);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-#root {
-  min-height: 100vh;
-}
+button { font-family: inherit; }
 
-button {
-  font-family: inherit;
-}
+h1, h2, h3 { line-height: 1.2; }
 
-/* Global scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--overlay1); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--bg-overlay1); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--overlay2); }
 
-h1, h2, h3 {
-  line-height: 1.2;
+#root { min-height: 100vh; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* =========================================================
+   Global animations
+   ========================================================= */
+
+@keyframes spin        { to { transform: rotate(360deg); } }
+@keyframes pulse-soft  { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes toast-slide { from { opacity: 0; transform: translateX(1rem); } to { opacity: 1; transform: translateX(0); } }
+@keyframes skeleton-shimmer {
+  from { background-position: -200px 0; }
+  to   { background-position: calc(200px + 100%) 0; }
 }
