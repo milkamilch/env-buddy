@@ -51,25 +51,9 @@
   --shadow-modal:   0 24px 48px -12px rgba(0,0,0,.6), 0 2px 4px rgba(0,0,0,.4);
   --shadow-popover: 0 8px 24px -8px rgba(0,0,0,.5);
 
-  /* Backward-compat aliases — removed in Phase 4 */
-  --base:         var(--bg-base);
-  --mantle:       var(--bg-mantle);
-  --surface:      var(--bg-surface);
-  --overlay0:     var(--bg-overlay0);
-  --overlay1:     var(--bg-overlay1);
-  --overlay2:     #585b70;
-  --subtext0:     var(--fg-subtext0);
-  --subtext1:     var(--fg-subtext1);
-  --text:         var(--fg-text);
-  --blue:         var(--accent-blue);
-  --red:          var(--accent-red);
-  --green:        var(--accent-green);
-  --peach:        var(--accent-peach);
-  --sky:          var(--accent-sky);
-  --mauve:        var(--accent-mauve);
+  /* Semantic color helpers — still used by components */
   --red-surface:  #2d1b22;
   --green-surface:#1a2b1a;
-  --peach-surface:#2b2418;
   --red-a:        color-mix(in oklch, var(--accent-red) 12%, transparent);
   --green-a:      color-mix(in oklch, var(--accent-green) 12%, transparent);
   --blue-a:       color-mix(in oklch, var(--accent-blue) 12%, transparent);
@@ -100,25 +84,9 @@
   --accent-sky:    #04a5e5;
   --accent-yellow: #df8e1d;
 
-  /* Backward-compat light aliases */
-  --base:         var(--bg-base);
-  --mantle:       var(--bg-mantle);
-  --surface:      var(--bg-surface);
-  --overlay0:     var(--bg-overlay0);
-  --overlay1:     var(--bg-overlay1);
-  --overlay2:     #9ca0b0;
-  --subtext0:     var(--fg-subtext0);
-  --subtext1:     var(--fg-subtext1);
-  --text:         var(--fg-text);
-  --blue:         var(--accent-blue);
-  --red:          var(--accent-red);
-  --green:        var(--accent-green);
-  --peach:        var(--accent-peach);
-  --sky:          var(--accent-sky);
-  --mauve:        var(--accent-mauve);
+  /* Semantic color helpers — still used by components */
   --red-surface:  #fce5e8;
   --green-surface:#e5f5e5;
-  --peach-surface:#fff3e8;
   --red-a:        color-mix(in oklch, var(--accent-red) 12%, transparent);
   --green-a:      color-mix(in oklch, var(--accent-green) 12%, transparent);
   --blue-a:       color-mix(in oklch, var(--accent-blue) 12%, transparent);
@@ -182,7 +150,7 @@ h1, h2, h3 { line-height: 1.2; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg-overlay1); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--overlay2); }
+::-webkit-scrollbar-thumb:hover { background: #585b70; }
 
 #root { min-height: 100vh; }
 

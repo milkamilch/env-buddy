@@ -2,8 +2,8 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  background: var(--surface);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-surface);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 10px;
   padding: 0.6rem 1rem;
   flex-wrap: wrap;
@@ -21,17 +21,17 @@
 .stat-card-value {
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--fg-text);
   line-height: 1;
 }
 
-.stat-green { color: var(--green); }
-.stat-red   { color: var(--red); }
-.stat-blue  { color: var(--blue); }
+.stat-green { color: var(--accent-green); }
+.stat-red   { color: var(--accent-red); }
+.stat-blue  { color: var(--accent-blue); }
 
 .stat-card-label {
   font-size: 0.72rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -39,7 +39,7 @@
 
 .stat-card-sub {
   font-size: 0.68rem;
-  color: var(--overlay1);
+  color: var(--bg-overlay1);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -47,7 +47,7 @@
 .stat-divider {
   width: 1px;
   height: 2.5rem;
-  background: var(--overlay0);
+  background: var(--bg-overlay0);
   margin: 0 0.5rem;
   flex-shrink: 0;
 }
@@ -74,7 +74,7 @@
 .stat-progress-track {
   width: 100%;
   height: 5px;
-  background: var(--overlay0);
+  background: var(--bg-overlay0);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -87,7 +87,7 @@
 
 .stat-bar-sub {
   font-size: 0.66rem;
-  color: var(--overlay1);
+  color: var(--bg-overlay1);
   white-space: nowrap;
 }
 
@@ -116,7 +116,7 @@
 
 .stat-tpl-name {
   font-size: 0.72rem;
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
   width: 72px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -127,14 +127,14 @@
 .stat-tpl-track {
   flex: 1;
   height: 5px;
-  background: var(--overlay0);
+  background: var(--bg-overlay0);
   border-radius: 99px;
   overflow: hidden;
 }
 
 .stat-tpl-fill {
   height: 100%;
-  background: var(--blue);
+  background: var(--accent-blue);
   border-radius: 99px;
   transition: width 0.4s ease;
 }
@@ -142,7 +142,7 @@
 .stat-tpl-count {
   font-size: 0.7rem;
   font-weight: 700;
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
   min-width: 14px;
   text-align: right;
 }

@@ -10,8 +10,8 @@
 }
 
 .logs-modal {
-  background: var(--base);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-base);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 12px;
   width: 100%;
   max-width: 900px;
@@ -27,8 +27,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background: var(--surface);
-  border-bottom: 1px solid var(--overlay0);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--bg-overlay0);
   flex-shrink: 0;
   gap: 1rem;
 }
@@ -42,14 +42,14 @@
 
 .logs-icon {
   font-size: 1rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   flex-shrink: 0;
 }
 
 .logs-name {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--text);
+  color: var(--fg-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -58,7 +58,7 @@
 .logs-live-badge {
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--green);
+  color: var(--accent-green);
   letter-spacing: 0.05em;
   flex-shrink: 0;
   animation: pulse 2s infinite;
@@ -82,22 +82,22 @@
 
 .logs-tail-label {
   font-size: 0.78rem;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   margin-right: 0.1rem;
 }
 
 .logs-tail-btn {
-  background: var(--mantle);
-  border: 1px solid var(--overlay0);
+  background: var(--bg-mantle);
+  border: 1px solid var(--bg-overlay0);
   border-radius: 5px;
-  color: var(--subtext1);
+  color: var(--fg-subtext1);
   font-size: 0.75rem;
   padding: 0.2rem 0.5rem;
   cursor: pointer;
   transition: all 0.15s;
 }
-.logs-tail-btn:hover { border-color: var(--overlay1); color: var(--text); }
-.logs-tail-btn.active { background: var(--overlay0); border-color: var(--blue); color: var(--blue); }
+.logs-tail-btn:hover { border-color: var(--bg-overlay1); color: var(--fg-text); }
+.logs-tail-btn.active { background: var(--bg-overlay0); border-color: var(--accent-blue); color: var(--accent-blue); }
 
 .logs-actions {
   display: flex;
@@ -107,9 +107,9 @@
 
 .logs-action-btn {
   background: transparent;
-  border: 1px solid var(--overlay1);
+  border: 1px solid var(--bg-overlay1);
   border-radius: 6px;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   font-size: 0.85rem;
   width: 1.8rem;
   height: 1.8rem;
@@ -119,14 +119,14 @@
   justify-content: center;
   transition: all 0.15s;
 }
-.logs-action-btn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); background: var(--blue-a-sm); }
+.logs-action-btn:hover:not(:disabled) { border-color: var(--accent-blue); color: var(--accent-blue); background: var(--blue-a-sm); }
 .logs-action-btn:disabled { opacity: 0.3; cursor: default; }
 
 .logs-close-btn {
   background: transparent;
-  border: 1px solid var(--overlay1);
+  border: 1px solid var(--bg-overlay1);
   border-radius: 6px;
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   font-size: 0.85rem;
   width: 1.8rem;
   height: 1.8rem;
@@ -137,7 +137,7 @@
   transition: all 0.15s;
   margin-left: 0.25rem;
 }
-.logs-close-btn:hover { border-color: var(--red); color: var(--red); }
+.logs-close-btn:hover { border-color: var(--accent-red); color: var(--accent-red); }
 
 .logs-body {
   flex: 1;
@@ -146,12 +146,12 @@
   font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
   font-size: 0.78rem;
   line-height: 1.6;
-  color: var(--text);
+  color: var(--fg-text);
 }
 
 .logs-body::-webkit-scrollbar { width: 6px; }
 .logs-body::-webkit-scrollbar-track { background: transparent; }
-.logs-body::-webkit-scrollbar-thumb { background: var(--overlay1); border-radius: 3px; }
+.logs-body::-webkit-scrollbar-thumb { background: var(--bg-overlay1); border-radius: 3px; }
 
 .log-line {
   white-space: pre-wrap;
@@ -159,10 +159,10 @@
   padding: 0.05rem 0;
   border-bottom: 1px solid transparent;
 }
-.log-line:hover { background: var(--surface); border-color: var(--overlay0); border-radius: 3px; }
+.log-line:hover { background: var(--bg-surface); border-color: var(--bg-overlay0); border-radius: 3px; }
 
 .logs-hint {
-  color: var(--subtext0);
+  color: var(--fg-subtext0);
   font-size: 0.85rem;
   font-family: sans-serif;
 }
@@ -171,13 +171,13 @@
   position: absolute;
   bottom: 1rem;
   right: 1rem;
-  background: var(--overlay0);
-  border: 1px solid var(--overlay1);
+  background: var(--bg-overlay0);
+  border: 1px solid var(--bg-overlay1);
   border-radius: 20px;
-  color: var(--text);
+  color: var(--fg-text);
   font-size: 0.78rem;
   padding: 0.35rem 0.85rem;
   cursor: pointer;
   transition: all 0.15s;
 }
-.logs-scroll-btn:hover { background: var(--overlay1); }
+.logs-scroll-btn:hover { background: var(--bg-overlay1); }
