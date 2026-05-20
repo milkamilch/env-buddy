@@ -12,14 +12,14 @@ export default function Sidebar({ page, onNavigate }) {
   return (
     <aside className="sidebar">
       <nav className="sidebar-nav">
-        {NAV_ITEMS.map(({ key, label, Icon }) => (
+        {NAV_ITEMS.map((item) => (
           <button
-            key={key}
-            className={`sidebar-nav-item ${page === key ? "active" : ""}`}
-            onClick={() => onNavigate(key)}
+            key={item.key}
+            className={`sidebar-nav-item ${page === item.key ? "active" : ""}`}
+            onClick={() => onNavigate(item.key)}
           >
-            <Icon size={20} strokeWidth={1.75} className="sidebar-nav-icon" />
-            <span className="sidebar-nav-label">{label}</span>
+            <item.Icon size={20} strokeWidth={1.75} className="sidebar-nav-icon" />
+            <span className="sidebar-nav-label">{item.label}</span>
           </button>
         ))}
       </nav>

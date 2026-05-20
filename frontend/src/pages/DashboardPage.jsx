@@ -11,7 +11,7 @@ const STATUS_FILTERS = ["alle", "running", "paused", "exited"];
 
 export default function DashboardPage({
   containers, stacks, loading,
-  onStarted, onStopped, onRemoved, onStackStopped,
+  onStopped, onRemoved, onStackStopped,
   onOpenDrawer, onClone,
 }) {
   const toast = useToast();

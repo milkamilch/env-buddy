@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, fetchTeamTemplates, fetchInvitations, acceptInvitation, declineInvitation, updateNotificationPrefs } from "./services/api";
+import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, fetchContainers, fetchStacks, fetchTeamTemplates, fetchInvitations, acceptInvitation, declineInvitation } from "./services/api";
 import TEMPLATE_ICONS from "./templateIcons";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -142,9 +142,15 @@ export default function App() {
     document.title = running > 0 ? `(${running}) Env-Buddy` : "Env-Buddy";
   }, [containers, stacks]);
 
-  useEffect(() => { if (user) { loadStartFormTemplates(); } }, [user]);
+  useEffect(() => {
+    if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadStartFormTemplates();
+    }
+  }, [user]);
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAll();
     const interval = setInterval(loadAll, 5000);
     return () => clearInterval(interval);
