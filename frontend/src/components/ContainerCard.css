@@ -13,6 +13,7 @@
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 .container-card:hover { border-color: var(--tb-stroke-strong); }
+.container-card.card-stopped { opacity: 0.7; }
 
 /* ── Header ── */
 .card-header {
@@ -74,6 +75,10 @@
   background: var(--tb-error-soft);
   border-color: var(--tb-error);
 }
+.card-timer.expiring {
+  color: var(--tb-warning);
+  animation: pulse-soft 2s ease-in-out infinite;
+}
 
 /* ── More button ── */
 .card-more {
@@ -107,6 +112,7 @@
   text-overflow: ellipsis;
   margin-bottom: var(--tb-space-3);
 }
+.card-sub-sep { color: var(--tb-text-quaternary); margin: 0 2px; }
 
 /* ── Stats area ── */
 .card-stats {
@@ -148,6 +154,10 @@
 
 /* Shared small button base */
 .btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
   border-radius: var(--tb-radius-sm);
   font-size: 12px;
   font-weight: 500;
@@ -157,6 +167,7 @@
   transition: background 0.12s, border-color 0.12s, color 0.12s;
   white-space: nowrap;
 }
+.btn-sm:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .btn-default, .btn-ghost {
   background: transparent;
@@ -221,6 +232,21 @@
   background: var(--tb-running);
   animation: pulse-soft 2s infinite;
 }
+.live-badge.live {
+  background: var(--tb-running-soft);
+  color: var(--tb-running);
+}
+.live-badge.live .live-badge-dot { animation: pulse-soft 1.6s ease-in-out infinite; }
+.live-badge.polling {
+  background: var(--tb-warning-soft);
+  border-color: var(--tb-warning);
+  color: var(--tb-warning);
+}
+.live-badge.offline {
+  background: var(--tb-error-soft);
+  border-color: var(--tb-error);
+  color: var(--tb-error);
+}
 
 /* ── Confirm label ── */
 .confirm-label { font-size: 11px; color: var(--tb-warning); white-space: nowrap; }
@@ -277,6 +303,17 @@
   transition: border-color 0.15s;
 }
 .container-row:hover { border-color: var(--tb-stroke-strong); }
+.container-row.card-stopped { opacity: 0.65; }
+.row-status-label {
+  font-family: var(--tb-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  width: 64px;
+  flex-shrink: 0;
+}
+.row-timer.expiring { color: var(--tb-warning); animation: pulse-soft 2s ease-in-out infinite; }
 .row-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 .row-name { font-size: 13px; font-weight: 600; color: var(--tb-text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-port { font-size: 12px; color: var(--tb-info); font-weight: 600; font-family: var(--tb-font-mono); }
