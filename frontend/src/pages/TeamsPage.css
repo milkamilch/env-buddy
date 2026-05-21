@@ -43,7 +43,7 @@
 .btn-confirm-yes-sm:hover { background: var(--tb-error-soft); }
 .btn-confirm-no-sm { background: transparent; border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-xs); color: var(--tb-text-tertiary); font-size: 0.78rem; padding: 0.25rem 0.65rem; cursor: pointer; transition: all 0.15s; }
 .btn-confirm-no-sm:hover { border-color: var(--tb-stroke-strong); color: var(--tb-text-primary); }
-.btn-remove-member { background: transparent; border: none; color: var(--tb-text-quaternary); font-size: 0.72rem; cursor: pointer; padding: 0.2rem 0.4rem; border-radius: 4px; flex-shrink: 0; transition: all 0.12s; white-space: nowrap; }
+.btn-remove-member { background: transparent; border: none; color: var(--tb-text-quaternary); font-size: 0.72rem; cursor: pointer; padding: 0.2rem 0.4rem; border-radius: var(--tb-radius-xs); flex-shrink: 0; transition: all 0.12s; white-space: nowrap; }
 .btn-remove-member:hover { color: var(--tb-error); background: var(--tb-error-soft); }
 .add-member-form { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.65rem 0.75rem; background: var(--tb-track); border-top: 1px solid var(--tb-stroke); }
 .add-member-input { flex: 1; background: var(--tb-track); border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-xs); color: var(--tb-text-primary); font-size: 0.82rem; padding: 0.4rem 0.6rem; outline: none; transition: border-color 0.15s; }
@@ -54,7 +54,7 @@
 .btn-add-member:disabled { opacity: 0.5; cursor: default; }
 .team-templates-panel { border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-sm); overflow: hidden; }
 .team-templates-panel .panel-header { border-radius: 0; }
-.btn-add-template { background: var(--tb-network); border: none; border-radius: var(--tb-radius-xs); color: #fff; font-size: 0.78rem; font-weight: 700; padding: 0.3rem 0.7rem; cursor: pointer; margin-left: auto; transition: opacity 0.15s; white-space: nowrap; }
+.btn-add-template { background: var(--tb-network); border: none; border-radius: var(--tb-radius-xs); color: var(--tb-text-on-accent); font-size: 0.78rem; font-weight: 700; padding: 0.3rem 0.7rem; cursor: pointer; margin-left: auto; transition: opacity 0.15s; white-space: nowrap; }
 .btn-add-template:hover { opacity: 0.85; }
 .templates-empty { background: var(--tb-glass-1); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); padding: 2rem; text-align: center; color: var(--tb-text-tertiary); font-size: 0.875rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
 .templates-empty p { margin: 0; }
