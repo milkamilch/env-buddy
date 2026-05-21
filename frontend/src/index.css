@@ -1,168 +1,228 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* =========================================================
-   Catppuccin Tokens
+   TestBud Design Tokens — Liquid Glass
    ========================================================= */
-
-/* Dark — Mocha (default) */
 :root {
-  color-scheme: dark;
+  --tb-font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", system-ui, sans-serif;
+  --tb-font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
 
-  --bg-base:     #11111b;
-  --bg-mantle:   #181825;
-  --bg-surface:  #1e1e2e;
-  --bg-surface2: #232336;
-  --bg-overlay0: #313244;
-  --bg-overlay1: #45475a;
+  --tb-text-xs:    11px;
+  --tb-text-sm:    12px;
+  --tb-text-base:  13px;
+  --tb-text-md:    15px;
+  --tb-text-lg:    17px;
+  --tb-text-xl:    22px;
 
-  --fg-subtext0: #6c7086;
-  --fg-subtext1: #a6adc8;
-  --fg-text:     #cdd6f4;
+  --tb-tracking-tight:  -0.02em;
+  --tb-tracking-caps:    0.06em;
 
-  --accent-blue:   #89b4fa;
-  --accent-mauve:  #cba6f7;
-  --accent-green:  #a6e3a1;
-  --accent-peach:  #fab387;
-  --accent-red:    #f38ba8;
-  --accent-sky:    #74c7ec;
-  --accent-yellow: #f9e2af;
+  --tb-space-1:  4px;  --tb-space-2:  8px;  --tb-space-3: 12px;
+  --tb-space-4: 16px;  --tb-space-5: 20px;  --tb-space-6: 24px;
+  --tb-space-7: 32px;  --tb-space-8: 48px;  --tb-space-9: 64px;
 
-  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --tb-radius-xs:   6px;
+  --tb-radius-sm:  10px;
+  --tb-radius-md:  14px;
+  --tb-radius-lg:  20px;
+  --tb-radius-xl:  28px;
+  --tb-radius-2xl: 36px;
+  --tb-radius-pill: 999px;
 
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
-  --space-8: 64px;
+  /* Status — invariant across themes */
+  --tb-running:  #30D158;
+  --tb-warning:  #FF9F0A;
+  --tb-error:    #FF453A;
+  --tb-info:     #64D2FF;
+  --tb-pending:  #FFD60A;
+  --tb-network:  #BF5AF2;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-
-  --border-thin:   1px solid var(--bg-overlay0);
-  --border-strong: 1px solid var(--bg-overlay1);
-
-  --shadow-modal:   0 24px 48px -12px rgba(0,0,0,.6), 0 2px 4px rgba(0,0,0,.4);
-  --shadow-popover: 0 8px 24px -8px rgba(0,0,0,.5);
-
-  /* Semantic color helpers — still used by components */
-  --red-surface:  #2d1b22;
-  --green-surface:#1a2b1a;
-  --red-a:        color-mix(in oklch, var(--accent-red) 12%, transparent);
-  --green-a:      color-mix(in oklch, var(--accent-green) 12%, transparent);
-  --blue-a:       color-mix(in oklch, var(--accent-blue) 12%, transparent);
-  --blue-a-sm:    color-mix(in oklch, var(--accent-blue) 8%, transparent);
-  --blue-a-lg:    color-mix(in oklch, var(--accent-blue) 30%, transparent);
+  /* Accent — TestBud orange */
+  --tb-accent:        #FF6B35;
+  --tb-accent-hover:  #FF8559;
+  --tb-accent-soft:   color-mix(in oklch, var(--tb-accent) 14%, transparent);
 }
 
-/* Light — Latte */
-[data-theme="light"] {
+/* ── Dark mode (default) ── */
+:root,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --tb-bg-page: #0B0B0F;
+  --tb-bg-page-grad:
+    radial-gradient(1200px 600px at 80% -10%, rgba(255,107,53,0.10), transparent 60%),
+    radial-gradient(900px 500px at 5% 110%, rgba(191,90,242,0.08), transparent 55%),
+    linear-gradient(180deg, #0B0B0F 0%, #07070A 100%);
+
+  --tb-glass-1:     rgba(28, 28, 32, 0.55);
+  --tb-glass-2:     rgba(36, 36, 42, 0.72);
+  --tb-glass-3:     rgba(44, 44, 52, 0.85);
+  --tb-glass-modal: rgba(22, 22, 28, 0.74);
+
+  --tb-stroke:        rgba(255, 255, 255, 0.10);
+  --tb-stroke-strong: rgba(255, 255, 255, 0.18);
+  --tb-stroke-inset:  inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --tb-text-primary:    rgba(255, 255, 255, 0.96);
+  --tb-text-secondary:  rgba(255, 255, 255, 0.66);
+  --tb-text-tertiary:   rgba(255, 255, 255, 0.42);
+  --tb-text-quaternary: rgba(255, 255, 255, 0.24);
+  --tb-text-on-accent:  #1A0A02;
+
+  --tb-shadow-card:
+    0 0.5px 0 rgba(255,255,255,0.08) inset,
+    0 1px 2px rgba(0,0,0,0.30),
+    0 8px 24px -8px rgba(0,0,0,0.50);
+  --tb-shadow-float:
+    0 0.5px 0 rgba(255,255,255,0.10) inset,
+    0 8px 24px rgba(0,0,0,0.40),
+    0 32px 64px -16px rgba(0,0,0,0.60);
+  --tb-shadow-modal:
+    0 0.5px 0 rgba(255,255,255,0.12) inset,
+    0 24px 48px rgba(0,0,0,0.55),
+    0 48px 96px -24px rgba(0,0,0,0.65);
+
+  --tb-track: rgba(255, 255, 255, 0.08);
+
+  --tb-running-soft:  color-mix(in oklch, var(--tb-running) 14%, transparent);
+  --tb-error-soft:    color-mix(in oklch, var(--tb-error) 14%, transparent);
+  --tb-info-soft:     color-mix(in oklch, var(--tb-info) 14%, transparent);
+  --tb-network-soft:  color-mix(in oklch, var(--tb-network) 14%, transparent);
+  --tb-warning-soft:  color-mix(in oklch, var(--tb-warning) 14%, transparent);
+  --tb-pending-soft:  color-mix(in oklch, var(--tb-pending) 14%, transparent);
+}
+
+/* ── Light mode ── */
+:root[data-theme="light"] {
   color-scheme: light;
 
-  --bg-base:     #eff1f5;
-  --bg-mantle:   #e6e9ef;
-  --bg-surface:  #ffffff;
-  --bg-surface2: #dce0e8;
-  --bg-overlay0: #ccd0da;
-  --bg-overlay1: #bcc0cc;
+  --tb-bg-page: #F2F2F5;
+  --tb-bg-page-grad:
+    radial-gradient(1100px 600px at 85% -10%, rgba(255,107,53,0.12), transparent 60%),
+    radial-gradient(900px 500px at 0% 110%, rgba(191,90,242,0.08), transparent 55%),
+    linear-gradient(180deg, #F6F6F9 0%, #EDEDF1 100%);
 
-  --fg-subtext0: #8c8fa1;
-  --fg-subtext1: #6c6f85;
-  --fg-text:     #4c4f69;
+  --tb-glass-1:     rgba(255, 255, 255, 0.62);
+  --tb-glass-2:     rgba(255, 255, 255, 0.78);
+  --tb-glass-3:     rgba(255, 255, 255, 0.92);
+  --tb-glass-modal: rgba(252, 252, 254, 0.82);
 
-  --accent-blue:   #1e66f5;
-  --accent-mauve:  #8839ef;
-  --accent-green:  #40a02b;
-  --accent-peach:  #fe640b;
-  --accent-red:    #d20f39;
-  --accent-sky:    #04a5e5;
-  --accent-yellow: #df8e1d;
+  --tb-stroke:        rgba(0, 0, 0, 0.08);
+  --tb-stroke-strong: rgba(0, 0, 0, 0.14);
+  --tb-stroke-inset:  inset 0 1px 0 rgba(255, 255, 255, 0.80);
 
-  /* Semantic color helpers — still used by components */
-  --red-surface:  #fce5e8;
-  --green-surface:#e5f5e5;
-  --red-a:        color-mix(in oklch, var(--accent-red) 12%, transparent);
-  --green-a:      color-mix(in oklch, var(--accent-green) 12%, transparent);
-  --blue-a:       color-mix(in oklch, var(--accent-blue) 12%, transparent);
-  --blue-a-sm:    color-mix(in oklch, var(--accent-blue) 8%, transparent);
-  --blue-a-lg:    color-mix(in oklch, var(--accent-blue) 30%, transparent);
+  --tb-text-primary:    rgba(0, 0, 0, 0.92);
+  --tb-text-secondary:  rgba(0, 0, 0, 0.60);
+  --tb-text-tertiary:   rgba(0, 0, 0, 0.42);
+  --tb-text-quaternary: rgba(0, 0, 0, 0.24);
+  --tb-text-on-accent:  #FFFFFF;
+
+  --tb-shadow-card:
+    0 0.5px 0 rgba(255,255,255,0.80) inset,
+    0 1px 2px rgba(15,15,20,0.06),
+    0 8px 24px -8px rgba(15,15,20,0.10);
+  --tb-shadow-float:
+    0 0.5px 0 rgba(255,255,255,0.80) inset,
+    0 8px 24px rgba(15,15,20,0.08),
+    0 32px 64px -16px rgba(15,15,20,0.14);
+  --tb-shadow-modal:
+    0 0.5px 0 rgba(255,255,255,0.90) inset,
+    0 24px 48px rgba(15,15,20,0.14),
+    0 48px 96px -24px rgba(15,15,20,0.20);
+
+  --tb-track: rgba(0, 0, 0, 0.06);
+
+  --tb-running:  #28A745;
+  --tb-warning:  #F58A00;
+  --tb-error:    #E0352B;
+  --tb-info:     #0A84FF;
+  --tb-pending:  #E0A800;
+  --tb-network:  #9D4EE0;
+
+  --tb-running-soft:  color-mix(in oklch, var(--tb-running) 14%, transparent);
+  --tb-error-soft:    color-mix(in oklch, var(--tb-error) 14%, transparent);
+  --tb-info-soft:     color-mix(in oklch, var(--tb-info) 14%, transparent);
+  --tb-network-soft:  color-mix(in oklch, var(--tb-network) 14%, transparent);
+  --tb-warning-soft:  color-mix(in oklch, var(--tb-warning) 14%, transparent);
+  --tb-pending-soft:  color-mix(in oklch, var(--tb-pending) 14%, transparent);
 }
 
 /* =========================================================
-   Tailwind @theme — maps CSS vars to utility classes
+   Tailwind @theme
    ========================================================= */
-
 @theme {
-  --font-sans: var(--font-display);
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-sans: var(--tb-font-display);
+  --font-mono: var(--tb-font-mono);
 
-  --color-base:     var(--bg-base);
-  --color-mantle:   var(--bg-mantle);
-  --color-surface:  var(--bg-surface);
-  --color-surface2: var(--bg-surface2);
-  --color-overlay0: var(--bg-overlay0);
-  --color-overlay1: var(--bg-overlay1);
-  --color-subtext0: var(--fg-subtext0);
-  --color-subtext1: var(--fg-subtext1);
-  --color-text:     var(--fg-text);
-  --color-blue:     var(--accent-blue);
-  --color-mauve:    var(--accent-mauve);
-  --color-green:    var(--accent-green);
-  --color-peach:    var(--accent-peach);
-  --color-red:      var(--accent-red);
-  --color-sky:      var(--accent-sky);
-  --color-yellow:   var(--accent-yellow);
+  --color-glass-1:   var(--tb-glass-1);
+  --color-glass-2:   var(--tb-glass-2);
+  --color-ink:       var(--tb-text-primary);
+  --color-ink-2:     var(--tb-text-secondary);
+  --color-ink-3:     var(--tb-text-tertiary);
+  --color-stroke:    var(--tb-stroke);
+  --color-accent:    var(--tb-accent);
+  --color-running:   var(--tb-running);
+  --color-warning:   var(--tb-warning);
+  --color-error:     var(--tb-error);
+  --color-info:      var(--tb-info);
+  --color-pending:   var(--tb-pending);
+  --color-network:   var(--tb-network);
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-xs:   var(--tb-radius-xs);
+  --radius-sm:   var(--tb-radius-sm);
+  --radius-md:   var(--tb-radius-md);
+  --radius-lg:   var(--tb-radius-lg);
+  --radius-xl:   var(--tb-radius-xl);
+  --radius-2xl:  var(--tb-radius-2xl);
+  --radius-pill: var(--tb-radius-pill);
 }
 
 /* =========================================================
    Global Resets
    ========================================================= */
-
 *, *::before, *::after { box-sizing: border-box; }
+
+html {
+  background: var(--tb-bg-page);
+  background-image: var(--tb-bg-page-grad);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
 
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: var(--font-display);
-  font-size: 14px;
+  font-family: var(--tb-font-display);
+  font-size: var(--tb-text-base);
   line-height: 1.5;
-  color: var(--fg-text);
-  background: var(--bg-base);
+  color: var(--tb-text-primary);
+  background: transparent;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-button { font-family: inherit; }
-
+button { font-family: inherit; cursor: pointer; }
+input, textarea, select { font-family: inherit; }
 h1, h2, h3 { line-height: 1.2; }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg-overlay1); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #585b70; }
+::-webkit-scrollbar-thumb { background: var(--tb-track); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--tb-stroke-strong); }
 
 #root { min-height: 100vh; }
 
-/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /* =========================================================
-   Global animations
+   Global Animations (unchanged)
    ========================================================= */
-
 @keyframes spin        { to { transform: rotate(360deg); } }
 @keyframes pulse-soft  { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 @keyframes toast-slide { from { opacity: 0; transform: translateX(1rem); } to { opacity: 1; transform: translateX(0); } }
