@@ -270,6 +270,7 @@
   gap: var(--tb-space-3);
   background: var(--tb-glass-1);
   backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--tb-stroke);
   border-radius: var(--tb-radius-sm);
   padding: var(--tb-space-2) var(--tb-space-4);
