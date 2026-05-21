@@ -90,6 +90,7 @@
   --tb-info-soft:     color-mix(in oklch, var(--tb-info) 14%, transparent);
   --tb-network-soft:  color-mix(in oklch, var(--tb-network) 14%, transparent);
   --tb-warning-soft:  color-mix(in oklch, var(--tb-warning) 14%, transparent);
+  --tb-pending-soft:  color-mix(in oklch, var(--tb-pending) 14%, transparent);
 }
 
 /* ── Light mode ── */
@@ -144,6 +145,7 @@
   --tb-info-soft:     color-mix(in oklch, var(--tb-info) 14%, transparent);
   --tb-network-soft:  color-mix(in oklch, var(--tb-network) 14%, transparent);
   --tb-warning-soft:  color-mix(in oklch, var(--tb-warning) 14%, transparent);
+  --tb-pending-soft:  color-mix(in oklch, var(--tb-pending) 14%, transparent);
 }
 
 /* =========================================================
@@ -206,8 +208,8 @@ h1, h2, h3 { line-height: 1.2; }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.25); }
+::-webkit-scrollbar-thumb { background: var(--tb-track); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--tb-stroke-strong); }
 
 #root { min-height: 100vh; }
 
