@@ -3,199 +3,77 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-base);
-  padding: 1rem;
+  padding: 2rem 1rem;
 }
 
 .auth-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--bg-overlay0);
-  border-radius: 16px;
-  padding: 2.5rem 2rem;
+  background: var(--tb-glass-modal);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid var(--tb-stroke);
+  border-radius: var(--tb-radius-xl);
+  box-shadow: var(--tb-shadow-modal);
+  padding: 2.5rem;
   width: 100%;
-  max-width: 420px;
+  max-width: 400px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
+  gap: 1.5rem;
 }
 
 .auth-logo {
-  font-size: 3rem;
-  line-height: 1;
-  margin-bottom: 0.25rem;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--tb-accent);
+  letter-spacing: var(--tb-tracking-tight);
+  text-align: center;
 }
 
-.auth-title {
-  margin: 0;
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: var(--fg-text);
-}
+.auth-title { margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--tb-text-primary); text-align: center; }
+.auth-sub { margin: 0; font-size: 0.88rem; color: var(--tb-text-tertiary); text-align: center; }
 
-.auth-sub {
-  margin: 0 0 1rem;
-  font-size: 0.82rem;
-  color: var(--fg-subtext0);
-}
+.auth-tabs { display: flex; background: var(--tb-track); border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-sm); padding: 3px; }
+.auth-tab { flex: 1; background: transparent; border: none; border-radius: var(--tb-radius-xs); color: var(--tb-text-tertiary); padding: 0.45rem; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.auth-tab.active { background: var(--tb-track); color: var(--tb-text-primary); }
 
-.auth-tabs {
-  display: flex;
-  width: 100%;
-  background: var(--bg-mantle);
-  border: 1px solid var(--bg-overlay0);
-  border-radius: 10px;
-  padding: 4px;
-  margin-bottom: 0.5rem;
-}
+.auth-form { display: flex; flex-direction: column; gap: 0.85rem; }
 
-.auth-tab {
-  flex: 1;
-  background: transparent;
-  border: none;
-  border-radius: 7px;
-  color: var(--fg-subtext0);
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.5rem;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.auth-tab.active {
-  background: var(--bg-overlay0);
-  color: var(--fg-text);
-}
-
-.auth-form {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  margin-top: 0.5rem;
-}
-
-.field-row {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.field-row .field {
-  flex: 1;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.field label {
-  font-size: 0.8rem;
-  color: var(--fg-subtext1);
-  font-weight: 500;
-}
-
+.field-row { display: flex; flex-direction: column; gap: 0.3rem; }
+.field { display: flex; flex-direction: column; gap: 0.3rem; }
+.field label { font-size: 0.82rem; color: var(--tb-text-secondary); font-weight: 500; }
 .field input {
-  background: var(--bg-mantle);
-  border: 1px solid var(--bg-overlay1);
-  border-radius: 8px;
-  color: var(--fg-text);
-  font-size: 0.9rem;
+  background: var(--tb-track);
+  border: 1px solid var(--tb-stroke);
+  border-radius: var(--tb-radius-sm);
+  color: var(--tb-text-primary);
+  font-size: 0.95rem;
   padding: 0.55rem 0.75rem;
   outline: none;
   transition: border-color 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
+.field input:focus { border-color: var(--tb-accent); }
+.field input::placeholder { color: var(--tb-text-tertiary); }
 
-.field input:focus {
-  border-color: var(--accent-blue);
-}
-
-.field input::placeholder {
-  color: var(--bg-overlay1);
-}
-
-.auth-error {
-  background: var(--red-surface);
-  border: 1px solid var(--accent-red);
-  border-radius: 8px;
-  color: var(--accent-red);
-  font-size: 0.83rem;
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-}
+.auth-error { color: var(--tb-error); font-size: 0.83rem; background: var(--tb-error-soft); border: 1px solid var(--tb-error); border-radius: var(--tb-radius-xs); padding: 0.5rem 0.75rem; margin: 0; }
 
 .auth-submit {
-  background: var(--accent-blue);
+  background: var(--tb-accent);
   border: none;
-  border-radius: 8px;
-  color: var(--bg-surface);
+  border-radius: var(--tb-radius-md);
+  color: var(--tb-text-on-accent);
   font-size: 0.95rem;
   font-weight: 700;
-  padding: 0.65rem;
+  padding: 0.7rem;
   cursor: pointer;
   transition: background 0.2s;
-  margin-top: 0.25rem;
-}
-
-.auth-submit:hover:not(:disabled) {
-  background: var(--accent-sky);
-}
-
-.auth-submit:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.auth-success {
-  background: var(--green-surface);
-  border: 1px solid var(--accent-green);
-  border-radius: 8px;
-  color: var(--accent-green);
-  font-size: 0.83rem;
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-}
-
-.auth-link {
-  background: transparent;
-  border: none;
-  color: var(--fg-subtext0);
-  font-size: 0.82rem;
-  cursor: pointer;
-  margin-top: 0.25rem;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.auth-link:hover {
-  color: var(--fg-subtext1);
-}
-
-.auth-back {
   width: 100%;
-  margin-bottom: 0.25rem;
 }
+.auth-submit:hover:not(:disabled) { background: var(--tb-accent-hover); }
+.auth-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.auth-back button {
-  background: transparent;
-  border: none;
-  color: var(--fg-subtext0);
-  font-size: 0.82rem;
-  cursor: pointer;
-  padding: 0;
-}
-
-.auth-back button:hover {
-  color: var(--fg-subtext1);
-}
-
-.auth-mode-title {
-  color: var(--fg-text);
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem;
-  align-self: flex-start;
-}
+.auth-success { color: var(--tb-running); font-size: 0.88rem; background: var(--tb-running-soft); border: 1px solid var(--tb-running); border-radius: var(--tb-radius-xs); padding: 0.5rem 0.75rem; margin: 0; text-align: center; }
+.auth-link { background: transparent; border: none; color: var(--tb-accent); font-size: 0.88rem; cursor: pointer; padding: 0; text-decoration: underline; }
+.auth-back { background: transparent; border: none; color: var(--tb-text-tertiary); font-size: 0.88rem; cursor: pointer; padding: 0; text-decoration: underline; }
+.auth-mode-title { font-size: 1rem; font-weight: 600; color: var(--tb-text-primary); margin: 0; }
