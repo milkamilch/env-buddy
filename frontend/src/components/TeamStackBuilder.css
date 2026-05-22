@@ -2,7 +2,7 @@
 .tsb-modal { background: var(--tb-glass-modal); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-xl); box-shadow: var(--tb-shadow-modal); width: 100%; max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; }
 .tsb-header { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--tb-stroke); flex-shrink: 0; }
 .tsb-title { font-size: 1rem; font-weight: 700; color: var(--tb-text-primary); }
-.tsb-close { background: transparent; border: none; color: var(--tb-text-tertiary); font-size: 0.9rem; cursor: pointer; padding: 0.25rem 0.4rem; border-radius: 4px; transition: color 0.15s; }
+.tsb-close { background: transparent; border: none; color: var(--tb-text-tertiary); font-size: 0.9rem; cursor: pointer; padding: 0.25rem 0.4rem; border-radius: var(--tb-radius-xs); transition: color 0.15s; }
 .tsb-close:hover { color: var(--tb-error); }
 .tsb-body { display: grid; grid-template-columns: 260px 1fr; gap: 0; overflow: hidden; flex: 1; min-height: 0; }
 .tsb-left { display: flex; flex-direction: column; gap: 0.6rem; padding: 1.1rem 1rem; border-right: 1px solid var(--tb-stroke); background: var(--tb-track); overflow-y: auto; }
@@ -40,7 +40,7 @@
 .tsb-item-icon { font-size: 1rem; flex-shrink: 0; }
 .tsb-item-name { font-size: 0.82rem; font-weight: 600; color: var(--tb-text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tsb-item-image { font-size: 0.72rem; color: var(--tb-text-tertiary); font-family: var(--tb-font-mono); max-width: 8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
-.tsb-item-btn { background: transparent; border: none; cursor: pointer; border-radius: 4px; padding: 0.15rem 0.35rem; font-size: 0.75rem; flex-shrink: 0; color: var(--tb-text-tertiary); transition: color 0.15s; }
+.tsb-item-btn { background: transparent; border: none; cursor: pointer; border-radius: var(--tb-radius-xs); padding: 0.15rem 0.35rem; font-size: 0.75rem; flex-shrink: 0; color: var(--tb-text-tertiary); transition: color 0.15s; }
 .tsb-item-btn:hover { color: var(--tb-network); }
 .tsb-item-remove:hover { color: var(--tb-error) !important; }
 .tsb-item-drag-handle { cursor: grab; color: var(--tb-text-quaternary); font-size: 0.9rem; flex-shrink: 0; user-select: none; transition: color 0.12s; }

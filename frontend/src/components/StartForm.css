@@ -57,7 +57,7 @@
 .config-env-key { flex: 0 0 40%; font-family: var(--tb-font-mono); font-size: 0.8rem; }
 .config-env-val { flex: 1; font-family: var(--tb-font-mono); font-size: 0.8rem; }
 .config-env-sep { color: var(--tb-text-tertiary); font-size: 0.9rem; flex-shrink: 0; }
-.btn-env-remove { background: transparent; border: none; color: var(--tb-text-tertiary); cursor: pointer; font-size: 0.75rem; padding: 0.2rem 0.3rem; border-radius: 4px; flex-shrink: 0; }
+.btn-env-remove { background: transparent; border: none; color: var(--tb-text-tertiary); cursor: pointer; font-size: 0.75rem; padding: 0.2rem 0.3rem; border-radius: var(--tb-radius-xs); flex-shrink: 0; }
 .btn-env-remove:hover { color: var(--tb-error); }
 .btn-add-env { background: transparent; border: 1px dashed var(--tb-stroke-strong); border-radius: var(--tb-radius-xs); color: var(--tb-text-tertiary); padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s, color 0.15s; align-self: flex-start; margin-top: 0.1rem; }
 .btn-add-env:hover { border-color: var(--tb-accent); color: var(--tb-accent); }
@@ -95,7 +95,7 @@
 .si-icon { font-size: 1rem; flex-shrink: 0; }
 .si-name { font-size: 0.82rem; font-weight: 600; color: var(--tb-text-primary); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .si-image { font-size: 0.72rem; color: var(--tb-text-tertiary); font-family: var(--tb-font-mono); flex-shrink: 0; max-width: 7rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.si-btn-expand, .si-btn-remove { background: transparent; border: none; cursor: pointer; border-radius: 4px; padding: 0.15rem 0.35rem; font-size: 0.75rem; flex-shrink: 0; transition: color 0.15s; }
+.si-btn-expand, .si-btn-remove { background: transparent; border: none; cursor: pointer; border-radius: var(--tb-radius-xs); padding: 0.15rem 0.35rem; font-size: 0.75rem; flex-shrink: 0; transition: color 0.15s; }
 .si-btn-expand { color: var(--tb-text-tertiary); }
 .si-btn-expand:hover { color: var(--tb-accent); }
 .si-btn-remove { color: var(--tb-text-tertiary); }
