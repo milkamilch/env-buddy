@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
+import { Search } from "lucide-react";
 import { fetchDefaultTemplates, fetchMyTemplates, fetchFavorites, saveFavorites, deleteTemplate, fetchTeamTemplates, fetchPublicTemplates, setTemplateVisibility } from "../services/api";
 import CreateTemplateModal from "../components/CreateTemplateModal";
 import { useToast } from "../components/Toast";
-import TEMPLATE_ICONS from "../templateIcons";
 import "./TemplatesPage.css";
 
-const DEFAULT_ICONS = TEMPLATE_ICONS;
+function tplGlyph(key) {
+  return (key || "?").slice(0, 2).toUpperCase();
+}
 
 export default function TemplatesPage() {
   const [defaultTemplates, setDefaultTemplates] = useState([]);
@@ -105,13 +107,25 @@ export default function TemplatesPage() {
   function favLabel(key) {
     if (key.startsWith("custom:")) {
       const t = customTemplates.find((t) => `custom:${t.id}` === key);
-      return t ? `${t.icon} ${t.name}` : key;
+      return t ? t.name : key;
     }
     if (key.startsWith("team:")) {
       const t = teamTemplates.find((t) => `team:${t.id}` === key);
-      return t ? `${t.icon} ${t.name}` : key;
+      return t ? t.name : key;
     }
-    return `${DEFAULT_ICONS[key] || "📦"} ${key}`;
+    return key;
+  }
+
+  function favGlyph(key) {
+    if (key.startsWith("custom:")) {
+      const t = customTemplates.find((t) => `custom:${t.id}` === key);
+      return tplGlyph(t?.name || key);
+    }
+    if (key.startsWith("team:")) {
+      const t = teamTemplates.find((t) => `team:${t.id}` === key);
+      return tplGlyph(t?.name || key);
+    }
+    return tplGlyph(key);
   }
 
   return (
@@ -122,49 +136,55 @@ export default function TemplatesPage() {
           <p className="tp-sub">Ziehe Templates in deine Schnellauswahl oder erstelle eigene.</p>
         </div>
         <div className="tp-header-actions">
-          <input
-            className="tp-search"
-            type="search"
-            placeholder="Suche…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <div className="tp-search-wrap">
+            <Search className="tp-search-icon" size={14} strokeWidth={1.75} />
+            <input
+              className="tp-search"
+              type="search"
+              placeholder="Suche…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
           <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Mein Template</button>
         </div>
       </div>
 
       <div className="tp-layout">
 
-        {/* ── Meine Auswahl ── */}
+        {/* ── Schnellauswahl ── */}
         <aside className="tp-sidebar">
-          <div className="favorites-header">
-            <span>⭐ Meine Schnellauswahl</span>
-            <span className="fav-count">{favorites.length}</span>
-          </div>
-          <div
-            className={`favorites-drop-zone ${dragOverFav && dragItem?.from === "library" ? "drag-over" : ""}`}
-            onDragOver={(e) => { e.preventDefault(); setDragOverFav(true); }}
-            onDragLeave={() => setDragOverFav(false)}
-            onDrop={onDropFavorites}
-          >
-            {favorites.length === 0 ? (
-              <p className="fav-empty">Templates hierher ziehen</p>
-            ) : (
-              favorites.map((key, i) => (
-                <div
-                  key={key}
-                  className="fav-item"
-                  draggable
-                  onDragStart={(e) => onDragStartFav(e, key, i)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => onDropFavItem(e, i)}
-                >
-                  <span className="fav-drag-handle">⠿</span>
-                  <span className="fav-label">{favLabel(key)}</span>
-                  <button className="fav-remove" onClick={() => removeFromFavorites(key)}>✕</button>
-                </div>
-              ))
-            )}
+          <div className="favorites-panel">
+            <div className="favorites-header">
+              <span className="favorites-header-label">Schnellauswahl</span>
+              <span className="fav-count">{favorites.length}</span>
+            </div>
+            <div
+              className={`favorites-drop-zone ${dragOverFav && dragItem?.from === "library" ? "drag-over" : ""}`}
+              onDragOver={(e) => { e.preventDefault(); setDragOverFav(true); }}
+              onDragLeave={() => setDragOverFav(false)}
+              onDrop={onDropFavorites}
+            >
+              {favorites.length === 0 ? (
+                <p className="fav-empty">Templates hierher ziehen</p>
+              ) : (
+                favorites.map((key, i) => (
+                  <div
+                    key={key}
+                    className="fav-item"
+                    draggable
+                    onDragStart={(e) => onDragStartFav(e, key, i)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => onDropFavItem(e, i)}
+                  >
+                    <span className="fav-drag-handle">⠿</span>
+                    <div className="fav-tile">{favGlyph(key)}</div>
+                    <span className="fav-label">{favLabel(key)}</span>
+                    <button className="fav-remove" onClick={() => removeFromFavorites(key)}>✕</button>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {dragItem?.from === "favorites" && (
@@ -173,7 +193,7 @@ export default function TemplatesPage() {
               onDragOver={(e) => e.preventDefault()}
               onDrop={onDropRemove}
             >
-              🗑 Hierher zum Entfernen
+              Hierher zum Entfernen
             </div>
           )}
         </aside>
@@ -204,13 +224,19 @@ export default function TemplatesPage() {
                           draggable
                           onDragStart={(e) => onDragStartLibrary(e, key)}
                         >
-                          <div className="tc-icon">{DEFAULT_ICONS[key] || "📦"}</div>
-                          <div className="tc-name">{key}</div>
-                          <div className="tc-type">Standard</div>
-                          {favorites.includes(key)
-                            ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
-                            : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
-                          }
+                          <div className="tc-head">
+                            <div className="tc-tile">{tplGlyph(key)}</div>
+                            <div className="tc-info">
+                              <div className="tc-name">{key}</div>
+                              <div className="tc-type">Standard</div>
+                            </div>
+                          </div>
+                          <div className="tc-actions">
+                            {favorites.includes(key)
+                              ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>In Auswahl</button>
+                              : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
+                            }
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -236,28 +262,31 @@ export default function TemplatesPage() {
                               draggable
                               onDragStart={(e) => onDragStartLibrary(e, key)}
                             >
-                              <div className="tc-icon">{t.icon}</div>
-                              <div className="tc-name">{t.name}</div>
-                              <div className="tc-desc">{t.description}</div>
+                              <div className="tc-head">
+                                <div className="tc-tile">{tplGlyph(t.name)}</div>
+                                <div className="tc-info">
+                                  <div className="tc-name">{t.name}</div>
+                                  <div className="tc-type">Eigenes</div>
+                                </div>
+                              </div>
+                              {t.description && <div className="tc-desc">{t.description}</div>}
                               <div className="tc-containers">
-                                {t.containers.length} Container{": "}
-                                {t.containers.map((c) => c.image).join(", ")}
+                                {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
                               </div>
                               <div className="tc-actions">
                                 {favorites.includes(key)
-                                  ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
+                                  ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>In Auswahl</button>
                                   : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
                                 }
                                 <button
                                   className="tc-btn"
-                                  style={{ opacity: 0.85 }}
                                   title={t.is_public ? "Öffentlich – klicken zum Verbergen" : "Privat – klicken zum Veröffentlichen"}
                                   onClick={async () => {
                                     const updated = await setTemplateVisibility(t.id, !t.is_public).catch(() => null);
                                     if (updated) setCustomTemplates((prev) => prev.map((x) => x.id === t.id ? { ...x, is_public: updated.is_public } : x));
                                   }}
                                 >
-                                  {t.is_public ? "🌐 Öffentlich" : "🔒 Privat"}
+                                  {t.is_public ? "Öffentlich" : "Privat"}
                                 </button>
                                 {confirmDeleteId === t.id ? (
                                   <>
@@ -293,16 +322,21 @@ export default function TemplatesPage() {
                             draggable
                             onDragStart={(e) => onDragStartLibrary(e, key)}
                           >
-                            <div className="tc-icon">{t.icon}</div>
-                            <div className="tc-name">{t.name}</div>
+                            <div className="tc-head">
+                              <div className="tc-tile">{tplGlyph(t.name)}</div>
+                              <div className="tc-info">
+                                <div className="tc-name">{t.name}</div>
+                                <div className="tc-type">Team</div>
+                              </div>
+                            </div>
                             {t.description && <div className="tc-desc">{t.description}</div>}
-                            <div className="tc-creator">👤 {t.creator_name}</div>
+                            <div className="tc-creator">{t.creator_name}</div>
                             <div className="tc-containers">
                               {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
                             </div>
                             <div className="tc-actions">
                               {favorites.includes(key)
-                                ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
+                                ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>In Auswahl</button>
                                 : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
                               }
                             </div>
@@ -312,26 +346,37 @@ export default function TemplatesPage() {
                     </div>
                   </>
                 )}
+
                 {filteredPublic.length > 0 && (
                   <>
                     <div className="library-section-header">
-                      <h3 className="library-section-title">🌐 Öffentliche Templates</h3>
+                      <h3 className="library-section-title">Öffentliche Templates</h3>
                       <span className="team-section-hint">Von anderen Benutzern geteilt</span>
                     </div>
                     <div className="template-grid">
                       {filteredPublic.map((t) => {
                         const key = `custom:${t.id}`;
                         return (
-                          <div key={t.id} className="template-card" draggable onDragStart={(e) => onDragStartLibrary(e, key)}>
-                            <div className="tc-icon">{t.icon}</div>
-                            <div className="tc-name">{t.name}</div>
+                          <div
+                            key={t.id}
+                            className="template-card"
+                            draggable
+                            onDragStart={(e) => onDragStartLibrary(e, key)}
+                          >
+                            <div className="tc-head">
+                              <div className="tc-tile">{tplGlyph(t.name)}</div>
+                              <div className="tc-info">
+                                <div className="tc-name">{t.name}</div>
+                                <div className="tc-type">Öffentlich</div>
+                              </div>
+                            </div>
                             {t.description && <div className="tc-desc">{t.description}</div>}
                             <div className="tc-containers">
                               {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
                             </div>
                             <div className="tc-actions">
                               {favorites.includes(key)
-                                ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>✓ In Auswahl</button>
+                                ? <button className="tc-btn tc-btn-remove" onClick={() => removeFromFavorites(key)}>In Auswahl</button>
                                 : <button className="tc-btn" onClick={() => addToFavorites(key)}>+ Auswahl</button>
                               }
                             </div>
