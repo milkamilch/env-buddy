@@ -216,7 +216,7 @@ export default function TemplatesPage() {
                 {filteredDefaults.length > 0 && (
                   <>
                     <h3 className="library-section-title">Standard-Templates</h3>
-                    <div className="template-grid">
+                    <div className="tp-grid">
                       {filteredDefaults.map((key) => (
                         <div
                           key={key}
@@ -252,7 +252,7 @@ export default function TemplatesPage() {
                         <button className="btn-new-template" onClick={() => setShowModal(true)}>+ Mein Template</button>
                       </div>
                     ) : (
-                      <div className="template-grid">
+                      <div className="tp-grid">
                         {filteredCustoms.map((t) => {
                           const key = `custom:${t.id}`;
                           return (
@@ -312,7 +312,7 @@ export default function TemplatesPage() {
                       <h3 className="library-section-title">Team-Templates</h3>
                       <span className="team-section-hint">Von deinen Teams — ins Teams-Tab für Verwaltung</span>
                     </div>
-                    <div className="template-grid">
+                    <div className="tp-grid">
                       {filteredTeams.map((t) => {
                         const key = `team:${t.id}`;
                         return (
@@ -353,7 +353,7 @@ export default function TemplatesPage() {
                       <h3 className="library-section-title">Öffentliche Templates</h3>
                       <span className="team-section-hint">Von anderen Benutzern geteilt</span>
                     </div>
-                    <div className="template-grid">
+                    <div className="tp-grid">
                       {filteredPublic.map((t) => {
                         const key = `custom:${t.id}`;
                         return (
