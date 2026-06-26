@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import "./DashboardPage.css";
 import { fetchSystemInfo, startStoppedContainer, stopContainer, removeContainer } from "../services/api";
 import ContainerCard from "../components/ContainerCard";
 import StackCard from "../components/StackCard";
