@@ -2,15 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { fetchAuditLog } from "../services/api";
 import "./AuditPage.css";
 
-const ACTION_ICONS = {
-  started:      "▶",
-  stopped:      "⏹",
-  removed:      "🗑",
-  restarted:    "↺",
-  extended:     "⏱",
-  auto_stopped: "⏰",
-};
-
 const ACTION_LABELS = {
   started:      "Gestartet",
   stopped:      "Gestoppt",
@@ -50,8 +41,13 @@ export default function AuditPage() {
   const filtered = filter === "alle" ? entries : entries.filter((e) => e.action === filter);
 
   return (
-    <div className="page-wrap">
-      <h2 className="audit-title">Verlauf</h2>
+    <div className="audit-page">
+      <div className="audit-header">
+        <div>
+          <h2>Verlauf</h2>
+          <p className="audit-sub">Aktivitäten und Ereignisse aller Container</p>
+        </div>
+      </div>
 
       <div className="audit-filters">
         {actions.map((a) => (
@@ -73,31 +69,34 @@ export default function AuditPage() {
       )}
 
       {!loading && filtered.length > 0 && (
-        <table className="audit-table">
-          <thead>
-            <tr>
-              <th>Zeit</th>
-              <th>Aktion</th>
-              <th>Container</th>
-              <th>Template</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((e) => (
-              <tr key={e.id}>
-                <td className="audit-td audit-td-time">{formatDate(e.created_at)}</td>
-                <td className="audit-td audit-td-action">
-                  <span className="audit-td-action-icon">{ACTION_ICONS[e.action] || "•"}</span>
-                  {ACTION_LABELS[e.action] || e.action}
-                </td>
-                <td className="audit-td audit-td-name">{e.container_name || "—"}</td>
-                <td className="audit-td audit-td-muted">{e.template || "—"}</td>
-                <td className="audit-td audit-td-muted">{e.extra || "—"}</td>
+        <div className="audit-table-wrap">
+          <table className="audit-table">
+            <thead>
+              <tr>
+                <th>Zeit</th>
+                <th>Aktion</th>
+                <th>Container</th>
+                <th>Template</th>
+                <th>Details</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filtered.map((e) => (
+                <tr key={e.id}>
+                  <td className="audit-td audit-td-time">{formatDate(e.created_at)}</td>
+                  <td className="audit-td">
+                    <span className={`audit-action-badge audit-action-${e.action}`}>
+                      {ACTION_LABELS[e.action] || e.action}
+                    </span>
+                  </td>
+                  <td className="audit-td audit-td-name">{e.container_name || "—"}</td>
+                  <td className="audit-td audit-td-template">{e.template || "—"}</td>
+                  <td className="audit-td audit-td-muted">{e.extra || "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );
