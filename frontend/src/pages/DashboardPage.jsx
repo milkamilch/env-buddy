@@ -200,16 +200,12 @@ export default function DashboardPage({
         </div>
 
         <div className="filter-group">
-          <span className="filter-label">Template:</span>
-          {templateFilterOptions.map((t) => (
-            <button
-              key={t}
-              className={`filter-btn ${activeTemplate === t ? "active" : ""}`}
-              onClick={() => setActiveTemplate(t)}
-            >
-              {t}
-            </button>
-          ))}
+          <Segmented
+            options={templateFilterOptions.map(t => ({ label: t === "alle" ? "Alle" : t, value: t }))}
+            value={activeTemplate}
+            onChange={setActiveTemplate}
+            label="Template-Filter"
+          />
         </div>
 
         <div className="filter-group">

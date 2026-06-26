@@ -97,15 +97,15 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const templateBase = (container.template || "").split(":")[0].split("/").pop().toLowerCase();
 
   const cpuColor = container.cpu_percent > 80
-    ? "var(--accent-red)"
+    ? "var(--stop)"
     : container.cpu_percent > 50
-    ? "var(--accent-peach)"
-    : "var(--accent-green)";
+    ? "var(--warn)"
+    : "var(--run)";
   const ramColor = (container.ram_percent ?? 0) > 80
-    ? "var(--accent-red)"
+    ? "var(--stop)"
     : (container.ram_percent ?? 0) > 50
-    ? "var(--accent-peach)"
-    : "var(--accent-sky)";
+    ? "var(--warn)"
+    : "var(--info)";
 
   async function handleCopyConnectionString(e) {
     e.stopPropagation();
@@ -233,7 +233,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
           {container.port && <span className="row-port">:{container.port}</span>}
           <div className="row-sparkline">
             {isRunning && statsHistory.length >= 2 && (
-              <Sparkline values={statsHistory.map(p => p.cpu)} color="var(--accent-green)" height={16} gradientId={`fill-list-${container.id}`} />
+              <Sparkline values={statsHistory.map(p => p.cpu)} color={cpuColor} height={16} gradientId={`fill-list-${container.id}`} />
             )}
           </div>
           {container.started_by && <span className="row-started-by">👤 {container.started_by}</span>}
