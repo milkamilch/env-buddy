@@ -156,17 +156,17 @@ export default function AuthPage({ onAuth }) {
             <>
               <div className="auth-field-row">
                 <div className="auth-field">
-                  <label className="auth-label">Vorname</label>
-                  <input className="auth-input" name="first_name" type="text" placeholder="Max" value={form.first_name} onChange={handleChange} required />
+                  <label className="auth-label" htmlFor="first_name">Vorname</label>
+                  <input id="first_name" className="auth-input" name="first_name" type="text" placeholder="Max" value={form.first_name} onChange={handleChange} required autoComplete="given-name" />
                 </div>
                 <div className="auth-field">
-                  <label className="auth-label">Name</label>
-                  <input className="auth-input" name="last_name" type="text" placeholder="Mustermann" value={form.last_name} onChange={handleChange} required />
+                  <label className="auth-label" htmlFor="last_name">Name</label>
+                  <input id="last_name" className="auth-input" name="last_name" type="text" placeholder="Mustermann" value={form.last_name} onChange={handleChange} required autoComplete="family-name" />
                 </div>
               </div>
               <div className="auth-field">
-                <label className="auth-label">Benutzername</label>
-                <input className="auth-input" name="username" type="text" placeholder="maxmuster" value={form.username} onChange={handleChange} required />
+                <label className="auth-label" htmlFor="username">Benutzername</label>
+                <input id="username" className="auth-input" name="username" type="text" placeholder="maxmuster" value={form.username} onChange={handleChange} required autoComplete="username" />
               </div>
             </>
           )}
@@ -174,24 +174,24 @@ export default function AuthPage({ onAuth }) {
           {/* EMAIL — login, register, forgot */}
           {mode !== "reset" && (
             <div className="auth-field">
-              <label className="auth-label">E-Mail</label>
-              <input className="auth-input" name="email" type="email" placeholder="max@example.com" value={form.email} onChange={handleChange} required />
+              <label className="auth-label" htmlFor="email">E-Mail</label>
+              <input id="email" className="auth-input" name="email" type="email" placeholder="max@example.com" value={form.email} onChange={handleChange} required autoComplete="email" />
             </div>
           )}
 
           {/* PASSWORD — login, register */}
           {(mode === "login" || mode === "register") && (
             <div className="auth-field">
-              <label className="auth-label">Passwort</label>
-              <input className="auth-input" name="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} required minLength={6} />
+              <label className="auth-label" htmlFor="password">Passwort</label>
+              <input id="password" className="auth-input" name="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} required minLength={6} autoComplete={mode === "login" ? "current-password" : "new-password"} />
             </div>
           )}
 
           {/* NEW PASSWORD — reset */}
           {mode === "reset" && (
             <div className="auth-field">
-              <label className="auth-label">Neues Passwort</label>
-              <input className="auth-input" name="new_password" type="password" placeholder="••••••••" value={form.new_password} onChange={handleChange} required minLength={6} />
+              <label className="auth-label" htmlFor="new_password">Neues Passwort</label>
+              <input id="new_password" className="auth-input" name="new_password" type="password" placeholder="••••••••" value={form.new_password} onChange={handleChange} required minLength={6} autoComplete="new-password" />
             </div>
           )}
 
