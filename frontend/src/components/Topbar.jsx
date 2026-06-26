@@ -43,7 +43,7 @@ export default function Topbar({ user, page, onOpenProfile, onOpenDrawer, onOpen
         </button>
 
         <button className="topbar-btn-new" onClick={onOpenDrawer}>
-          <Plus size={14} strokeWidth={2} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
+          <Plus size={14} strokeWidth={1.6} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
           Neu
         </button>
 

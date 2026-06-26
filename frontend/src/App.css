@@ -1,7 +1,7 @@
 /* === App Shell (grid: sidebar | main) === */
 .app {
   display: grid;
-  grid-template-columns: 248px 1fr;
+  grid-template-columns: var(--sidebar-w) 1fr;
   height: 100vh;
   overflow: hidden;
   background: var(--bg);
@@ -481,7 +481,7 @@
 .bulk-bar {
   position: fixed;
   bottom: 16px;
-  left: 264px;
+  left: calc(var(--sidebar-w) + 16px);
   right: 16px;
   z-index: 80;
   background: var(--ink);

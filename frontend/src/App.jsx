@@ -73,9 +73,15 @@ export default function App() {
   }
 
   useEffect(() => {
-    window.addEventListener("auth:logout", handleLogout);
-    return () => window.removeEventListener("auth:logout", handleLogout);
-  }, []);
+    function onAuthLogout() {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setUser(null);
+      navigate("/");
+    }
+    window.addEventListener("auth:logout", onAuthLogout);
+    return () => window.removeEventListener("auth:logout", onAuthLogout);
+  }, [navigate]);
 
   useEffect(() => {
     function onKeyDown(e) {
