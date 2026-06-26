@@ -1,6 +1,6 @@
-import { Sun, Moon, Plus } from "lucide-react";
+import { Bell, Plus } from "lucide-react";
 
-const AVATAR_COLORS = ["#89b4fa","#a6e3a1","#fab387","#f38ba8","#cba6f7","#89dceb","#f9e2af"];
+const AVATAR_COLORS = ["#e85d2a","#2f6df0","#1f9d57","#7a5ae0","#c97c12"];
 function avatarColor(username = "") {
   let h = 0;
   for (let i = 0; i < username.length; i++) h = (h * 31 + username.charCodeAt(i)) & 0xffff;
@@ -15,18 +15,14 @@ const PAGE_LABELS = {
   audit:       "Audit",
 };
 
-export default function Topbar({ user, page, theme, onOpenProfile, onToggleTheme, onOpenDrawer }) {
+export default function Topbar({ user, page, onOpenProfile, onOpenDrawer, onOpenPalette, onOpenInbox, invitationCount }) {
   const initials = ((user.first_name?.[0] || "") + (user.last_name?.[0] || "")).toUpperCase() || "?";
   const color = avatarColor(user.username);
 
   return (
     <header className="topbar">
-      <div className="topbar-logo">
-        <span className="topbar-logo-icon">env-buddy</span>
-      </div>
-
       <div className="topbar-breadcrumb">
-        <span className="topbar-bc-parent">Dashboard</span>
+        <span>Dashboard</span>
         {page !== "dashboard" && (
           <>
             <span className="topbar-bc-sep">›</span>
@@ -35,30 +31,30 @@ export default function Topbar({ user, page, theme, onOpenProfile, onToggleTheme
         )}
       </div>
 
+      <button className="topbar-cmdk" onClick={onOpenPalette} aria-label="Befehlspalette öffnen">
+        <span className="topbar-cmdk-label">Suchen…</span>
+        <kbd className="topbar-cmdk-kbd">⌘K</kbd>
+      </button>
+
       <div className="topbar-actions">
-        <button className="topbar-cmdk-pill" disabled title="Command Palette (coming soon)">
-          <span className="topbar-cmdk-text">Suche</span>
-          <kbd className="topbar-cmdk-key">⌘K</kbd>
+        <button className="topbar-icon-btn" onClick={onOpenInbox} aria-label="Einladungen">
+          <Bell size={16} strokeWidth={1.6} />
+          {invitationCount > 0 && <span className="topbar-badge" />}
         </button>
 
-        <button className="topbar-icon-btn" onClick={onToggleTheme} title="Theme wechseln"
-          aria-label={theme === "dark" ? "Zu hellem Theme wechseln" : "Zu dunklem Theme wechseln"}>
-          {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+        <button className="topbar-btn-new" onClick={onOpenDrawer}>
+          <Plus size={14} strokeWidth={2} style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }} />
+          Neu
         </button>
 
-        <button className="topbar-icon-btn" onClick={onOpenDrawer} title="Container starten"
-          aria-label="Container starten">
-          <Plus size={16} />
-        </button>
-
-        <button className="topbar-avatar-btn" onClick={onOpenProfile}
-          aria-label={`Profil von ${user.username} öffnen`}>
+        <button className="topbar-user-pill" onClick={onOpenProfile} aria-label="Profil öffnen">
           <span
             className="topbar-avatar"
-            style={{ background: color + "33", border: `1.5px solid ${color}`, color }}
+            style={{ background: color + "22", color }}
           >
             {initials}
           </span>
+          <span className="topbar-username">{user.username}</span>
         </button>
       </div>
     </header>

@@ -15,29 +15,6 @@ import Sidebar from "./components/Sidebar";
 import StartDrawer from "./components/StartDrawer";
 import "./App.css";
 
-const AVATAR_COLORS = ["#89b4fa","#a6e3a1","#fab387","#f38ba8","#cba6f7","#89dceb","#f9e2af"];
-function avatarColor(username = "") {
-  let h = 0;
-  for (let i = 0; i < username.length; i++) h = (h * 31 + username.charCodeAt(i)) & 0xffff;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
-
-function UserAvatar({ user }) {
-  const initials = ((user.first_name?.[0] || "") + (user.last_name?.[0] || "")).toUpperCase() || "?";
-  const color = avatarColor(user.username);
-  return (
-    <span style={{
-      width: "2rem", height: "2rem", borderRadius: "50%",
-      background: color + "33", border: `1.5px solid ${color}`,
-      color, fontWeight: 700, fontSize: "0.78rem",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      flexShrink: 0,
-    }}>
-      {initials}
-    </span>
-  );
-}
-
 function getStoredUser() {
   try { return JSON.parse(localStorage.getItem("user")); } catch { return null; }
 }
@@ -63,15 +40,6 @@ export default function App() {
     localStorage.removeItem("user");
     setUser(null);
     navigate("/");
-  }
-
-  function handleToggleTheme() {
-    const current = document.documentElement.getAttribute("data-theme") || "dark";
-    const next = current === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", next);
-    const updated = { ...user, theme: next };
-    setUser(updated);
-    localStorage.setItem("user", JSON.stringify(updated));
   }
 
   async function loadStartFormTemplates() {
@@ -131,10 +99,6 @@ export default function App() {
   }, [user]);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", user?.theme || "dark");
-  }, [user?.theme]);
-
-  useEffect(() => {
     const running = [
       ...containers.filter((c) => c.status === "running"),
       ...stacks.flatMap((s) => s.containers).filter((c) => c.status === "running"),
@@ -143,14 +107,11 @@ export default function App() {
   }, [containers, stacks]);
 
   useEffect(() => {
-    if (user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      loadStartFormTemplates();
-    }
+    if (user) loadStartFormTemplates();
   }, [user]);
+
   useEffect(() => {
     if (!user) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadAll();
     const interval = setInterval(loadAll, 5000);
     return () => clearInterval(interval);
@@ -169,22 +130,20 @@ export default function App() {
 
   return (
     <div className="app">
-      <Topbar
-        user={user}
-        page={path}
-        onOpenProfile={() => setProfileOpen(true)}
-        onToggleTheme={handleToggleTheme}
-        onOpenDrawer={() => setDrawerOpen(true)}
-        onOpenPalette={() => setPaletteOpen(true)}
-        onOpenInbox={() => setInboxOpen(true)}
-        invitationCount={invitations.length}
-        theme={user?.theme || "dark"}
-      />
+      <Sidebar page={path} onNavigate={handleNavigate} />
 
-      <div className="app-body">
-        <Sidebar page={path} onNavigate={handleNavigate} />
+      <div className="main">
+        <Topbar
+          user={user}
+          page={path}
+          onOpenProfile={() => setProfileOpen(true)}
+          onOpenDrawer={() => setDrawerOpen(true)}
+          onOpenPalette={() => setPaletteOpen(true)}
+          onOpenInbox={() => setInboxOpen(true)}
+          invitationCount={invitations.length}
+        />
 
-        <main className="app-content">
+        <div className="scroll">
           {error && <div className="error-banner">Backend nicht erreichbar — läuft auf http://localhost:8000?</div>}
 
           <Routes>
@@ -209,7 +168,7 @@ export default function App() {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
-        </main>
+        </div>
       </div>
 
       <StartDrawer
@@ -242,24 +201,29 @@ export default function App() {
 
       {inboxOpen && (
         <div className="modal-overlay" onClick={() => setInboxOpen(false)}>
-          <div className="modal-box" style={{ maxWidth: "32rem" }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <span className="modal-title">Einladungen</span>
               <button className="modal-close" onClick={() => setInboxOpen(false)}>✕</button>
             </div>
             <div className="modal-body">
               {invitations.length === 0 ? (
-                <p style={{ color: "var(--subtext0)", fontSize: "0.875rem" }}>Keine ausstehenden Einladungen.</p>
+                <p style={{ color: "var(--ink-3)", fontSize: "13px" }}>Keine ausstehenden Einladungen.</p>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   {invitations.map((inv) => (
                     <div key={inv.id} style={{
-                      background: "var(--surface1, #1e1e2e)", borderRadius: "8px",
-                      padding: "0.75rem 1rem", display: "flex", alignItems: "center", gap: "1rem",
+                      background: "var(--surface-sink)",
+                      border: "1px solid var(--line)",
+                      borderRadius: "var(--r-md)",
+                      padding: "12px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
                     }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600 }}>{inv.team_name}</div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--subtext0)" }}>
+                        <div style={{ fontWeight: 600, color: "var(--ink)" }}>{inv.team_name}</div>
+                        <div style={{ fontSize: "12px", color: "var(--ink-3)" }}>
                           Eingeladen von @{inv.inviter_name}
                         </div>
                       </div>
@@ -269,9 +233,9 @@ export default function App() {
                           setInvitations((p) => p.filter((i) => i.id !== inv.id));
                         }}
                         style={{
-                          padding: "0.3rem 0.7rem", borderRadius: "6px",
-                          border: "1px solid #a6e3a1", color: "#a6e3a1", background: "transparent",
-                          cursor: "pointer", fontSize: "0.82rem",
+                          padding: "5px 12px", borderRadius: "var(--r-sm)",
+                          border: "1px solid var(--run)", color: "var(--run)",
+                          background: "transparent", cursor: "pointer", fontSize: "12px", fontWeight: 600,
                         }}
                       >
                         Annehmen
@@ -282,9 +246,9 @@ export default function App() {
                           setInvitations((p) => p.filter((i) => i.id !== inv.id));
                         }}
                         style={{
-                          padding: "0.3rem 0.7rem", borderRadius: "6px",
-                          border: "1px solid var(--overlay1)", color: "var(--subtext0)", background: "transparent",
-                          cursor: "pointer", fontSize: "0.82rem",
+                          padding: "5px 12px", borderRadius: "var(--r-sm)",
+                          border: "1px solid var(--line-2)", color: "var(--ink-3)",
+                          background: "transparent", cursor: "pointer", fontSize: "12px",
                         }}
                       >
                         Ablehnen

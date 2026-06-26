@@ -11,6 +11,10 @@ const NAV_ITEMS = [
 export default function Sidebar({ page, onNavigate }) {
   return (
     <aside className="sidebar">
+      <div className="sidebar-brand">
+        <span className="sidebar-brand-icon">🧪</span>
+        <span className="sidebar-brand-name">env-buddy</span>
+      </div>
       <nav className="sidebar-nav">
         {NAV_ITEMS.map((item) => (
           <button
@@ -18,7 +22,7 @@ export default function Sidebar({ page, onNavigate }) {
             className={`sidebar-nav-item ${page === item.key ? "active" : ""}`}
             onClick={() => onNavigate(item.key)}
           >
-            <item.Icon size={20} strokeWidth={1.75} className="sidebar-nav-icon" />
+            <item.Icon size={16} strokeWidth={1.6} className="sidebar-nav-icon" />
             <span className="sidebar-nav-label">{item.label}</span>
           </button>
         ))}
