@@ -89,7 +89,7 @@ export default function ImportContainerModal({ onImport, onClose }) {
             value={jsonText}
             onChange={(e) => { setJsonText(e.target.value); setError(null); }}
           />
-          {error && <p style={{ color: "var(--red, #f38ba8)", fontSize: "0.82rem", margin: 0 }}>{error}</p>}
+          {error && <p style={{ color: "var(--stop)", fontSize: "0.82rem", margin: 0 }}>{error}</p>}
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "space-between", alignItems: "center" }}>
             <button
               style={{
