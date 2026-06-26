@@ -51,7 +51,6 @@ export default function AuditPage() {
 
   return (
     <div className="page-wrap">
-    <div className="audit-page">
       <h2 className="audit-title">Verlauf</h2>
 
       <div className="audit-filters">
@@ -100,7 +99,6 @@ export default function AuditPage() {
           </tbody>
         </table>
       )}
-    </div>
     </div>
   );
 }

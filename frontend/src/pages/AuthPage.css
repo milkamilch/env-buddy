@@ -127,3 +127,6 @@
   padding: 0;
 }
 .auth-link:hover { color: var(--accent-ink); }
+
+.auth-field-row { display: flex; gap: 8px; }
+.auth-field-row .auth-field { flex: 1; }

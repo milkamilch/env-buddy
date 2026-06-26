@@ -154,12 +154,12 @@ export default function AuthPage({ onAuth }) {
           {/* REGISTER */}
           {mode === "register" && (
             <>
-              <div className="auth-field-row" style={{ display: "flex", gap: "8px" }}>
-                <div className="auth-field" style={{ flex: 1 }}>
+              <div className="auth-field-row">
+                <div className="auth-field">
                   <label className="auth-label">Vorname</label>
                   <input className="auth-input" name="first_name" type="text" placeholder="Max" value={form.first_name} onChange={handleChange} required />
                 </div>
-                <div className="auth-field" style={{ flex: 1 }}>
+                <div className="auth-field">
                   <label className="auth-label">Name</label>
                   <input className="auth-input" name="last_name" type="text" placeholder="Mustermann" value={form.last_name} onChange={handleChange} required />
                 </div>
