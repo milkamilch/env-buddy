@@ -12,6 +12,10 @@ import "./TeamsPage.css";
 const ROLE_LABELS = { admin: "Admin", manager: "Manager", member: "Mitglied" };
 const ROLE_LEVEL  = { member: 0, manager: 1, admin: 2 };
 
+function tplGlyph(name) {
+  return (name || "?").slice(0, 2).toUpperCase();
+}
+
 export default function TeamsPage({ user }) {
   const toast = useToast();
   const [teams, setTeams]               = useState([]);
@@ -20,24 +24,19 @@ export default function TeamsPage({ user }) {
   const [templates, setTemplates]       = useState([]);
   const [loadingTeam, setLoadingTeam]   = useState(false);
 
-  // Create team dialog
   const [showCreateTeam, setShowCreateTeam] = useState(false);
   const [newTeamName, setNewTeamName]       = useState("");
   const [creatingTeam, setCreatingTeam]     = useState(false);
 
-  // Add member
   const [addUsername, setAddUsername]   = useState("");
   const [addingMember, setAddingMember] = useState(false);
 
-  // Template modal
   const [showTmplModal, setShowTmplModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
 
-  // Delete confirmations
   const [confirmDeleteTmpl, setConfirmDeleteTmpl] = useState(null);
   const [confirmDeleteTeam, setConfirmDeleteTeam] = useState(false);
 
-  // Favorites (for Auswahl toggle)
   const [favorites, setFavorites] = useState([]);
   const [copyingTmpl, setCopyingTmpl] = useState(null);
 
@@ -45,7 +44,6 @@ export default function TeamsPage({ user }) {
     fetchFavorites().then(setFavorites).catch(() => {});
   }, []);
 
-  // Load teams on mount
   useEffect(() => {
     fetchMyTeams()
       .then((data) => {
@@ -55,7 +53,6 @@ export default function TeamsPage({ user }) {
       .catch(() => {});
   }, []);
 
-  // Load members + templates when selectedId changes
   const loadTeamData = useCallback(async (teamId) => {
     if (!teamId) return;
     setLoadingTeam(true);
@@ -74,11 +71,10 @@ export default function TeamsPage({ user }) {
     loadTeamData(selectedId);
   }, [selectedId, loadTeamData]);
 
-  // Eigene Rolle im aktuell gewählten Team
   const myMembership = members.find((m) => m.user_id === user.id);
   const myRole       = myMembership?.role ?? "member";
   const myLevel      = ROLE_LEVEL[myRole] ?? 0;
-  const canManage    = myLevel >= 1;  // admin oder manager
+  const canManage    = myLevel >= 1;
   const isAdmin      = myRole === "admin";
 
   // ── Create team ──────────────────────────────────────────────────────────
@@ -224,7 +220,6 @@ export default function TeamsPage({ user }) {
 
   return (
     <div className="teams-page">
-      {/* Header */}
       <div className="teams-header">
         <div>
           <h2>Teams</h2>
@@ -235,11 +230,10 @@ export default function TeamsPage({ user }) {
         </button>
       </div>
 
-      {/* Team selector */}
       {teams.length > 0 && (
         <div className="team-selector-bar">
           <div className="team-selector-left">
-            <label className="team-selector-label">Team:</label>
+            <span className="team-selector-label">Team</span>
             <select
               className="team-dropdown"
               value={selectedId || ""}
@@ -261,18 +255,16 @@ export default function TeamsPage({ user }) {
                 <button className="btn-confirm-no-sm" onClick={() => setConfirmDeleteTeam(false)}>Abbrechen</button>
               </div>
             ) : (
-              <button className="btn-delete-team" onClick={handleDeleteTeam} title="Team löschen">
-                🗑 Team löschen
+              <button className="btn-delete-team" onClick={handleDeleteTeam}>
+                Team löschen
               </button>
             )
           )}
         </div>
       )}
 
-      {/* No teams empty state */}
       {teams.length === 0 && (
         <div className="teams-empty">
-          <span className="teams-empty-icon">👥</span>
           <p className="teams-empty-title">Noch kein Team</p>
           <p className="teams-empty-sub">Erstelle dein erstes Team und lade Kollegen ein.</p>
           <button className="btn-create-team" onClick={() => setShowCreateTeam(true)}>
@@ -281,11 +273,10 @@ export default function TeamsPage({ user }) {
         </div>
       )}
 
-      {/* Team body */}
       {selectedId && (
         <div className="team-body">
           {loadingTeam ? (
-            <div className="team-loading"><span className="loading-spinner" /></div>
+            <div className="team-loading">Lädt…</div>
           ) : (
             <>
               {/* Members panel */}
@@ -297,15 +288,13 @@ export default function TeamsPage({ user }) {
 
                 <div className="members-list">
                   {members.map((m) => {
-                    // Kann actor die Rolle dieses Mitglieds ändern?
                     const canChangeRole =
                       canManage &&
                       m.user_id !== user.id &&
                       !(myRole === "manager" && m.role === "admin");
-                    // Kann actor dieses Mitglied entfernen?
                     const canRemove =
                       m.user_id === user.id
-                        ? m.role !== "admin"   // selbst verlassen (nicht als admin)
+                        ? m.role !== "admin"
                         : canManage && !(myRole === "manager" && m.role === "admin");
 
                     return (
@@ -352,7 +341,7 @@ export default function TeamsPage({ user }) {
                     <input
                       className="add-member-input"
                       type="text"
-                      placeholder="Benutzername..."
+                      placeholder="Benutzername…"
                       value={addUsername}
                       onChange={(e) => setAddUsername(e.target.value)}
                     />
@@ -376,7 +365,7 @@ export default function TeamsPage({ user }) {
                 {templates.length === 0 ? (
                   <div className="templates-empty">
                     <p>Noch keine Templates für dieses Team.</p>
-                    <button className="btn-add-template" onClick={() => setShowTmplModal(true)}>
+                    <button className="btn-create-team" onClick={() => setShowTmplModal(true)}>
                       + Erstes Template erstellen
                     </button>
                   </div>
@@ -384,12 +373,17 @@ export default function TeamsPage({ user }) {
                   <div className="team-templates-grid">
                     {templates.map((t) => {
                       const canEdit = t.created_by === user.id || canManage;
+                      const isFav = favorites.includes(`team:${t.id}`);
                       return (
                         <div key={t.id} className="team-tmpl-card">
-                          <div className="ttc-icon">{t.icon}</div>
-                          <div className="ttc-name">{t.name}</div>
+                          <div className="ttc-head">
+                            <div className="ttc-tile">{tplGlyph(t.name)}</div>
+                            <div className="ttc-info">
+                              <div className="ttc-name">{t.name}</div>
+                              <div className="ttc-creator">{t.creator_name}</div>
+                            </div>
+                          </div>
                           {t.description && <div className="ttc-desc">{t.description}</div>}
-                          <div className="ttc-creator">👤 {t.creator_name}</div>
                           <div className="ttc-containers">
                             {t.containers.length} Container: {t.containers.map((c) => c.image).join(", ")}
                           </div>
@@ -402,17 +396,14 @@ export default function TeamsPage({ user }) {
                               </>
                             ) : (
                               <>
-                                {favorites.includes(`team:${t.id}`) ? (
-                                  <button className="ttc-btn-fav ttc-btn-fav-active" onClick={() => handleToggleFavorite(t)}>
-                                    ✓ In Auswahl
-                                  </button>
-                                ) : (
-                                  <button className="ttc-btn-fav" onClick={() => handleToggleFavorite(t)}>
-                                    + Auswahl
-                                  </button>
-                                )}
                                 <button
-                                  className="ttc-btn-copy"
+                                  className={`ttc-btn${isFav ? " ttc-btn-fav-active" : ""}`}
+                                  onClick={() => handleToggleFavorite(t)}
+                                >
+                                  {isFav ? "In Auswahl" : "+ Auswahl"}
+                                </button>
+                                <button
+                                  className="ttc-btn"
                                   onClick={() => handleCopyTemplate(t)}
                                   disabled={copyingTmpl === t.id}
                                 >
@@ -420,10 +411,10 @@ export default function TeamsPage({ user }) {
                                 </button>
                                 {canEdit && (
                                   <>
-                                    <button className="ttc-btn-edit" onClick={() => { setEditingTemplate(t); setShowTmplModal(true); }}>
+                                    <button className="ttc-btn" onClick={() => { setEditingTemplate(t); setShowTmplModal(true); }}>
                                       Bearbeiten
                                     </button>
-                                    <button className="ttc-btn-delete" onClick={() => handleDeleteTemplate(t.id)}>
+                                    <button className="ttc-btn" onClick={() => handleDeleteTemplate(t.id)}>
                                       Löschen
                                     </button>
                                   </>
@@ -442,7 +433,6 @@ export default function TeamsPage({ user }) {
         </div>
       )}
 
-      {/* Create team dialog */}
       {showCreateTeam && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowCreateTeam(false)}>
           <div className="modal-box" style={{ maxWidth: "400px" }}>
@@ -451,7 +441,7 @@ export default function TeamsPage({ user }) {
               <button className="modal-close" onClick={() => setShowCreateTeam(false)}>✕</button>
             </div>
             <form className="modal-body" onSubmit={handleCreateTeam}>
-              <label style={{ fontSize: "0.85rem", color: "var(--subtext0)", display: "block", marginBottom: "0.35rem" }}>
+              <label style={{ fontSize: "11px", fontWeight: 600, color: "var(--ink-3)", textTransform: "uppercase", letterSpacing: "0.05em", display: "block", marginBottom: "6px" }}>
                 Team-Name
               </label>
               <input
@@ -475,7 +465,6 @@ export default function TeamsPage({ user }) {
         </div>
       )}
 
-      {/* Team stack builder */}
       {showTmplModal && (
         <TeamStackBuilder
           teamId={selectedId}
