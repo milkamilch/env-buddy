@@ -192,14 +192,15 @@ export default function DashboardPage({
           {search && (
             <button className="search-clear" onClick={() => setSearch("")}>✕</button>
           )}
-          <button
-            className="btn-chip"
-            onClick={() => setImportOpen(true)}
-            title="Container aus JSON importieren"
-          >
-            ↑ Importieren
-          </button>
         </div>
+
+        <button
+          className="btn-chip"
+          onClick={() => setImportOpen(true)}
+          title="Container aus JSON importieren"
+        >
+          ↑ Importieren
+        </button>
 
         <div className="filter-group">
           <Segmented
