@@ -1,0 +1,26 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pill-run  { background: var(--run-soft);  color: var(--run); }
+.pill-stop { background: var(--stop-soft); color: var(--stop); }
+.pill-warn { background: var(--warn-soft); color: var(--warn); }
+.pill-start { background: var(--info-soft); color: var(--info); }
+
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.pill-run .pill-dot {
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
