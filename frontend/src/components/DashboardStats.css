@@ -87,3 +87,9 @@
 .stat-tpl-track { height: 4px; background: var(--surface-sink); border-radius: 2px; }
 .stat-tpl-fill { height: 100%; background: var(--accent-soft); border-radius: 2px; }
 .stat-tpl-count { font-size: 11px; color: var(--ink-4); font-family: "JetBrains Mono", monospace; text-align: right; }
+
+@media (max-width: 900px) {
+  .dash-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

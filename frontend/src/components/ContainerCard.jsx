@@ -203,6 +203,21 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     finally { setConfirmDelete(false); setDeleting(false); }
   }
 
+  async function handleShare() {
+    const label = container.id.slice(0, 12);
+    setShareLoading(true);
+    try {
+      const s = await grantContainerAccess(label, shareUsername.trim());
+      setShares((prev) => [...prev, s]);
+      setShareUsername("");
+      toast.success(`Zugriff für ${shareUsername} gewährt`);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setShareLoading(false);
+    }
+  }
+
   async function handleUpdate(e) {
     e.stopPropagation();
     if (!updateConfirm) { setUpdateConfirm(true); return; }
@@ -616,26 +631,12 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
                     placeholder="z.B. max"
                     value={shareUsername}
                     onChange={(e) => setShareUsername(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && shareUsername.trim() && document.getElementById("share-btn").click()}
+                    onKeyDown={(e) => { if (e.key === "Enter" && shareUsername.trim()) handleShare(); }}
                   />
                   <button
-                    id="share-btn"
                     className="btn-primary"
                     disabled={!shareUsername.trim() || shareLoading}
-                    onClick={async () => {
-                      const label = container.id.slice(0, 12);
-                      setShareLoading(true);
-                      try {
-                        const s = await grantContainerAccess(label, shareUsername.trim());
-                        setShares((prev) => [...prev, s]);
-                        setShareUsername("");
-                        toast.success(`Zugriff für ${shareUsername} gewährt`);
-                      } catch (err) {
-                        toast.error(err.message);
-                      } finally {
-                        setShareLoading(false);
-                      }
-                    }}
+                    onClick={handleShare}
                   >
                     {shareLoading ? "…" : "Teilen"}
                   </button>
