@@ -108,42 +108,44 @@ export default function StackCard({ stack, onStopped, viewMode = "grid" }) {
   const isExpiringSoon = remaining != null && remaining > 0 && remaining <= 300;
 
   return (
-    <div className={`stack-card ${viewMode === "grid" ? "stack-card--grid" : ""}`}>
-      <div className="stack-header">
-        <div className="stack-icons">
+    <div className="stack-card">
+      <div className="stack-card-header">
+        <div style={{ display: "flex", gap: "0.2rem", flexShrink: 0 }}>
           {stack.containers.slice(0, 3).map((c) => (
-            <span key={c.id} className="stack-icon-chip" title={c.template}>
+            <span key={c.id} style={{ fontSize: "1.2rem", lineHeight: 1 }} title={c.template}>
               {TEMPLATE_ICONS[c.template] || "📦"}
             </span>
           ))}
           {stack.containers.length > 3 && (
-            <span className="stack-icon-more">+{stack.containers.length - 3}</span>
+            <span style={{ fontSize: "0.75rem", color: "var(--ink-3)", alignSelf: "center", paddingLeft: "0.2rem" }}>
+              +{stack.containers.length - 3}
+            </span>
           )}
         </div>
 
-        <div className="stack-title">
-          <span className="stack-name">{stack.stack_name}</span>
-          <div className="stack-status-row">
-            <span className={`stack-status status-${stackStatus}`}>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.2rem", minWidth: 0 }}>
+          <span className="stack-card-name">{stack.stack_name}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+            <span className={`stack-card-status ${stackStatus === "running" ? "active" : ""}`}>
               {stackStatus} · {stack.containers.length} services
             </span>
             {remaining != null && (
-              <span className={`stack-countdown ${isExpiringSoon ? "countdown-urgent" : ""}`}>
+              <span style={{ fontSize: "11px", color: isExpiringSoon ? "var(--warn)" : "var(--ink-3)", fontFamily: '"JetBrains Mono", monospace' }}>
                 ⏱ {formatCountdown(remaining)}
               </span>
             )}
           </div>
           {stack.network && (
-            <span className="stack-network" title="Internes Docker-Netzwerk — Container erreichbar via service_name:port">
+            <span style={{ fontSize: "11px", color: "var(--ink-3)", fontFamily: '"JetBrains Mono", monospace', opacity: 0.75 }} title="Internes Docker-Netzwerk">
               🔗 {stack.network}
             </span>
           )}
         </div>
 
-        <div className="stack-actions">
+        <div className="stack-card-actions" style={{ border: "none", paddingTop: 0 }}>
           {viewMode === "list" && (
             <button
-              className="btn-expand"
+              className="btn-stack"
               onClick={() => setExpanded((v) => !v)}
               title={expanded ? "Einklappen" : "Ausklappen"}
             >
@@ -151,18 +153,18 @@ export default function StackCard({ stack, onStopped, viewMode = "grid" }) {
             </button>
           )}
           {allStopped ? (
-            <button className="btn-stack-start" onClick={handleStartStack}>▶ Start all</button>
+            <button className="btn-stack" onClick={handleStartStack}>▶ Start all</button>
           ) : (
-            <button className="btn-stack-stop" onClick={handleStopStack}>⏹ Stop all</button>
+            <button className="btn-stack btn-stack-stop" onClick={handleStopStack}>⏹ Stop all</button>
           )}
           {confirmRemove ? (
             <>
               <span className="confirm-label">Sicher?</span>
-              <button className="btn-stack-confirm-yes" onClick={handleRemoveStack} title="Ja, löschen">✓</button>
-              <button className="btn-stack-confirm-no" onClick={() => setConfirmRemove(false)} title="Abbrechen">✕</button>
+              <button className="btn-stack" onClick={handleRemoveStack} title="Ja, löschen" style={{ color: "var(--run)" }}>✓</button>
+              <button className="btn-stack" onClick={() => setConfirmRemove(false)} title="Abbrechen">✕</button>
             </>
           ) : (
-            <button className="btn-stack-remove" onClick={handleRemoveStack} title="Stack löschen">🗑</button>
+            <button className="btn-stack" onClick={handleRemoveStack} title="Stack löschen">🗑</button>
           )}
         </div>
       </div>
@@ -170,8 +172,9 @@ export default function StackCard({ stack, onStopped, viewMode = "grid" }) {
       {showContainers && (
         <div className="stack-containers">
           {stack.containers.map((c) => {
-            const cpuColor = c.cpu_percent > 80 ? "#f38ba8" : c.cpu_percent > 50 ? "#fab387" : "#a6e3a1";
-            const ramColor = c.ram_percent > 80 ? "#f38ba8" : c.ram_percent > 50 ? "#fab387" : "#a6e3a1";
+            const cpuColor = c.cpu_percent > 80 ? "var(--stop)" : c.cpu_percent > 50 ? "var(--warn)" : "var(--run)";
+            const ramColor = c.ram_percent > 80 ? "var(--stop)" : c.ram_percent > 50 ? "var(--warn)" : "var(--info)";
+            const dotCls = c.status === "running" ? "stack-dot-run" : (c.status === "exited" || c.status === "stopped") ? "stack-dot-stop" : "stack-dot-warn";
             return (
               <div
                 key={c.id}
@@ -179,27 +182,24 @@ export default function StackCard({ stack, onStopped, viewMode = "grid" }) {
                 onClick={() => setEditingId(c.id)}
                 title="Konfiguration bearbeiten"
               >
-                <span className="row-icon">{TEMPLATE_ICONS[c.template] || "📦"}</span>
-                <div className="row-info">
-                  <span className="row-name">{c.name}</span>
-                  <span className={`row-status status-${c.status}`}>{c.status}</span>
+                <div className={`stack-container-dot ${dotCls}`} />
+                <span className="stack-container-name">{c.name}</span>
+                <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", flexShrink: 0 }}>
+                  {c.port && <span style={{ fontSize: "11px", color: "var(--info)", fontFamily: '"JetBrains Mono", monospace', fontWeight: 600 }}>:{c.port}</span>}
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: cpuColor, fontFamily: '"JetBrains Mono", monospace' }}>{c.cpu_percent}% CPU</span>
+                  <span style={{ fontSize: "11px", fontWeight: 600, color: ramColor, fontFamily: '"JetBrains Mono", monospace' }}>{c.ram_mb} MB</span>
                 </div>
-                <div className="row-meta">
-                  {c.port && <span className="row-port">:{c.port}</span>}
-                  <span className="row-stat" style={{ color: cpuColor }}>{c.cpu_percent}% CPU</span>
-                  <span className="row-stat" style={{ color: ramColor }}>{c.ram_mb} MB</span>
-                </div>
-                <div className="row-btns" onClick={(e) => e.stopPropagation()}>
-                  <button className="btn-logs-sm" onClick={() => setLogsId(c.id)} title="Logs">▤</button>
+                <div style={{ display: "flex", gap: "4px", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                  <button className="btn-stack" onClick={() => setLogsId(c.id)} title="Logs">▤</button>
                   <button
-                    className="btn-restart"
+                    className="btn-stack"
                     onClick={() => handleRestart(c.id)}
                     disabled={restarting[c.id]}
                     title="Neustart"
                   >
                     {restarting[c.id] ? "…" : "↺"}
                   </button>
-                  <button className="btn-stop-sm" onClick={() => handleStopContainer(c.id)} title="Stop">
+                  <button className="btn-stack btn-stack-stop" onClick={() => handleStopContainer(c.id)} title="Stop">
                     ⏹
                   </button>
                 </div>

@@ -24,8 +24,8 @@ export default function DashboardStats({ containers, stacks, systemTotalRamMb, m
     ? Math.min((totalRamMb / systemTotalRamMb) * 100, 100)
     : 0;
 
-  const cpuColor = totalCpu > 80 ? "#f38ba8" : totalCpu > 50 ? "#fab387" : "#a6e3a1";
-  const ramColor = ramPercent > 80 ? "#f38ba8" : ramPercent > 50 ? "#fab387" : "#a6e3a1";
+  const cpuColor = totalCpu > 80 ? "var(--stop)" : totalCpu > 50 ? "var(--warn)" : "var(--run)";
+  const ramColor = ramPercent > 80 ? "var(--stop)" : ramPercent > 50 ? "var(--warn)" : "var(--info)";
 
   // top 3 templates by usage
   const templateCounts = {};

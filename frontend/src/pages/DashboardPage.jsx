@@ -6,6 +6,7 @@ import StackCard from "../components/StackCard";
 import DashboardStats from "../components/DashboardStats";
 import ImportContainerModal from "../components/ImportContainerModal";
 import { useToast } from "../components/Toast";
+import Segmented from "../components/Segmented";
 
 const STATUS_FILTERS = ["alle", "running", "paused", "exited"];
 
@@ -190,10 +191,9 @@ export default function DashboardPage({
             <button className="search-clear" onClick={() => setSearch("")}>✕</button>
           )}
           <button
-            className="btn-start-all"
+            className="btn-chip"
             onClick={() => setImportOpen(true)}
             title="Container aus JSON importieren"
-            style={{ background: "var(--overlay1)" }}
           >
             ↑ Importieren
           </button>
@@ -213,16 +213,17 @@ export default function DashboardPage({
         </div>
 
         <div className="filter-group">
-          <span className="filter-label">Status:</span>
-          {STATUS_FILTERS.map((s) => (
-            <button
-              key={s}
-              className={`filter-btn filter-status-${s} ${activeStatus === s ? "active" : ""}`}
-              onClick={() => setActiveStatus(s)}
-            >
-              {s}
-            </button>
-          ))}
+          <Segmented
+            options={STATUS_FILTERS.map(f => ({ label: f === "alle" ? "Alle" : f.charAt(0).toUpperCase() + f.slice(1), value: f }))}
+            value={activeStatus}
+            onChange={setActiveStatus}
+            counts={Object.fromEntries(STATUS_FILTERS.map(f => [
+              f,
+              f === "alle"
+                ? containers.length + stacks.length
+                : containers.filter(c => c.status === f).length
+            ]))}
+          />
         </div>
 
         <button
@@ -259,7 +260,7 @@ export default function DashboardPage({
           {filteredStacks.length > 0 && (
             <div className="section-block">
               <div className="section-label">Stacks <span className="section-count">{filteredStacks.length}</span></div>
-              <div className={`container-grid ${viewMode === "list" ? "grid-list" : ""}`}>
+              <div className={viewMode === "grid" ? "container-grid" : "container-list"}>
                 {filteredStacks.map((s) => (
                   <StackCard key={s.stack_id} stack={s} onStopped={onStackStopped} viewMode={viewMode} />
                 ))}
@@ -274,7 +275,7 @@ export default function DashboardPage({
           {filtered.length > 0 && (
             <div className="section-block">
               <div className="section-label">Container <span className="section-count">{filtered.length}</span></div>
-              <div className={`container-grid ${viewMode === "list" ? "grid-list" : ""}`}>
+              <div className={viewMode === "grid" ? "container-grid" : "container-list"}>
                 {filtered.map((c) => (
                   <ContainerCard key={c.id} container={c} onStopped={onStopped} onRemoved={onRemoved} viewMode={viewMode} selectMode={selectMode} isSelected={selected.has(c.id)} onToggleSelect={toggleSelect} onClone={onClone} />
                 ))}

@@ -1,66 +1,89 @@
 .dash-stats {
-  display: flex;
-  gap: var(--tb-space-3);
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
 }
 
 .stat-card {
-  background: var(--tb-glass-1);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--tb-stroke);
-  border-radius: var(--tb-radius-lg);
-  padding: var(--tb-space-4);
-  flex: 1;
-  min-width: 140px;
-  box-shadow: var(--tb-shadow-card);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: 16px;
+  box-shadow: var(--shadow-card);
   display: flex;
   flex-direction: column;
-  gap: var(--tb-space-2);
+  gap: 4px;
 }
-
-.stat-card-value {
-  font-size: 26px;
-  font-weight: 700;
-  color: var(--tb-text-primary);
-  letter-spacing: var(--tb-tracking-tight);
-  line-height: 1;
-}
-.stat-green { color: var(--tb-running); }
-.stat-red   { color: var(--tb-error); }
-.stat-blue  { color: var(--tb-info); }
 
 .stat-card-label {
   font-size: 11px;
-  color: var(--tb-text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: var(--tb-tracking-caps);
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+  font-family: "JetBrains Mono", monospace;
 }
 
-.stat-divider { border: none; border-top: 1px solid var(--tb-stroke); margin: 0; }
+.stat-card-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+  font-family: "JetBrains Mono", monospace;
+}
 
-.stat-card-bar { display: flex; flex-direction: column; gap: var(--tb-space-2); }
+.stat-card-sub {
+  font-size: 11px;
+  color: var(--ink-4);
+}
 
+.stat-green { color: var(--run); }
+.stat-red   { color: var(--stop); }
+.stat-blue  { color: var(--info); }
+
+/* Bar cards */
+.stat-card-bar { gap: 6px; }
+.stat-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.stat-bar-value {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
+  font-weight: 700;
+}
 .stat-progress-track {
   height: 4px;
-  background: var(--tb-track);
+  background: var(--surface-sink);
   border-radius: 2px;
   overflow: hidden;
 }
-.stat-progress-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+.stat-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 0.3s var(--ease);
+}
+.stat-bar-sub {
+  font-size: 10px;
+  color: var(--ink-4);
+}
 
-.stat-card-templates { display: flex; flex-direction: column; gap: var(--tb-space-2); }
-.stat-template-bars { display: flex; flex-direction: column; gap: 5px; }
-.stat-tpl-row { display: flex; align-items: center; gap: var(--tb-space-2); }
-.stat-tpl-track { flex: 1; height: 3px; background: var(--tb-track); border-radius: 2px; overflow: hidden; }
-.stat-tpl-fill { height: 100%; background: var(--tb-accent); border-radius: 2px; }
+/* Divider */
+.stat-divider { display: none; }
 
-/* ── Bar card internals ── */
-.stat-card-sub { font-size: 0.68rem; color: var(--tb-text-tertiary); text-transform: none; }
-.stat-bar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--tb-space-2); }
-.stat-bar-value { font-size: 0.85rem; font-weight: 700; }
-.stat-bar-sub { font-size: 0.66rem; color: var(--tb-text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stat-card-label-top { margin-bottom: 0.25rem; }
-.stat-tpl-name { font-size: 0.72rem; color: var(--tb-text-secondary); width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
-.stat-tpl-count { font-size: 0.7rem; font-weight: 700; color: var(--tb-text-secondary); flex-shrink: 0; }
+/* Top templates */
+.stat-card-templates { grid-column: span 2; }
+.stat-card-label-top { margin-bottom: 6px; display: block; }
+.stat-template-bars { display: flex; flex-direction: column; gap: 6px; }
+.stat-tpl-row {
+  display: grid;
+  grid-template-columns: 1fr 60px auto;
+  align-items: center;
+  gap: 8px;
+}
+.stat-tpl-name { font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat-tpl-track { height: 4px; background: var(--surface-sink); border-radius: 2px; }
+.stat-tpl-fill { height: 100%; background: var(--accent-soft); border-radius: 2px; }
+.stat-tpl-count { font-size: 11px; color: var(--ink-4); font-family: "JetBrains Mono", monospace; text-align: right; }

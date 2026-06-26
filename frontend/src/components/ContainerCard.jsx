@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Square, RotateCcw, TimerReset, Terminal, ScrollText, Trash2, Play, Copy } from "lucide-react";
+import { Square, RotateCcw, TimerReset, Terminal, ScrollText, Trash2, Play, Copy, BarChart3, Link2, Users, Camera, BookmarkPlus } from "lucide-react";
 import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth, updateContainerImage, createTemplate, createSnapshot, fetchContainerShares, grantContainerAccess, revokeContainerAccess } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
@@ -7,6 +7,8 @@ import ResourceGraphModal from "./ResourceGraphModal";
 import ContainerTerminalModal from "./ContainerTerminalModal";
 import { useToast } from "./Toast";
 import TEMPLATE_ICONS from "../templateIcons";
+import StatusPill from "./StatusPill";
+import Sparkline from "./Sparkline";
 import "./ContainerCard.css";
 
 const EXTEND_MINUTES = [15, 30, 60];
@@ -25,32 +27,6 @@ function useStatsHistory(container) {
   return histRef.current;
 }
 
-function Sparkline({ values, color, width = "100%", height = 22, gradientId }) {
-  if (values.length < 2) return <svg width={width} height={height} />;
-  const svgWidth = 120;
-  const max = Math.max(...values, 1);
-  const step = svgWidth / (HISTORY_MAX - 1);
-  const pts = values.map((v, i) => {
-    const x = ((HISTORY_MAX - values.length + i) * step).toFixed(1);
-    const y = (height - (v / max) * (height - 2) - 1).toFixed(1);
-    return `${x},${y}`;
-  });
-  const polyPts = pts.join(" ");
-  const fillPts = `${pts[0].split(",")[0]},${height} ${polyPts} ${pts[pts.length - 1].split(",")[0]},${height}`;
-  const fillId = gradientId ?? `fill-${color.replace(/[^a-z0-9]/gi, "")}`;
-  return (
-    <svg width={width} height={height} viewBox={`0 0 ${svgWidth} ${height}`} preserveAspectRatio="none" style={{ display: "block" }}>
-      <defs>
-        <linearGradient id={fillId} x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polygon points={fillPts} fill={`url(#${fillId})`} />
-      <polyline points={polyPts} fill="none" stroke={color} strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round" />
-    </svg>
-  );
-}
 
 function LiveBadge({ isRunning }) {
   if (!isRunning) return null;
@@ -305,36 +281,20 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
         className={`container-card ${!isRunning ? "card-stopped" : ""}`}
         onClick={() => selectMode ? onToggleSelect(container.id) : setEditOpen(true)}
       >
-        {/* Header */}
+        {/* Head */}
         <div className="card-header">
-          <span className={`status-dot ${statusDotClass(container.status)}`} />
-          <span className={`card-status-label status-${container.status}`}>{container.status}</span>
-          <span className="card-image">{templateBase || container.template}</span>
-          {isRunning && remaining != null && (
-            <span className={`card-timer ${isExpiringSoon ? "expiring" : ""}`}>⌄ {formatCountdown(remaining)}</span>
-          )}
-          {selectMode && (
-            <input type="checkbox" checked={isSelected} onChange={() => onToggleSelect(container.id)} onClick={e => e.stopPropagation()} style={{ accentColor: "var(--accent-blue)", marginLeft: "auto" }} />
-          )}
-          {isRunning && tcpReachable !== null && (
-            <span
-              className={`health-badge ${tcpReachable ? "health-up" : "health-down"}`}
-              title={tcpReachable ? "Dienst erreichbar" : "Dienst antwortet nicht"}
-            >
-              {tcpReachable ? "● erreichbar" : "● nicht erreichbar"}
-            </span>
-          )}
-          <button className="card-more" onClick={e => e.stopPropagation()} title="Mehr Aktionen" aria-label="Mehr Aktionen">⋮</button>
-        </div>
-
-        {/* Name + Sub */}
-        <div>
-          <div className="card-name">{container.name}</div>
-          <div className="card-sub">
-            {container.id && <span>{container.id.slice(0, 12)}…</span>}
-            {container.port && <><span className="card-sub-sep">·</span><span>:{container.port}</span></>}
-            {container.started_by && <><span className="card-sub-sep">·</span><span>👤 {container.started_by}</span></>}
-            {container.shared_from && <><span className="card-sub-sep">·</span><span style={{ color: "#89b4fa" }}>🔗 @{container.shared_from}</span></>}
+          <span className="card-tpl-ico">{TEMPLATE_ICONS[templateBase] || "📦"}</span>
+          <div className="card-head-info">
+            <div className="card-name">{container.name}</div>
+            <div className="card-image">{templateBase || container.template}</div>
+          </div>
+          <div className="card-head-right">
+            <StatusPill status={container.status} />
+            {isRunning && remaining != null && (
+              <span className={`card-timer ${isExpiringSoon ? "expiring" : ""}`}>
+                {formatCountdown(remaining)}
+              </span>
+            )}
           </div>
         </div>
 
@@ -353,17 +313,21 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
         {isRunning && (
           <div className="card-stats">
             <div className="stat-row">
-              <span className="stat-lbl">CPU</span>
-              <span className="stat-val" style={{ color: cpuColor }}>{container.cpu_percent}%</span>
+              <div className="stat-row-head">
+                <span className="stat-lbl">CPU</span>
+                <span className="stat-val">{container.cpu_percent?.toFixed(1)}%</span>
+              </div>
               <div className="stat-sparkline">
-                <Sparkline values={statsHistory.map(p => p.cpu)} color="var(--accent-green)" gradientId={`fill-cpu-${container.id}`} />
+                <Sparkline values={statsHistory.map(p => p.cpu)} color="var(--run)" height={24} />
               </div>
             </div>
             <div className="stat-row">
-              <span className="stat-lbl">RAM</span>
-              <span className="stat-val" style={{ color: ramColor }}>{container.ram_mb}MB</span>
+              <div className="stat-row-head">
+                <span className="stat-lbl">RAM</span>
+                <span className="stat-val">{container.ram_mb}MB</span>
+              </div>
               <div className="stat-sparkline">
-                <Sparkline values={statsHistory.map(p => p.ram)} color="var(--accent-sky)" gradientId={`fill-ram-${container.id}`} />
+                <Sparkline values={statsHistory.map(p => p.ram)} color="var(--info)" height={24} />
               </div>
             </div>
           </div>
@@ -387,7 +351,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
                 <TimerReset size={12} strokeWidth={1.75} /> Verlängern
               </button>
               {extendOpen && (
-                <div style={{ position: "absolute", top: "110%", left: 0, zIndex: 100, background: "var(--bg-surface2)", border: "var(--border-thin)", borderRadius: "var(--radius-md)", padding: "var(--space-1)", display: "flex", flexDirection: "column", gap: 2, minWidth: "7rem", boxShadow: "var(--shadow-popover)" }} onClick={e => e.stopPropagation()}>
+                <div className="extend-popover" onClick={e => e.stopPropagation()}>
                   {EXTEND_MINUTES.map(m => (
                     <button key={m} className="btn-sm btn-ghost" style={{ width: "100%", justifyContent: "center" }} onClick={e => handleExtend(e, m)} disabled={extending}>+{m} Min.</button>
                   ))}
@@ -408,7 +372,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
 
           {isRunning && (
             <button className="btn-icon-sm btn-ghost" onClick={e => { e.stopPropagation(); setGraphOpen(true); }} title="Ressourcen-Verlauf" aria-label="Ressourcen-Verlauf">
-              📊
+              <BarChart3 size={14} strokeWidth={1.75} />
             </button>
           )}
 
@@ -441,7 +405,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
                   toast.error("Fehler beim Erstellen des Links");
                 }
               }}
-            >🔗</button>
+            ><Link2 size={14} strokeWidth={1.75} /></button>
           )}
 
           {isRunning && (
@@ -460,7 +424,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
                 setShareUsername("");
                 setShareOpen(true);
               }}
-            >👥</button>
+            ><Users size={14} strokeWidth={1.75} /></button>
           )}
 
           <button
@@ -484,7 +448,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
                 toast.error("Fehler: " + err.message);
               }
             }}
-          >📷</button>
+          ><Camera size={14} strokeWidth={1.75} /></button>
 
           <button
             className="btn-icon-sm btn-ghost"
@@ -494,7 +458,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
               setTemplateName(container.name || "");
               setSaveTemplateOpen(true);
             }}
-          >⊕</button>
+          ><BookmarkPlus size={14} strokeWidth={1.75} /></button>
 
           {onClone && isRunning && (
             <button className="btn-icon-sm btn-ghost" onClick={handleClone} disabled={cloning} title="Klonen" aria-label="Container klonen">
