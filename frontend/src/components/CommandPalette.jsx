@@ -52,7 +52,7 @@ export default function CommandPalette({ templates, onClose }) {
 
   return (
     <div className="cmd-scrim" onClick={onClose}>
-      <div className="cmd" onClick={(e) => e.stopPropagation()}>
+      <div className="cmd" role="dialog" aria-modal="true" aria-label="Befehlspalette" onClick={(e) => e.stopPropagation()}>
         <div className="cmd-search">
           <span className="cmd-search-icon">⌘</span>
           <input
