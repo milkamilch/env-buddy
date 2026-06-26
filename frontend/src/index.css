@@ -1,181 +1,134 @@
 @import "tailwindcss";
 
 /* =========================================================
-   TestBud Design Tokens — Liquid Glass
+   TestBud Design Tokens — Clean Light (Variant A "Air")
    ========================================================= */
 :root {
-  --tb-font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    "Helvetica Neue", system-ui, sans-serif;
-  --tb-font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  /* Backgrounds */
+  --bg:           #f4f3f0;
+  --surface:      #ffffff;
+  --surface-2:    #faf9f7;
+  --surface-sink: #f0efe9;
 
-  --tb-text-xs:    11px;
-  --tb-text-sm:    12px;
-  --tb-text-base:  13px;
-  --tb-text-md:    15px;
-  --tb-text-lg:    17px;
-  --tb-text-xl:    22px;
+  /* Borders */
+  --line:         rgba(24,22,18,0.08);
+  --line-2:       rgba(24,22,18,0.12);
 
-  --tb-tracking-tight:  -0.02em;
-  --tb-tracking-caps:    0.06em;
+  /* Text */
+  --ink:          #1c1a16;
+  --ink-2:        rgba(28,26,22,0.60);
+  --ink-3:        rgba(28,26,22,0.40);
+  --ink-4:        rgba(28,26,22,0.28);
+
+  /* Accent */
+  --accent:       #e85d2a;
+  --accent-ink:   #b8420f;
+  --accent-soft:  rgba(232,93,42,0.10);
+  --accent-line:  rgba(232,93,42,0.30);
+
+  /* Status */
+  --run:  #1f9d57;
+  --warn: #c97c12;
+  --stop: #cc3b2e;
+  --info: #2f6df0;
+
+  /* Status soft */
+  --run-soft:  rgba(31,157,87,0.10);
+  --warn-soft: rgba(201,124,18,0.10);
+  --stop-soft: rgba(204,59,46,0.10);
+  --info-soft: rgba(47,109,240,0.10);
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px rgba(24,22,18,0.04);
+  --shadow-pop:  0 8px 24px rgba(24,22,18,0.12), 0 2px 6px rgba(24,22,18,0.06);
+
+  /* Geometry */
+  --r-card: 16px;
+  --r-pill: 999px;
+  --r-sm:   8px;
+  --r-md:   12px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* ── Backward-compat aliases (removed in Phase 6 cleanup) ── */
+  --tb-font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --tb-font-mono:    "JetBrains Mono", monospace;
+
+  --tb-text-xs:    11px;  --tb-text-sm:   12px;  --tb-text-base: 13px;
+  --tb-text-md:    15px;  --tb-text-lg:   17px;  --tb-text-xl:   22px;
+
+  --tb-tracking-tight: -0.02em;
+  --tb-tracking-caps:   0.06em;
 
   --tb-space-1:  4px;  --tb-space-2:  8px;  --tb-space-3: 12px;
   --tb-space-4: 16px;  --tb-space-5: 20px;  --tb-space-6: 24px;
   --tb-space-7: 32px;  --tb-space-8: 48px;  --tb-space-9: 64px;
 
-  --tb-radius-xs:   6px;
-  --tb-radius-sm:  10px;
-  --tb-radius-md:  14px;
-  --tb-radius-lg:  20px;
-  --tb-radius-xl:  28px;
-  --tb-radius-2xl: 36px;
+  --tb-radius-xs:   6px;  --tb-radius-sm:   8px;  --tb-radius-md:  12px;
+  --tb-radius-lg:  16px;  --tb-radius-xl:  20px;  --tb-radius-2xl: 28px;
   --tb-radius-pill: 999px;
 
-  /* Status — invariant across themes */
-  --tb-running:  #30D158;
-  --tb-warning:  #FF9F0A;
-  --tb-error:    #FF453A;
-  --tb-info:     #64D2FF;
-  --tb-pending:  #FFD60A;
-  --tb-network:  #BF5AF2;
+  --tb-accent:        var(--accent);
+  --tb-accent-hover:  var(--accent-ink);
+  --tb-accent-soft:   var(--accent-soft);
 
-  /* Accent — TestBud orange */
-  --tb-accent:        #FF6B35;
-  --tb-accent-hover:  #FF8559;
-  --tb-accent-soft:   color-mix(in oklch, var(--tb-accent) 14%, transparent);
+  --tb-running: var(--run);
+  --tb-warning: var(--warn);
+  --tb-error:   var(--stop);
+  --tb-info:    var(--info);
+  --tb-network: #7a5ae0;
+  --tb-pending: var(--warn);
+
+  --tb-running-soft: var(--run-soft);
+  --tb-warning-soft: var(--warn-soft);
+  --tb-error-soft:   var(--stop-soft);
+  --tb-info-soft:    var(--info-soft);
+  --tb-network-soft: rgba(122,90,224,0.10);
+  --tb-pending-soft: var(--warn-soft);
+
+  --tb-bg-page:      var(--bg);
+  --tb-bg-page-grad: none;
+
+  --tb-glass-1:     var(--surface);
+  --tb-glass-2:     var(--surface);
+  --tb-glass-3:     var(--surface);
+  --tb-glass-modal: var(--surface);
+
+  --tb-stroke:        var(--line);
+  --tb-stroke-strong: var(--line-2);
+  --tb-stroke-inset:  inset 0 1px 0 var(--line);
+
+  --tb-text-primary:    var(--ink);
+  --tb-text-secondary:  var(--ink-2);
+  --tb-text-tertiary:   var(--ink-3);
+  --tb-text-quaternary: var(--ink-4);
+  --tb-text-on-accent:  #ffffff;
+
+  --tb-shadow-card:  var(--shadow-card);
+  --tb-shadow-float: var(--shadow-pop);
+  --tb-shadow-modal: var(--shadow-pop);
+
+  --tb-track: var(--surface-sink);
 }
 
-/* ── Dark mode (default) ── */
-:root,
-:root[data-theme="dark"] {
-  color-scheme: dark;
-
-  --tb-bg-page: #0B0B0F;
-  --tb-bg-page-grad:
-    radial-gradient(1200px 600px at 80% -10%, rgba(255,107,53,0.10), transparent 60%),
-    radial-gradient(900px 500px at 5% 110%, rgba(191,90,242,0.08), transparent 55%),
-    linear-gradient(180deg, #0B0B0F 0%, #07070A 100%);
-
-  --tb-glass-1:     rgba(28, 28, 32, 0.55);
-  --tb-glass-2:     rgba(36, 36, 42, 0.72);
-  --tb-glass-3:     rgba(44, 44, 52, 0.85);
-  --tb-glass-modal: rgba(22, 22, 28, 0.74);
-
-  --tb-stroke:        rgba(255, 255, 255, 0.10);
-  --tb-stroke-strong: rgba(255, 255, 255, 0.18);
-  --tb-stroke-inset:  inset 0 1px 0 rgba(255, 255, 255, 0.06);
-
-  --tb-text-primary:    rgba(255, 255, 255, 0.96);
-  --tb-text-secondary:  rgba(255, 255, 255, 0.66);
-  --tb-text-tertiary:   rgba(255, 255, 255, 0.42);
-  --tb-text-quaternary: rgba(255, 255, 255, 0.24);
-  --tb-text-on-accent:  #1A0A02;
-
-  --tb-shadow-card:
-    0 0.5px 0 rgba(255,255,255,0.08) inset,
-    0 1px 2px rgba(0,0,0,0.30),
-    0 8px 24px -8px rgba(0,0,0,0.50);
-  --tb-shadow-float:
-    0 0.5px 0 rgba(255,255,255,0.10) inset,
-    0 8px 24px rgba(0,0,0,0.40),
-    0 32px 64px -16px rgba(0,0,0,0.60);
-  --tb-shadow-modal:
-    0 0.5px 0 rgba(255,255,255,0.12) inset,
-    0 24px 48px rgba(0,0,0,0.55),
-    0 48px 96px -24px rgba(0,0,0,0.65);
-
-  --tb-track: rgba(255, 255, 255, 0.08);
-
-  --tb-running-soft:  color-mix(in oklch, var(--tb-running) 14%, transparent);
-  --tb-error-soft:    color-mix(in oklch, var(--tb-error) 14%, transparent);
-  --tb-info-soft:     color-mix(in oklch, var(--tb-info) 14%, transparent);
-  --tb-network-soft:  color-mix(in oklch, var(--tb-network) 14%, transparent);
-  --tb-warning-soft:  color-mix(in oklch, var(--tb-warning) 14%, transparent);
-  --tb-pending-soft:  color-mix(in oklch, var(--tb-pending) 14%, transparent);
-}
-
-/* ── Light mode ── */
-:root[data-theme="light"] {
-  color-scheme: light;
-
-  --tb-bg-page: #F2F2F5;
-  --tb-bg-page-grad:
-    radial-gradient(1100px 600px at 85% -10%, rgba(255,107,53,0.12), transparent 60%),
-    radial-gradient(900px 500px at 0% 110%, rgba(191,90,242,0.08), transparent 55%),
-    linear-gradient(180deg, #F6F6F9 0%, #EDEDF1 100%);
-
-  --tb-glass-1:     rgba(255, 255, 255, 0.62);
-  --tb-glass-2:     rgba(255, 255, 255, 0.78);
-  --tb-glass-3:     rgba(255, 255, 255, 0.92);
-  --tb-glass-modal: rgba(252, 252, 254, 0.82);
-
-  --tb-stroke:        rgba(0, 0, 0, 0.08);
-  --tb-stroke-strong: rgba(0, 0, 0, 0.14);
-  --tb-stroke-inset:  inset 0 1px 0 rgba(255, 255, 255, 0.80);
-
-  --tb-text-primary:    rgba(0, 0, 0, 0.92);
-  --tb-text-secondary:  rgba(0, 0, 0, 0.60);
-  --tb-text-tertiary:   rgba(0, 0, 0, 0.42);
-  --tb-text-quaternary: rgba(0, 0, 0, 0.24);
-  --tb-text-on-accent:  #FFFFFF;
-
-  --tb-shadow-card:
-    0 0.5px 0 rgba(255,255,255,0.80) inset,
-    0 1px 2px rgba(15,15,20,0.06),
-    0 8px 24px -8px rgba(15,15,20,0.10);
-  --tb-shadow-float:
-    0 0.5px 0 rgba(255,255,255,0.80) inset,
-    0 8px 24px rgba(15,15,20,0.08),
-    0 32px 64px -16px rgba(15,15,20,0.14);
-  --tb-shadow-modal:
-    0 0.5px 0 rgba(255,255,255,0.90) inset,
-    0 24px 48px rgba(15,15,20,0.14),
-    0 48px 96px -24px rgba(15,15,20,0.20);
-
-  --tb-track: rgba(0, 0, 0, 0.06);
-
-  --tb-running:  #28A745;
-  --tb-warning:  #F58A00;
-  --tb-error:    #E0352B;
-  --tb-info:     #0A84FF;
-  --tb-pending:  #E0A800;
-  --tb-network:  #9D4EE0;
-
-  --tb-running-soft:  color-mix(in oklch, var(--tb-running) 14%, transparent);
-  --tb-error-soft:    color-mix(in oklch, var(--tb-error) 14%, transparent);
-  --tb-info-soft:     color-mix(in oklch, var(--tb-info) 14%, transparent);
-  --tb-network-soft:  color-mix(in oklch, var(--tb-network) 14%, transparent);
-  --tb-warning-soft:  color-mix(in oklch, var(--tb-warning) 14%, transparent);
-  --tb-pending-soft:  color-mix(in oklch, var(--tb-pending) 14%, transparent);
-}
-
-/* =========================================================
-   Tailwind @theme
-   ========================================================= */
 @theme {
-  --font-sans: var(--tb-font-display);
-  --font-mono: var(--tb-font-mono);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 
-  --color-glass-1:   var(--tb-glass-1);
-  --color-glass-2:   var(--tb-glass-2);
-  --color-ink:       var(--tb-text-primary);
-  --color-ink-2:     var(--tb-text-secondary);
-  --color-ink-3:     var(--tb-text-tertiary);
-  --color-stroke:    var(--tb-stroke);
-  --color-accent:    var(--tb-accent);
-  --color-running:   var(--tb-running);
-  --color-warning:   var(--tb-warning);
-  --color-error:     var(--tb-error);
-  --color-info:      var(--tb-info);
-  --color-pending:   var(--tb-pending);
-  --color-network:   var(--tb-network);
+  --color-ink:     var(--ink);
+  --color-ink-2:   var(--ink-2);
+  --color-ink-3:   var(--ink-3);
+  --color-accent:  var(--accent);
+  --color-running: var(--run);
+  --color-warning: var(--warn);
+  --color-error:   var(--stop);
+  --color-info:    var(--info);
 
-  --radius-xs:   var(--tb-radius-xs);
-  --radius-sm:   var(--tb-radius-sm);
-  --radius-md:   var(--tb-radius-md);
-  --radius-lg:   var(--tb-radius-lg);
-  --radius-xl:   var(--tb-radius-xl);
-  --radius-2xl:  var(--tb-radius-2xl);
-  --radius-pill: var(--tb-radius-pill);
+  --radius-sm:   var(--r-sm);
+  --radius-md:   var(--r-md);
+  --radius-lg:   var(--r-card);
+  --radius-pill: var(--r-pill);
 }
 
 /* =========================================================
@@ -184,19 +137,17 @@
 *, *::before, *::after { box-sizing: border-box; }
 
 html {
-  background: var(--tb-bg-page);
-  background-image: var(--tb-bg-page-grad);
-  background-attachment: fixed;
+  background: var(--bg);
   min-height: 100vh;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  font-family: var(--tb-font-display);
-  font-size: var(--tb-text-base);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 13px;
   line-height: 1.5;
-  color: var(--tb-text-primary);
+  color: var(--ink);
   background: transparent;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -208,8 +159,8 @@ h1, h2, h3 { line-height: 1.2; }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--tb-track); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--tb-stroke-strong); }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(24,22,18,0.20); }
 
 #root { min-height: 100vh; }
 
@@ -220,12 +171,10 @@ h1, h2, h3 { line-height: 1.2; }
   }
 }
 
-/* =========================================================
-   Global Animations (unchanged)
-   ========================================================= */
 @keyframes spin        { to { transform: rotate(360deg); } }
 @keyframes pulse-soft  { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
-@keyframes toast-slide { from { opacity: 0; transform: translateX(1rem); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulse-dot   { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(0.85); } }
+@keyframes toast-slide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes skeleton-shimmer {
   from { background-position: -200px 0; }
   to   { background-position: calc(200px + 100%) 0; }
