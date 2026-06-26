@@ -17,11 +17,18 @@ export default function ContainerTerminalModal({ containerId, containerName, onC
   }, [onClose]);
 
   useEffect(() => {
+    const cssVars = getComputedStyle(document.documentElement);
+    const termTheme = {
+      background: cssVars.getPropertyValue("--bg").trim() || "#f4f3f0",
+      foreground: cssVars.getPropertyValue("--ink").trim() || "#1c1a16",
+      cursor:     cssVars.getPropertyValue("--accent").trim() || "#e85d2a",
+      selectionBackground: "rgba(232,93,42,0.20)",
+    };
     const term = new Terminal({
       cursorBlink: true,
       fontSize: 13,
       fontFamily: "monospace",
-      theme: { background: "#1e1e2e", foreground: "#cdd6f4", cursor: "#f5e0dc" },
+      theme: termTheme,
     });
     const fitAddon = new FitAddon();
     term.loadAddon(fitAddon);
@@ -78,7 +85,7 @@ export default function ContainerTerminalModal({ containerId, containerName, onC
             <button className="logs-close-btn" onClick={onClose} title="Schließen">✕</button>
           </div>
         </div>
-        <div ref={containerRef} style={{ flex: 1, padding: "0.5rem", background: "#1e1e2e" }} />
+        <div ref={containerRef} style={{ flex: 1, padding: "0.5rem", background: "var(--bg)" }} />
       </div>
     </div>
   );

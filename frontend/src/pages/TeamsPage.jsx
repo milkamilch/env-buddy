@@ -490,7 +490,7 @@ export default function TeamsPage({ user }) {
 
 // ── Avatar helpers ───────────────────────────────────────────────────────────
 
-const AVATAR_COLORS = ["#89b4fa","#a6e3a1","#fab387","#f38ba8","#cba6f7","#89dceb","#f9e2af"];
+const AVATAR_COLORS = ["#e85d2a", "#2f6df0", "#1f9d57", "#7a5ae0", "#c97c12", "#cc3b2e"];
 function _hash(str) {
   let h = 0;
   for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) & 0xffff;

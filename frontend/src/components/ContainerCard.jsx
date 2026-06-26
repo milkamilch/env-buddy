@@ -252,7 +252,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
             )}
           </div>
           {container.started_by && <span className="row-started-by">👤 {container.started_by}</span>}
-          {container.shared_from && <span className="row-started-by" style={{ color: "#89b4fa" }}>🔗 @{container.shared_from}</span>}
+          {container.shared_from && <span className="row-started-by" style={{ color: "var(--info)" }}>🔗 @{container.shared_from}</span>}
           {isRunning && remaining != null && (
             <span className={`row-timer ${isExpiringSoon ? "expiring" : ""}`}>{formatCountdown(remaining)}</span>
           )}
@@ -610,7 +610,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
                     <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.3rem" }}>
                       <span style={{ flex: 1, fontSize: "0.85rem" }}>👤 {s.grantee_username}</span>
                       <button
-                        style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "#f38ba8", cursor: "pointer" }}
+                        style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "var(--stop)", cursor: "pointer" }}
                         onClick={async () => {
                           await revokeContainerAccess(s.id).catch(() => {});
                           setShares((prev) => prev.filter((x) => x.id !== s.id));

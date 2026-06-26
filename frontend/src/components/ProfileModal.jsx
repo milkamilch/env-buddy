@@ -269,9 +269,9 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
               style={{
                 padding: "0.35rem 0.85rem",
                 borderRadius: "0.5rem",
-                border: "1px solid var(--border, #45475a)",
+                border: "1px solid var(--border)",
                 background: "transparent",
-                color: "var(--text-primary, #cdd6f4)",
+                color: "var(--ink)",
                 cursor: testSending ? "not-allowed" : "pointer",
                 fontSize: "0.8rem",
               }}
@@ -281,10 +281,10 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
               {testSending ? "Sendet…" : "Test-E-Mail senden"}
             </button>
             {testResult === "ok" && (
-              <span style={{ color: "#a6e3a1", fontSize: "0.8rem" }}>✓ Gesendet!</span>
+              <span style={{ color: "var(--run)", fontSize: "0.8rem" }}>✓ Gesendet!</span>
             )}
             {testResult && testResult !== "ok" && (
-              <span style={{ color: "#f38ba8", fontSize: "0.8rem" }}>{testResult}</span>
+              <span style={{ color: "var(--stop)", fontSize: "0.8rem" }}>{testResult}</span>
             )}
           </div>
 
@@ -299,7 +299,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
               <code style={{ fontSize: "0.8rem", flex: 1, color: "var(--subtext1)" }}>{k.key_prefix}…</code>
               <span style={{ fontSize: "0.78rem", color: "var(--subtext0)" }}>{k.name}</span>
               <button
-                style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "#f38ba8", cursor: "pointer" }}
+                style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "var(--stop)", cursor: "pointer" }}
                 onClick={async () => {
                   await revokeApiKey(k.id).catch(() => {});
                   setApiKeys((prev) => prev.filter((x) => x.id !== k.id));
@@ -310,8 +310,8 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
             </div>
           ))}
           {createdKey && (
-            <div style={{ background: "var(--surface1)", border: "1px solid #a6e3a1", borderRadius: "0.5rem", padding: "0.75rem", marginBottom: "0.5rem" }}>
-              <p style={{ fontSize: "0.78rem", color: "#a6e3a1", margin: "0 0 0.4rem" }}>Kopiere den Key jetzt — er wird nicht mehr angezeigt:</p>
+            <div style={{ background: "var(--surface1)", border: "1px solid var(--run)", borderRadius: "0.5rem", padding: "0.75rem", marginBottom: "0.5rem" }}>
+              <p style={{ fontSize: "0.78rem", color: "var(--run)", margin: "0 0 0.4rem" }}>Kopiere den Key jetzt — er wird nicht mehr angezeigt:</p>
               <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                 <code style={{ fontSize: "0.8rem", flex: 1, wordBreak: "break-all" }}>{createdKey}</code>
                 <button
@@ -374,7 +374,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
                 <span style={{ flex: 1, fontSize: "0.85rem" }}>{s.name}</span>
                 <span style={{ fontSize: "0.75rem", color: "var(--subtext0)" }}>{new Date(s.created_at).toLocaleDateString()}</span>
                 <button
-                  style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid #89b4fa", background: "transparent", color: "#89b4fa", cursor: "pointer" }}
+                  style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--info)", background: "transparent", color: "var(--info)", cursor: "pointer" }}
                   onClick={() => {
                     const encoded = btoa(JSON.stringify(s.config));
                     navigate(`/dashboard?start=${encoded}`);
@@ -384,7 +384,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
                   ▶ Starten
                 </button>
                 <button
-                  style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "#f38ba8", cursor: "pointer" }}
+                  style={{ fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "0.35rem", border: "1px solid var(--border)", background: "transparent", color: "var(--stop)", cursor: "pointer" }}
                   onClick={async () => {
                     await deleteSnapshot(s.id).catch(() => {});
                     setSnapshots((prev) => prev.filter((x) => x.id !== s.id));
