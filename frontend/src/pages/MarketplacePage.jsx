@@ -9,6 +9,10 @@ import {
 import { useToast } from "../components/Toast";
 import "./MarketplacePage.css";
 
+function tplGlyph(name) {
+  return (name || "?").slice(0, 2).toUpperCase();
+}
+
 function Stars({ value, onChange }) {
   const [hovered, setHovered] = useState(0);
   return (
@@ -30,25 +34,27 @@ function Stars({ value, onChange }) {
 function TemplateCard({ tmpl, onOpen, user }) {
   return (
     <div className="mp-card" onClick={() => onOpen(tmpl)}>
-      <div className="mp-card-header">
-        <span className="mp-icon">{tmpl.icon}</span>
+      <div className="mp-card-head">
+        <div className="mp-tile">{tplGlyph(tmpl.name)}</div>
         <div className="mp-card-info">
           <span className="mp-name">{tmpl.name}</span>
           <span className="mp-publisher">von {tmpl.publisher_name}</span>
         </div>
-        {user?.id === tmpl.user_id && <span className="mp-own-badge">Mein Template</span>}
+        {user?.id === tmpl.user_id && <span className="mp-own-badge">Eigenes</span>}
       </div>
       {tmpl.description && <p className="mp-desc">{tmpl.description}</p>}
-      <div className="mp-tags">
-        {tmpl.tags.map((t) => <span key={t} className="mp-tag">{t}</span>)}
-      </div>
+      {tmpl.tags.length > 0 && (
+        <div className="mp-tags">
+          {tmpl.tags.map((t) => <span key={t} className="mp-tag">{t}</span>)}
+        </div>
+      )}
       <div className="mp-card-footer">
         <Stars value={Math.round(tmpl.avg_rating)} />
         <span className="mp-rating-num">{tmpl.avg_rating > 0 ? tmpl.avg_rating.toFixed(1) : "–"}</span>
         <span className="mp-separator">·</span>
-        <span className="mp-stat">⬇ {tmpl.download_count}</span>
+        <span>{tmpl.download_count} Downloads</span>
         <span className="mp-separator">·</span>
-        <span className="mp-stat">🐳 {tmpl.containers.length} Container</span>
+        <span>{tmpl.containers.length} Ctr.</span>
       </div>
     </div>
   );
@@ -159,14 +165,14 @@ function DetailModal({ tmpl, user, onClose, onImported, onDeleted }) {
         <button className="modal-close" onClick={onClose}>✕</button>
 
         <div className="mp-detail-header">
-          <span className="mp-icon mp-icon-lg">{detail.icon}</span>
+          <div className="mp-tile mp-tile-lg">{tplGlyph(detail.name)}</div>
           <div>
             <h2 className="mp-detail-title">{detail.name}</h2>
             <span className="mp-publisher">von {detail.publisher_name}</span>
           </div>
           <div className="mp-detail-actions">
             {user && (
-              <button className="btn-import" onClick={handleImport}>⬇ Importieren</button>
+              <button className="btn-import" onClick={handleImport}>Importieren</button>
             )}
             {user && user.id === detail.user_id && (
               <button className="btn-delete-tmpl" onClick={handleDelete}>Löschen</button>
@@ -178,7 +184,7 @@ function DetailModal({ tmpl, user, onClose, onImported, onDeleted }) {
           <Stars value={Math.round(detail.avg_rating)} />
           <span className="mp-rating-num">{detail.avg_rating > 0 ? detail.avg_rating.toFixed(1) : "–"} ({detail.rating_count})</span>
           <span className="mp-separator">·</span>
-          <span className="mp-stat">⬇ {detail.download_count} Downloads</span>
+          <span>{detail.download_count} Downloads</span>
           {detail.tags.length > 0 && (
             <>
               <span className="mp-separator">·</span>
@@ -189,9 +195,9 @@ function DetailModal({ tmpl, user, onClose, onImported, onDeleted }) {
 
         {detail.description && <p className="mp-detail-desc">{detail.description}</p>}
 
-        {/* Containers */}
+        {/* Container */}
         <div className="mp-section">
-          <h3>🐳 Container ({detail.containers.length})</h3>
+          <h3>Container ({detail.containers.length})</h3>
           <div className="mp-container-list">
             {detail.containers.map((c, i) => (
               <div key={i} className="mp-container-item">
@@ -206,7 +212,7 @@ function DetailModal({ tmpl, user, onClose, onImported, onDeleted }) {
         {/* Bewertung */}
         {user && user.id !== detail.user_id && (
           <div className="mp-section">
-            <h3>⭐ Bewerten</h3>
+            <h3>Bewerten</h3>
             <Stars value={myRating} onChange={handleRate} />
           </div>
         )}
@@ -214,7 +220,7 @@ function DetailModal({ tmpl, user, onClose, onImported, onDeleted }) {
         {/* Bilder */}
         <div className="mp-section">
           <div className="mp-section-header">
-            <h3>🖼 Bilder ({images.length})</h3>
+            <h3>Bilder ({images.length})</h3>
             {user && (
               <>
                 <button className="btn-upload" onClick={() => fileRef.current.click()} disabled={uploading}>
@@ -252,7 +258,7 @@ function DetailModal({ tmpl, user, onClose, onImported, onDeleted }) {
 
         {/* Kommentare */}
         <div className="mp-section">
-          <h3>💬 Kommentare ({comments.length})</h3>
+          <h3>Kommentare ({comments.length})</h3>
           <div className="mp-comments">
             {comments.length === 0 && <p className="mp-empty-hint">Noch keine Kommentare</p>}
             {comments.map((c) => (
@@ -294,7 +300,7 @@ function PublishModal({ onClose, onPublished }) {
   const [selectedId, setSelectedId] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [icon, setIcon] = useState("📦");
+  const [icon, setIcon] = useState("");
   const [tagsInput, setTagsInput] = useState("");
   const [containers, setContainers] = useState([{ service_name: "", image: "", internal_port: 3000, env: {} }]);
 
@@ -308,7 +314,7 @@ function PublishModal({ onClose, onPublished }) {
     setSelectedId(id);
     setName(t.name);
     setDescription(t.description || "");
-    setIcon(t.icon || "📦");
+    setIcon(t.icon || "");
     setContainers(t.containers.map((c) => ({ ...c })));
   }
 
@@ -338,7 +344,7 @@ function PublishModal({ onClose, onPublished }) {
             <select value={selectedId || ""} onChange={(e) => loadFromTemplate(e.target.value)} className="mp-select">
               <option value="">— Vorlage wählen —</option>
               {myTemplates.map((t) => (
-                <option key={t.id} value={t.id}>{t.icon} {t.name}</option>
+                <option key={t.id} value={t.id}>{t.name}</option>
               ))}
             </select>
           </div>
@@ -351,7 +357,7 @@ function PublishModal({ onClose, onPublished }) {
           </div>
           <div className="mp-field" style={{ width: "80px" }}>
             <label>Icon</label>
-            <input className="mp-input" value={icon} onChange={(e) => setIcon(e.target.value)} />
+            <input className="mp-input" value={icon} onChange={(e) => setIcon(e.target.value)} placeholder="optional" />
           </div>
         </div>
 
@@ -451,7 +457,7 @@ export default function MarketplacePage({ user }) {
           <button type="submit" className="btn-search">Suchen</button>
         </form>
         <div className="mp-sort">
-          <span>Sortieren:</span>
+          <span className="mp-sort-label">Sortieren:</span>
           {["newest", "rating", "downloads"].map((s) => (
             <button
               key={s}
