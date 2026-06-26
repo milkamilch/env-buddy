@@ -51,13 +51,13 @@ export default function CommandPalette({ templates, onClose }) {
   }
 
   return (
-    <div className="cp-overlay" onClick={onClose}>
-      <div className="cp-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="cp-search-row">
-          <span className="cp-search-icon">⌘</span>
+    <div className="cmd-scrim" onClick={onClose}>
+      <div className="cmd" onClick={(e) => e.stopPropagation()}>
+        <div className="cmd-search">
+          <span className="cmd-search-icon">⌘</span>
           <input
             ref={inputRef}
-            className="cp-input"
+            className="cmd-input"
             placeholder="Seite öffnen oder Template starten…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -65,29 +65,24 @@ export default function CommandPalette({ templates, onClose }) {
           />
         </div>
         {results.length > 0 && (
-          <ul className="cp-list">
+          <ul className="cmd-results">
             {results.map((item, i) => (
               <li
                 key={item.id}
-                className={`cp-item ${i === active ? "cp-item-active" : ""}`}
+                className={`cmd-item ${i === active ? "active" : ""}`}
                 onMouseEnter={() => setActive(i)}
                 onClick={() => execute(item)}
               >
-                <span className="cp-item-icon">{item.icon}</span>
-                <span className="cp-item-label">{item.label}</span>
-                <span className="cp-item-type">{item.type === "page" ? "Seite" : "Template starten"}</span>
+                <span className="cmd-item-icon">{item.icon}</span>
+                <span className="cmd-item-label">{item.label}</span>
+                <span className="cmd-item-sub">{item.type === "page" ? "Seite" : "Template starten"}</span>
               </li>
             ))}
           </ul>
         )}
         {results.length === 0 && query && (
-          <p className="cp-empty">Keine Ergebnisse für „{query}"</p>
+          <p className="cmd-empty">Keine Ergebnisse für „{query}"</p>
         )}
-        <div className="cp-footer">
-          <span>↑↓ navigieren</span>
-          <span>↵ auswählen</span>
-          <span>Esc schließen</span>
-        </div>
       </div>
     </div>
   );

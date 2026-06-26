@@ -12,12 +12,10 @@
 }
 
 .logs-modal {
-  background: var(--tb-glass-modal);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid var(--tb-stroke);
-  border-radius: var(--tb-radius-xl);
-  box-shadow: var(--tb-shadow-modal);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-pop);
   width: 100%;
   max-width: 900px;
   height: 75vh;
@@ -32,64 +30,62 @@
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  background: var(--tb-track);
-  border-bottom: 1px solid var(--tb-stroke);
+  background: var(--surface-sink);
+  border-bottom: 1px solid var(--line);
   flex-shrink: 0;
   gap: 1rem;
 }
 
 .logs-title { display: flex; align-items: center; gap: 0.5rem; min-width: 0; }
-.logs-icon { font-size: 1rem; color: var(--tb-text-tertiary); flex-shrink: 0; }
-.logs-name { font-size: 0.9rem; font-weight: 600; color: var(--tb-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.logs-icon { font-size: 1rem; color: var(--ink-3); flex-shrink: 0; }
+.logs-name { font-size: 0.9rem; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.logs-live-badge { font-size: 0.72rem; font-weight: 700; color: var(--tb-running); letter-spacing: 0.05em; flex-shrink: 0; animation: pulse-soft 2s infinite; }
-.logs-live-badge-polling { color: var(--tb-warning); }
+.logs-live-badge { font-size: 0.72rem; font-weight: 700; color: var(--run); letter-spacing: 0.05em; flex-shrink: 0; animation: pulse-soft 2s infinite; }
+.logs-live-badge-polling { color: var(--warn); }
 
 .logs-controls { display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0; }
-.logs-tail-label { font-size: 0.78rem; color: var(--tb-text-tertiary); margin-right: 0.1rem; }
-.logs-tail-btn { background: var(--tb-track); border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-xs); color: var(--tb-text-secondary); font-size: 0.75rem; padding: 0.2rem 0.5rem; cursor: pointer; transition: all 0.15s; }
-.logs-tail-btn:hover { border-color: var(--tb-stroke-strong); color: var(--tb-text-primary); }
-.logs-tail-btn.active { background: var(--tb-track); border-color: var(--tb-accent); color: var(--tb-accent); }
+.logs-tail-label { font-size: 0.78rem; color: var(--ink-3); margin-right: 0.1rem; }
+.logs-tail-btn { background: var(--surface-sink); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink-2); font-size: 0.75rem; padding: 0.2rem 0.5rem; cursor: pointer; transition: all 0.15s; }
+.logs-tail-btn:hover { border-color: var(--line-2); color: var(--ink); }
+.logs-tail-btn.active { background: var(--surface-sink); border-color: var(--accent); color: var(--accent); }
 
 .logs-actions { display: flex; gap: 0.25rem; margin-left: 0.25rem; }
-.logs-action-btn { background: transparent; border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-xs); color: var(--tb-text-tertiary); font-size: 0.85rem; width: 1.8rem; height: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-.logs-action-btn:hover:not(:disabled) { border-color: var(--tb-accent); color: var(--tb-accent); background: var(--tb-accent-soft); }
+.logs-action-btn { background: transparent; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink-3); font-size: 0.85rem; width: 1.8rem; height: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.logs-action-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 .logs-action-btn:disabled { opacity: 0.3; cursor: default; }
 
-.logs-close-btn { background: transparent; border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-xs); color: var(--tb-text-tertiary); font-size: 0.85rem; width: 1.8rem; height: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; margin-left: 0.25rem; }
-.logs-close-btn:hover { border-color: var(--tb-error); color: var(--tb-error); }
+.logs-close-btn { background: transparent; border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink-3); font-size: 0.85rem; width: 1.8rem; height: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; margin-left: 0.25rem; }
+.logs-close-btn:hover { border-color: var(--stop); color: var(--stop); }
 
 .logs-body {
   flex: 1;
   overflow-y: auto;
   padding: 0.75rem 1rem;
-  font-family: var(--tb-font-mono);
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.78rem;
   line-height: 1.6;
-  color: var(--tb-text-primary);
+  color: var(--ink);
 }
 .logs-body::-webkit-scrollbar { width: 6px; }
 .logs-body::-webkit-scrollbar-track { background: transparent; }
-.logs-body::-webkit-scrollbar-thumb { background: var(--tb-track); border-radius: 3px; }
+.logs-body::-webkit-scrollbar-thumb { background: var(--surface-sink); border-radius: 3px; }
 
 .log-line { white-space: pre-wrap; word-break: break-all; padding: 0.05rem 0; border-bottom: 1px solid transparent; }
-.log-line:hover { background: var(--tb-track); border-color: var(--tb-stroke); border-radius: 3px; }
+.log-line:hover { background: var(--surface-sink); border-color: var(--line); border-radius: 3px; }
 
-.logs-hint { color: var(--tb-text-tertiary); font-size: 0.85rem; font-family: var(--tb-font-display); }
+.logs-hint { color: var(--ink-3); font-size: 0.85rem; font-family: inherit; }
 
 .logs-scroll-btn {
   position: absolute;
   bottom: 1rem;
   right: 1rem;
-  background: var(--tb-glass-2);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid var(--tb-stroke);
-  border-radius: var(--tb-radius-pill);
-  color: var(--tb-text-primary);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--ink);
   font-size: 0.78rem;
   padding: 0.35rem 0.85rem;
   cursor: pointer;
   transition: all 0.15s;
 }
-.logs-scroll-btn:hover { border-color: var(--tb-stroke-strong); }
+.logs-scroll-btn:hover { border-color: var(--line-2); }

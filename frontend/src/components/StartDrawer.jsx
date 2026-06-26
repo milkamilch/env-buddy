@@ -6,7 +6,7 @@ export default function StartDrawer({ open, onClose, templates, onStarted, prefi
 
   return (
     <>
-      <div className="drawer-overlay" onClick={onClose} />
+      <div className="drawer-scrim" onClick={onClose} />
       <aside className="drawer">
         <div className="drawer-header">
           <span className="drawer-title">Container starten</span>

@@ -6,52 +6,50 @@
   display: flex; align-items: center; justify-content: center; padding: 1rem;
 }
 .modal-box {
-  background: var(--tb-glass-modal);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid var(--tb-stroke);
-  border-radius: var(--tb-radius-xl);
-  box-shadow: var(--tb-shadow-modal);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-pop);
   width: 100%; max-width: 540px; max-height: 90vh;
   display: flex; flex-direction: column; overflow: hidden;
 }
-.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--tb-stroke); }
-.modal-title { font-size: 1rem; font-weight: 600; color: var(--tb-text-primary); }
-.modal-close { background: transparent; border: none; color: var(--tb-text-tertiary); font-size: 1rem; cursor: pointer; padding: 0.2rem 0.4rem; border-radius: var(--tb-radius-xs); }
-.modal-close:hover { color: var(--tb-error); }
-.modal-view-toggle { display: flex; background: var(--tb-track); border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-xs); padding: 2px; gap: 0; margin-left: auto; margin-right: 0.75rem; }
-.modal-view-btn { background: transparent; border: none; border-radius: var(--tb-radius-xs); color: var(--tb-text-tertiary); font-size: 0.78rem; font-weight: 500; padding: 0.2rem 0.6rem; cursor: pointer; transition: background 0.15s, color 0.15s; }
-.modal-view-btn.active { background: var(--tb-stroke); color: var(--tb-text-primary); }
-.modal-view-btn:hover:not(.active) { color: var(--tb-text-primary); }
-.modal-json-hint { font-size: 0.78rem; color: var(--tb-text-tertiary); margin: 0 0 0.5rem; }
-.modal-json-hint code { background: var(--tb-track); border-radius: 3px; padding: 0.05rem 0.3rem; font-size: 0.75rem; color: var(--tb-network); }
-.modal-json-editor { width: 100%; box-sizing: border-box; background: var(--tb-track); border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-sm); color: var(--tb-text-primary); font-family: var(--tb-font-mono); font-size: 0.82rem; line-height: 1.5; padding: 0.75rem; resize: vertical; outline: none; transition: border-color 0.15s; }
-.modal-json-editor:focus { border-color: var(--tb-accent); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--line); }
+.modal-title { font-size: 1rem; font-weight: 600; color: var(--ink); }
+.modal-close { background: transparent; border: none; color: var(--ink-3); font-size: 1rem; cursor: pointer; padding: 0.2rem 0.4rem; border-radius: var(--r-sm); }
+.modal-close:hover { color: var(--stop); }
+.modal-view-toggle { display: flex; background: var(--surface-sink); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 2px; gap: 0; margin-left: auto; margin-right: 0.75rem; }
+.modal-view-btn { background: transparent; border: none; border-radius: var(--r-sm); color: var(--ink-3); font-size: 0.78rem; font-weight: 500; padding: 0.2rem 0.6rem; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.modal-view-btn.active { background: var(--line); color: var(--ink); }
+.modal-view-btn:hover:not(.active) { color: var(--ink); }
+.modal-json-hint { font-size: 0.78rem; color: var(--ink-3); margin: 0 0 0.5rem; }
+.modal-json-hint code { background: var(--surface-sink); border-radius: 3px; padding: 0.05rem 0.3rem; font-size: 0.75rem; color: var(--ink-3); }
+.modal-json-editor { width: 100%; box-sizing: border-box; background: var(--surface-sink); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); font-family: "JetBrains Mono", monospace; font-size: 0.82rem; line-height: 1.5; padding: 0.75rem; resize: vertical; outline: none; transition: border-color 0.15s; }
+.modal-json-editor:focus { border-color: var(--accent); }
 .modal-body { padding: 1rem 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.7rem; flex: 1; }
-.modal-hint { padding: 1.5rem; color: var(--tb-text-tertiary); text-align: center; }
+.modal-hint { padding: 1.5rem; color: var(--ink-3); text-align: center; }
 .modal-row { display: flex; align-items: center; gap: 0.75rem; }
-.modal-label { font-size: 0.82rem; color: var(--tb-text-secondary); width: 7rem; flex-shrink: 0; }
-.modal-input { flex: 1; background: var(--tb-track); border: 1px solid var(--tb-stroke); border-radius: var(--tb-radius-xs); color: var(--tb-text-primary); padding: 0.4rem 0.7rem; font-size: 0.88rem; min-width: 0; }
-.modal-input:focus { outline: none; border-color: var(--tb-accent); }
-.modal-input::placeholder { color: var(--tb-text-tertiary); }
+.modal-label { font-size: 0.82rem; color: var(--ink-2); width: 7rem; flex-shrink: 0; }
+.modal-input { flex: 1; background: var(--surface-sink); border: 1px solid var(--line); border-radius: var(--r-sm); color: var(--ink); padding: 0.4rem 0.7rem; font-size: 0.88rem; min-width: 0; }
+.modal-input:focus { outline: none; border-color: var(--accent); }
+.modal-input::placeholder { color: var(--ink-3); }
 .modal-input-sm { max-width: 7rem; flex: 0 0 7rem; }
 .modal-mem-slider { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
-.modal-mem-slider input[type="range"] { width: 100%; accent-color: var(--tb-accent); cursor: pointer; }
-.modal-mem-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--tb-text-tertiary); }
-.modal-mem-value { font-size: 0.82rem; font-weight: 600; color: var(--tb-accent); min-width: 4.5rem; text-align: right; flex-shrink: 0; }
-.modal-section-label { font-size: 0.75rem; color: var(--tb-text-tertiary); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.3rem; }
+.modal-mem-slider input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+.modal-mem-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--ink-3); }
+.modal-mem-value { font-size: 0.82rem; font-weight: 600; color: var(--accent); min-width: 4.5rem; text-align: right; flex-shrink: 0; }
+.modal-section-label { font-size: 0.75rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 0.3rem; }
 .modal-env-row { display: flex; align-items: center; gap: 0.4rem; }
-.modal-env-key { flex: 0 0 38%; font-family: var(--tb-font-mono); font-size: 0.82rem; }
-.modal-env-val { flex: 1; font-family: var(--tb-font-mono); font-size: 0.82rem; }
-.modal-env-sep { color: var(--tb-text-tertiary); font-size: 0.9rem; flex-shrink: 0; }
-.btn-env-remove { background: transparent; border: none; color: var(--tb-text-tertiary); cursor: pointer; font-size: 0.75rem; padding: 0.2rem 0.3rem; border-radius: var(--tb-radius-xs); flex-shrink: 0; }
-.btn-env-remove:hover { color: var(--tb-error); }
-.btn-add-env { background: transparent; border: 1px dashed var(--tb-stroke-strong); border-radius: var(--tb-radius-xs); color: var(--tb-text-tertiary); padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s, color 0.15s; align-self: flex-start; }
-.btn-add-env:hover { border-color: var(--tb-accent); color: var(--tb-accent); }
-.modal-error { color: var(--tb-error); font-size: 0.85rem; background: var(--tb-error-soft); border: 1px solid var(--tb-error); border-radius: var(--tb-radius-xs); padding: 0.5rem 0.75rem; margin: 0; }
-.modal-footer { display: flex; gap: 0.75rem; justify-content: flex-end; padding: 0.875rem 1.25rem; border-top: 1px solid var(--tb-stroke); }
-.modal-btn-cancel { background: transparent; border: 1px solid var(--tb-stroke-strong); border-radius: var(--tb-radius-sm); color: var(--tb-text-secondary); padding: 0.5rem 1rem; font-size: 0.88rem; cursor: pointer; }
-.modal-btn-cancel:hover { border-color: var(--tb-text-secondary); }
-.modal-btn-save { background: var(--tb-accent); border: none; border-radius: var(--tb-radius-sm); color: var(--tb-text-on-accent); padding: 0.5rem 1.1rem; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-.modal-btn-save:hover:not(:disabled) { background: var(--tb-accent-hover); }
+.modal-env-key { flex: 0 0 38%; font-family: "JetBrains Mono", monospace; font-size: 0.82rem; }
+.modal-env-val { flex: 1; font-family: "JetBrains Mono", monospace; font-size: 0.82rem; }
+.modal-env-sep { color: var(--ink-3); font-size: 0.9rem; flex-shrink: 0; }
+.btn-env-remove { background: transparent; border: none; color: var(--ink-3); cursor: pointer; font-size: 0.75rem; padding: 0.2rem 0.3rem; border-radius: var(--r-sm); flex-shrink: 0; }
+.btn-env-remove:hover { color: var(--stop); }
+.btn-add-env { background: transparent; border: 1px dashed var(--line-2); border-radius: var(--r-sm); color: var(--ink-3); padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: pointer; transition: border-color 0.15s, color 0.15s; align-self: flex-start; }
+.btn-add-env:hover { border-color: var(--accent); color: var(--accent); }
+.modal-error { color: var(--stop); font-size: 0.85rem; background: var(--stop-soft); border: 1px solid var(--stop); border-radius: var(--r-sm); padding: 0.5rem 0.75rem; margin: 0; }
+.modal-footer { display: flex; gap: 0.75rem; justify-content: flex-end; padding: 0.875rem 1.25rem; border-top: 1px solid var(--line); }
+.modal-btn-cancel { background: transparent; border: 1px solid var(--line-2); border-radius: var(--r-md); color: var(--ink-2); padding: 0.5rem 1rem; font-size: 0.88rem; cursor: pointer; }
+.modal-btn-cancel:hover { border-color: var(--ink-2); }
+.modal-btn-save { background: var(--accent); border: none; border-radius: var(--r-md); color: #fff; padding: 0.5rem 1.1rem; font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.modal-btn-save:hover:not(:disabled) { background: var(--accent-ink); }
 .modal-btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
