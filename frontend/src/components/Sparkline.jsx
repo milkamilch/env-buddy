@@ -1,6 +1,11 @@
+import { useId } from "react";
+
 const POINTS = 60;
 
 export default function Sparkline({ values = [], color = "var(--accent)", height = 32 }) {
+  const uid = useId();
+  const gradId = `sg-${uid.replace(/:/g, "")}`;
+
   if (values.length < 2) return <svg width="100%" height={height} />;
 
   const w = 100;
@@ -15,7 +20,6 @@ export default function Sparkline({ values = [], color = "var(--accent)", height
 
   const polyPts = pts.join(" ");
   const fillPts = `${pts[0].split(",")[0]},${height} ${polyPts} ${pts[pts.length - 1].split(",")[0]},${height}`;
-  const gradId = `sg-${color.replace(/[^a-z0-9]/gi, "")}-${height}`;
 
   return (
     <svg

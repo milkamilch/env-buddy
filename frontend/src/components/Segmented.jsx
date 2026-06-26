@@ -1,18 +1,20 @@
 import "./Segmented.css";
 
-export default function Segmented({ options, value, onChange, counts }) {
+export default function Segmented({ options, value, onChange, counts, label = "Filter" }) {
   return (
-    <div className="segmented">
+    <div className="segmented" role="group" aria-label={label}>
       {options.map((opt) => {
-        const label = typeof opt === "string" ? opt : opt.label;
-        const val   = typeof opt === "string" ? opt : opt.value;
+        const optLabel = typeof opt === "string" ? opt : opt.label;
+        const val      = typeof opt === "string" ? opt : opt.value;
         return (
           <button
             key={val}
+            type="button"
+            aria-pressed={value === val}
             className={`seg-btn ${value === val ? "active" : ""}`}
             onClick={() => onChange(val)}
           >
-            {label}
+            {optLabel}
             {counts?.[val] != null && (
               <span className="seg-count">{counts[val]}</span>
             )}
