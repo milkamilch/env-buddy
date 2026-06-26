@@ -50,6 +50,7 @@ export default function AuditPage() {
   const filtered = filter === "alle" ? entries : entries.filter((e) => e.action === filter);
 
   return (
+    <div className="page-wrap">
     <div className="audit-page">
       <h2 className="audit-title">Verlauf</h2>
 
@@ -99,6 +100,7 @@ export default function AuditPage() {
           </tbody>
         </table>
       )}
+    </div>
     </div>
   );
 }

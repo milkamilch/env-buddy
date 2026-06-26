@@ -90,13 +90,16 @@ export default function AuthPage({ onAuth }) {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <div className="auth-logo">✉️</div>
+          <div className="auth-brand">
+            <span className="auth-brand-icon">🧪</span>
+            <span className="auth-brand-name">env-buddy</span>
+          </div>
           <h1 className="auth-title">E-Mail bestätigen</h1>
-          <p className="auth-sub" style={{ textAlign: "center", marginTop: "0.5rem", lineHeight: 1.6 }}>
+          <p className="auth-subtitle">
             Wir haben dir einen Bestätigungslink geschickt.<br />
             Bitte prüfe dein Postfach und klicke auf den Link, um deinen Account zu aktivieren.
           </p>
-          <button className="auth-link" style={{ marginTop: "1.5rem" }} onClick={() => switchMode("login")}>
+          <button className="auth-link" onClick={() => switchMode("login")}>
             Zurück zum Login
           </button>
         </div>
@@ -109,10 +112,12 @@ export default function AuthPage({ onAuth }) {
     return (
       <div className="auth-page">
         <div className="auth-card">
-          <div className="auth-logo">🧪</div>
-          <h1 className="auth-title">Test-Buddy</h1>
-          <p className="auth-sub" style={{ textAlign: "center" }}>E-Mail wird bestätigt…</p>
-          <span className="loading-spinner" style={{ margin: "1.5rem auto", display: "block", width: 28, height: 28 }} />
+          <div className="auth-brand">
+            <span className="auth-brand-icon">🧪</span>
+            <span className="auth-brand-name">env-buddy</span>
+          </div>
+          <h1 className="auth-title">E-Mail wird bestätigt…</h1>
+          <span className="loading-spinner" />
         </div>
       </div>
     );
@@ -121,9 +126,13 @@ export default function AuthPage({ onAuth }) {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-logo">🧪</div>
-        <h1 className="auth-title">Test-Buddy</h1>
-        <p className="auth-sub">On-Demand Testumgebungen</p>
+        <div className="auth-brand">
+          <span className="auth-brand-icon">🧪</span>
+          <span className="auth-brand-name">env-buddy</span>
+        </div>
+        <h1 className="auth-title">
+          {mode === "reset" ? "Neues Passwort festlegen" : mode === "forgot" ? "Passwort zurücksetzen" : "Willkommen"}
+        </h1>
 
         {mode !== "forgot" && mode !== "reset" && (
           <div className="auth-tabs">
@@ -137,13 +146,7 @@ export default function AuthPage({ onAuth }) {
         )}
 
         {mode === "forgot" && (
-          <div className="auth-back">
-            <button onClick={() => switchMode("login")}>← Zurück zum Login</button>
-          </div>
-        )}
-
-        {mode === "reset" && (
-          <p className="auth-mode-title">Neues Passwort festlegen</p>
+          <button className="auth-link" onClick={() => switchMode("login")}>← Zurück zum Login</button>
         )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
@@ -151,44 +154,44 @@ export default function AuthPage({ onAuth }) {
           {/* REGISTER */}
           {mode === "register" && (
             <>
-              <div className="field-row">
-                <div className="field">
-                  <label>Vorname</label>
-                  <input name="first_name" type="text" placeholder="Max" value={form.first_name} onChange={handleChange} required />
+              <div className="auth-field-row" style={{ display: "flex", gap: "8px" }}>
+                <div className="auth-field" style={{ flex: 1 }}>
+                  <label className="auth-label">Vorname</label>
+                  <input className="auth-input" name="first_name" type="text" placeholder="Max" value={form.first_name} onChange={handleChange} required />
                 </div>
-                <div className="field">
-                  <label>Name</label>
-                  <input name="last_name" type="text" placeholder="Mustermann" value={form.last_name} onChange={handleChange} required />
+                <div className="auth-field" style={{ flex: 1 }}>
+                  <label className="auth-label">Name</label>
+                  <input className="auth-input" name="last_name" type="text" placeholder="Mustermann" value={form.last_name} onChange={handleChange} required />
                 </div>
               </div>
-              <div className="field">
-                <label>Benutzername</label>
-                <input name="username" type="text" placeholder="maxmuster" value={form.username} onChange={handleChange} required />
+              <div className="auth-field">
+                <label className="auth-label">Benutzername</label>
+                <input className="auth-input" name="username" type="text" placeholder="maxmuster" value={form.username} onChange={handleChange} required />
               </div>
             </>
           )}
 
           {/* EMAIL — login, register, forgot */}
           {mode !== "reset" && (
-            <div className="field">
-              <label>E-Mail</label>
-              <input name="email" type="email" placeholder="max@example.com" value={form.email} onChange={handleChange} required />
+            <div className="auth-field">
+              <label className="auth-label">E-Mail</label>
+              <input className="auth-input" name="email" type="email" placeholder="max@example.com" value={form.email} onChange={handleChange} required />
             </div>
           )}
 
           {/* PASSWORD — login, register */}
           {(mode === "login" || mode === "register") && (
-            <div className="field">
-              <label>Passwort</label>
-              <input name="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} required minLength={6} />
+            <div className="auth-field">
+              <label className="auth-label">Passwort</label>
+              <input className="auth-input" name="password" type="password" placeholder="••••••••" value={form.password} onChange={handleChange} required minLength={6} />
             </div>
           )}
 
           {/* NEW PASSWORD — reset */}
           {mode === "reset" && (
-            <div className="field">
-              <label>Neues Passwort</label>
-              <input name="new_password" type="password" placeholder="••••••••" value={form.new_password} onChange={handleChange} required minLength={6} />
+            <div className="auth-field">
+              <label className="auth-label">Neues Passwort</label>
+              <input className="auth-input" name="new_password" type="password" placeholder="••••••••" value={form.new_password} onChange={handleChange} required minLength={6} />
             </div>
           )}
 
