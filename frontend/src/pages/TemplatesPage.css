@@ -256,7 +256,7 @@
 /* Template grid */
 .tp-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--grid-gap, 18px);
 }
 
@@ -340,7 +340,7 @@
 }
 
 /* Card actions */
-.tc-actions { display: flex; gap: 6px; }
+.tc-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .tc-btn {
   flex: 1;
   height: 30px;
@@ -352,6 +352,7 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
   transition: border-color 0.14s var(--ease), color 0.14s var(--ease);
 }
 .tc-btn:hover { border-color: var(--accent-line); color: var(--accent-ink); }
@@ -366,6 +367,7 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
 }
 .tc-btn-delete {
   height: 30px;
@@ -376,6 +378,7 @@
   color: var(--ink-3);
   font-size: 12px;
   cursor: pointer;
+  white-space: nowrap;
   transition: border-color 0.14s, color 0.14s;
 }
 .tc-btn-delete:hover { border-color: var(--accent-line); color: var(--accent-ink); }
