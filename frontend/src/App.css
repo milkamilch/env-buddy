@@ -86,6 +86,58 @@
   text-align: center;
 }
 
+/* === Sidebar Quick-Start + foot === */
+.sidebar-section {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sidebar-quick-label {
+  padding: 0 8px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+}
+.sidebar-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 4px;
+}
+.sidebar-quick-pill {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  padding: 5px 11px;
+  cursor: pointer;
+  transition: border-color 0.14s var(--ease), color 0.14s var(--ease);
+}
+.sidebar-quick-pill:hover { border-color: var(--accent-line); color: var(--accent-ink); }
+.sidebar-foot {
+  padding: 12px 8px 4px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10.5px;
+  color: var(--ink-4);
+}
+.sidebar-foot-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--run);
+  flex-shrink: 0;
+}
+
 /* === Main column === */
 .main {
   display: flex;
@@ -111,12 +163,22 @@
 
 .topbar-breadcrumb {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--ink-3);
+  align-items: baseline;
+  gap: 10px;
+  flex-shrink: 0;
 }
-
+.topbar-bc-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.topbar-bc-sub {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+@media (max-width: 1100px) { .topbar-bc-sub { display: none; } }
 .topbar-bc-sep { color: var(--ink-4); }
 .topbar-bc-current { color: var(--ink); font-weight: 600; }
 
@@ -440,7 +502,7 @@
 }
 
 /* === Container grid / list === */
-.container-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.container-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--grid-gap); }
 .container-list { display: flex; flex-direction: column; gap: 4px; }
 
 /* === Section labels === */

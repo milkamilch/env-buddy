@@ -8,27 +8,23 @@ function avatarColor(username = "") {
 }
 
 const PAGE_LABELS = {
-  dashboard:   "Dashboard",
-  templates:   "Templates",
-  marketplace: "Marketplace",
-  teams:       "Teams",
-  audit:       "Audit",
+  dashboard:   ["Dashboard",   "Container-Übersicht"],
+  templates:   ["Templates",   "Eigene & öffentliche"],
+  marketplace: ["Marketplace", "Community-Templates"],
+  teams:       ["Teams",       "Mitglieder & Rollen"],
+  audit:       ["Audit",       "Aktivitäten"],
 };
 
 export default function Topbar({ user, page, onOpenProfile, onOpenDrawer, onOpenPalette, onOpenInbox, invitationCount }) {
   const initials = ((user.first_name?.[0] || "") + (user.last_name?.[0] || "")).toUpperCase() || "?";
   const color = avatarColor(user.username);
+  const [title, sub] = PAGE_LABELS[page] ?? [page, ""];
 
   return (
     <header className="topbar">
       <div className="topbar-breadcrumb">
-        <span>Dashboard</span>
-        {page !== "dashboard" && (
-          <>
-            <span className="topbar-bc-sep">›</span>
-            <span className="topbar-bc-current">{PAGE_LABELS[page] ?? page}</span>
-          </>
-        )}
+        <span className="topbar-bc-title">{title}</span>
+        {sub && <span className="topbar-bc-sub">{sub}</span>}
       </div>
 
       <button className="topbar-cmdk" onClick={onOpenPalette} aria-label="Befehlspalette öffnen">

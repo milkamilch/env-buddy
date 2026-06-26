@@ -9,7 +9,7 @@
 }
 
 .pill-run  { background: var(--run-soft);  color: var(--run); }
-.pill-stop { background: var(--stop-soft); color: var(--stop); }
+.pill-stop { background: rgba(28,26,22,0.07); color: rgba(28,26,22,0.40); }
 .pill-warn { background: var(--warn-soft); color: var(--warn); }
 .pill-start { background: var(--info-soft); color: var(--info); }
 

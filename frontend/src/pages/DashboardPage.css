@@ -1,6 +1,10 @@
 /* === Dashboard page shell === */
 .dashboard-page {
-  padding: 24px;
+  padding: var(--page-pad, 36px);
+  max-width: 1320px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 20px;

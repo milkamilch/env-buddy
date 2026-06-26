@@ -6,10 +6,13 @@ import ContainerLogsModal from "./ContainerLogsModal";
 import ResourceGraphModal from "./ResourceGraphModal";
 import ContainerTerminalModal from "./ContainerTerminalModal";
 import { useToast } from "./Toast";
-import TEMPLATE_ICONS from "../templateIcons";
 import StatusPill from "./StatusPill";
 import Sparkline from "./Sparkline";
 import "./ContainerCard.css";
+
+function tplGlyph(key) {
+  return (key || "?").slice(0, 2).toUpperCase();
+}
 
 const EXTEND_MINUTES = [15, 30, 60];
 const HISTORY_MAX = 60;
@@ -298,18 +301,18 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
       >
         {/* Head */}
         <div className="card-header">
-          <span className="card-tpl-ico">{TEMPLATE_ICONS[templateBase] || "📦"}</span>
+          <div className="card-tpl-ico">{tplGlyph(templateBase)}</div>
           <div className="card-head-info">
             <div className="card-name">{container.name}</div>
-            <div className="card-image">{templateBase || container.template}</div>
+            <div className="card-meta">
+              <span>{templateBase || container.template}</span>
+              {container.port && <><span className="card-meta-sep">·</span><span>:{container.port}</span></>}
+              <span className="card-meta-sep">·</span>
+              <span>{container.id.slice(0, 8)}</span>
+            </div>
           </div>
           <div className="card-head-right">
             <StatusPill status={container.status} />
-            {isRunning && remaining != null && (
-              <span className={`card-timer ${isExpiringSoon ? "expiring" : ""}`}>
-                {formatCountdown(remaining)}
-              </span>
-            )}
           </div>
         </div>
 
@@ -325,193 +328,122 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
         )}
 
         {/* Stats */}
-        {isRunning && (
-          <div className="card-stats">
-            <div className="stat-row">
-              <div className="stat-row-head">
-                <span className="stat-lbl">CPU</span>
-                <span className="stat-val">{container.cpu_percent?.toFixed(1)}%</span>
-              </div>
-              <div className="stat-sparkline">
-                <Sparkline values={statsHistory.map(p => p.cpu)} color="var(--run)" height={24} />
-              </div>
+        <div className="card-stats">
+          <div className="stat-row">
+            <div className="stat-row-head">
+              <span className="stat-lbl">CPU</span>
+              <span className={`stat-val ${!isRunning ? "stat-val-dim" : ""}`} style={{ color: isRunning ? cpuColor : undefined }}>
+                {isRunning ? `${container.cpu_percent?.toFixed(1)} %` : "—"}
+              </span>
             </div>
-            <div className="stat-row">
-              <div className="stat-row-head">
-                <span className="stat-lbl">RAM</span>
-                <span className="stat-val">{container.ram_mb}MB</span>
-              </div>
-              <div className="stat-sparkline">
-                <Sparkline values={statsHistory.map(p => p.ram)} color="var(--info)" height={24} />
-              </div>
+            <div className="stat-sparkline">
+              <Sparkline
+                values={statsHistory.length >= 2 ? statsHistory.map(p => p.cpu) : Array(10).fill(0)}
+                color={isRunning ? cpuColor : "var(--line-2)"}
+                height={24}
+                gradientId={`fill-cpu-${container.id}`}
+              />
             </div>
           </div>
-        )}
-
-        {/* Actions */}
-        <div className="card-actions" onClick={e => e.stopPropagation()}>
-          {isRunning ? (
-            <button className="btn-sm btn-destructive" onClick={handleStop} disabled={acting}>
-              <Square size={12} strokeWidth={2} /> Stop
-            </button>
-          ) : (
-            <button className="btn-sm btn-default" onClick={handleStart} disabled={acting} style={{ color: "var(--accent-green)" }}>
-              <Play size={12} strokeWidth={2} /> Starten
-            </button>
-          )}
-
-          {isRunning && (
-            <div style={{ position: "relative" }}>
-              <button className="btn-sm btn-default" onClick={e => { e.stopPropagation(); setExtendOpen(o => !o); }} disabled={extending} style={isExpiringSoon ? { color: "var(--accent-peach)", borderColor: "color-mix(in oklch, var(--accent-peach) 40%, transparent)" } : {}}>
-                <TimerReset size={12} strokeWidth={1.75} /> Verlängern
-              </button>
-              {extendOpen && (
-                <div className="extend-popover" onClick={e => e.stopPropagation()}>
-                  {EXTEND_MINUTES.map(m => (
-                    <button key={m} className="btn-sm btn-ghost" style={{ width: "100%", justifyContent: "center" }} onClick={e => handleExtend(e, m)} disabled={extending}>+{m} Min.</button>
-                  ))}
-                </div>
-              )}
+          <div className="stat-row">
+            <div className="stat-row-head">
+              <span className="stat-lbl">RAM</span>
+              <span className={`stat-val ${!isRunning ? "stat-val-dim" : ""}`} style={{ color: isRunning ? ramColor : undefined }}>
+                {isRunning ? `${container.ram_mb} MB` : "—"}
+              </span>
             </div>
-          )}
+            <div className="stat-sparkline">
+              <Sparkline
+                values={statsHistory.length >= 2 ? statsHistory.map(p => p.ram) : Array(10).fill(0)}
+                color={isRunning ? ramColor : "var(--line-2)"}
+                height={24}
+                gradientId={`fill-ram-${container.id}`}
+              />
+            </div>
+          </div>
+        </div>
 
-          {isRunning && (
-            <button className="btn-sm btn-default" onClick={handleRestart} disabled={restarting} title="Neustart">
-              <RotateCcw size={12} strokeWidth={1.75} /> {restarting ? "…" : "Neustart"}
-            </button>
-          )}
-
-          <button className="btn-icon-sm btn-ghost" onClick={e => { e.stopPropagation(); setLogsOpen(true); }} title="Logs" aria-label="Logs anzeigen">
-            <ScrollText size={14} strokeWidth={1.75} />
-          </button>
-
-          {isRunning && (
-            <button className="btn-icon-sm btn-ghost" onClick={e => { e.stopPropagation(); setGraphOpen(true); }} title="Ressourcen-Verlauf" aria-label="Ressourcen-Verlauf">
-              <BarChart3 size={14} strokeWidth={1.75} />
-            </button>
-          )}
-
-          {isRunning && (
-            <button className="btn-icon-sm btn-ghost" onClick={e => { e.stopPropagation(); setTerminalOpen(true); }} title="Terminal öffnen" aria-label="Terminal öffnen">
-              <Terminal size={14} strokeWidth={1.75} />
-            </button>
-          )}
-
-          {isRunning && (
-            <button
-              className="btn-icon-sm btn-ghost"
-              title="Konfiguration teilen (Link kopieren)"
-              onClick={async (e) => {
-                e.stopPropagation();
-                try {
-                  const config = await fetchContainerConfig(container.id);
-                  const payload = {
-                    template: container.template || config.name,
-                    env: config.env || {},
-                    port: config.port || null,
-                    container_name: "",
-                    duration_minutes: config.duration_minutes || 60,
-                  };
-                  const encoded = btoa(JSON.stringify(payload));
-                  const url = `${window.location.origin}/dashboard?start=${encoded}`;
-                  await navigator.clipboard.writeText(url);
-                  toast.success("Link kopiert");
-                } catch {
-                  toast.error("Fehler beim Erstellen des Links");
-                }
-              }}
-            ><Link2 size={14} strokeWidth={1.75} /></button>
-          )}
-
-          {isRunning && (
-            <button
-              className="btn-icon-sm btn-ghost"
-              title="Zugriff teilen"
-              onClick={async (e) => {
-                e.stopPropagation();
-                const label = container.id.slice(0, 12);
-                setShareLoading(true);
-                try {
-                  const list = await fetchContainerShares(label);
-                  setShares(list);
-                } catch { setShares([]); }
-                finally { setShareLoading(false); }
-                setShareUsername("");
-                setShareOpen(true);
-              }}
-            ><Users size={14} strokeWidth={1.75} /></button>
-          )}
-
-          <button
-            className="btn-icon-sm btn-ghost"
-            title="Als Snapshot speichern"
-            onClick={async (e) => {
-              e.stopPropagation();
-              try {
-                const config = await fetchContainerConfig(container.id);
-                await createSnapshot({
-                  name: container.name || container.id.slice(0, 12),
-                  template: container.template || config.name || "",
-                  env: config.env || {},
-                  port: config.port || null,
-                  mem_limit: config.mem_limit || null,
-                  cpu_limit: config.cpu_limit || null,
-                  duration_minutes: config.duration_minutes || 60,
-                });
-                toast.success("Snapshot gespeichert");
-              } catch (err) {
-                toast.error("Fehler: " + err.message);
-              }
-            }}
-          ><Camera size={14} strokeWidth={1.75} /></button>
-
-          <button
-            className="btn-icon-sm btn-ghost"
-            title="Als Template speichern"
-            onClick={(e) => {
-              e.stopPropagation();
-              setTemplateName(container.name || "");
-              setSaveTemplateOpen(true);
-            }}
-          ><BookmarkPlus size={14} strokeWidth={1.75} /></button>
-
-          {onClone && isRunning && (
-            <button className="btn-icon-sm btn-ghost" onClick={handleClone} disabled={cloning} title="Klonen" aria-label="Container klonen">
-              <Copy size={14} strokeWidth={1.75} />
-            </button>
-          )}
-
-          <span className="card-spacer" />
-
-          {isRunning && <LiveBadge isRunning />}
-
-          {isRunning && (
-            updateConfirm ? (
+        {/* Footer */}
+        <div className="card-foot" onClick={e => e.stopPropagation()}>
+          <div className="card-foot-left">
+            {isRunning && remaining != null ? (
+              <span className={`card-timer ${isExpiringSoon ? "expiring" : ""}`}>
+                <TimerReset size={13} strokeWidth={1.6} style={{ opacity: 0.5 }} />
+                {formatCountdown(remaining)}
+              </span>
+            ) : (
+              <span className="card-foot-owner">
+                {container.started_by || container.owner || ""}
+              </span>
+            )}
+          </div>
+          <div className="card-foot-actions">
+            {selectMode && (
+              <input type="checkbox" checked={isSelected} onChange={() => onToggleSelect(container.id)} onClick={e => e.stopPropagation()} style={{ accentColor: "var(--accent)" }} />
+            )}
+            {isRunning ? (
               <>
-                <span className="confirm-label">Neu starten?</span>
-                <button className="btn-sm btn-ghost" onClick={handleUpdate} style={{ color: "var(--accent-green)" }} aria-label="Update bestätigen">✓</button>
-                <button className="btn-sm btn-ghost" onClick={e => { e.stopPropagation(); setUpdateConfirm(false); }} aria-label="Abbrechen">✕</button>
+                <button className="act" title="Terminal" onClick={e => { e.stopPropagation(); setTerminalOpen(true); }}><Terminal size={15} strokeWidth={1.6} /></button>
+                <button className="act" title="Logs" onClick={e => { e.stopPropagation(); setLogsOpen(true); }}><ScrollText size={15} strokeWidth={1.6} /></button>
+                <button className="act" title="Ressourcen" onClick={e => { e.stopPropagation(); setGraphOpen(true); }}><BarChart3 size={15} strokeWidth={1.6} /></button>
+                <div style={{ position: "relative" }}>
+                  <button className="act" title="Verlängern" onClick={e => { e.stopPropagation(); setExtendOpen(o => !o); }} disabled={extending}><TimerReset size={15} strokeWidth={1.6} /></button>
+                  {extendOpen && (
+                    <div className="extend-popover" onClick={e => e.stopPropagation()}>
+                      {EXTEND_MINUTES.map(m => (
+                        <button key={m} className="btn-sm btn-ghost" style={{ width: "100%", justifyContent: "center" }} onClick={e => handleExtend(e, m)} disabled={extending}>+{m} Min.</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button className="act" title="Neustart" onClick={handleRestart} disabled={restarting}><RotateCcw size={15} strokeWidth={1.6} /></button>
+                <button className="act" title="Snapshot" onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    const config = await fetchContainerConfig(container.id);
+                    await createSnapshot({ name: container.name || container.id.slice(0, 12), template: container.template || config.name || "", env: config.env || {}, port: config.port || null, mem_limit: config.mem_limit || null, cpu_limit: config.cpu_limit || null, duration_minutes: config.duration_minutes || 60 });
+                    toast.success("Snapshot gespeichert");
+                  } catch (err) { toast.error("Fehler: " + err.message); }
+                }}><Camera size={15} strokeWidth={1.6} /></button>
+                <button className="act" title="Link teilen" onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    const config = await fetchContainerConfig(container.id);
+                    const payload = { template: container.template || config.name, env: config.env || {}, port: config.port || null, container_name: "", duration_minutes: config.duration_minutes || 60 };
+                    const encoded = btoa(JSON.stringify(payload));
+                    await navigator.clipboard.writeText(`${window.location.origin}/dashboard?start=${encoded}`);
+                    toast.success("Link kopiert");
+                  } catch { toast.error("Fehler beim Erstellen des Links"); }
+                }}><Link2 size={15} strokeWidth={1.6} /></button>
+                {onClone && <button className="act" onClick={handleClone} disabled={cloning} title="Klonen"><Copy size={15} strokeWidth={1.6} /></button>}
+                <button className="act" title="Als Template speichern" onClick={(e) => { e.stopPropagation(); setTemplateName(container.name || ""); setSaveTemplateOpen(true); }}><BookmarkPlus size={15} strokeWidth={1.6} /></button>
+                {updateConfirm ? (
+                  <>
+                    <span className="confirm-label">Neu starten?</span>
+                    <button className="act" onClick={handleUpdate} title="Update bestätigen" style={{ color: "var(--run)" }}>✓</button>
+                    <button className="act" onClick={e => { e.stopPropagation(); setUpdateConfirm(false); }} title="Abbrechen">✕</button>
+                  </>
+                ) : (
+                  <button className="act" onClick={handleUpdate} disabled={updating} title="Image aktualisieren"><RotateCcw size={15} strokeWidth={1.6} style={{ transform: "scaleX(-1)" }} /></button>
+                )}
+                <button className="act danger" title="Stoppen" onClick={handleStop} disabled={acting}><Square size={14} strokeWidth={1.6} /></button>
               </>
             ) : (
-              <button className="btn-sm btn-default" onClick={handleUpdate} disabled={updating} title="Neuestes Image pullen und Container neu starten">
-                {updating ? "…" : "↑ Update"}
-              </button>
-            )
-          )}
-
-          {!isRunning && (
-            confirmDelete ? (
               <>
-                <span className="confirm-label">Sicher?</span>
-                <button className="btn-sm btn-ghost" onClick={handleRemove} disabled={deleting} style={{ color: "var(--accent-green)" }} aria-label="Löschen bestätigen">✓</button>
-                <button className="btn-sm btn-ghost" onClick={e => { e.stopPropagation(); setConfirmDelete(false); }} aria-label="Abbrechen">✕</button>
+                <button className="act go" title="Starten" onClick={handleStart} disabled={acting}><Play size={14} strokeWidth={1.6} /></button>
+                <button className="act" title="Logs" onClick={e => { e.stopPropagation(); setLogsOpen(true); }}><ScrollText size={15} strokeWidth={1.6} /></button>
+                {confirmDelete ? (
+                  <>
+                    <span className="confirm-label">Sicher?</span>
+                    <button className="act" onClick={handleRemove} disabled={deleting} style={{ color: "var(--run)" }} title="Bestätigen">✓</button>
+                    <button className="act" onClick={e => { e.stopPropagation(); setConfirmDelete(false); }} title="Abbrechen">✕</button>
+                  </>
+                ) : (
+                  <button className="act danger" onClick={handleRemove} title="Löschen"><Trash2 size={15} strokeWidth={1.6} /></button>
+                )}
               </>
-            ) : (
-              <button className="btn-sm btn-destructive" onClick={handleRemove} title="Löschen">
-                <Trash2 size={12} strokeWidth={1.75} /> Löschen
-              </button>
-            )
-          )}
+            )}
+          </div>
         </div>
       </div>
 

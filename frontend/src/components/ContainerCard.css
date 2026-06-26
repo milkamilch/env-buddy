@@ -3,62 +3,70 @@
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-card);
-  padding: 16px;
+  padding: var(--card-pad, 22px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   box-shadow: var(--shadow-card);
-  transition: box-shadow 0.15s var(--ease), transform 0.15s var(--ease), border-color 0.15s;
+  transition: border-color 0.16s var(--ease), background 0.16s var(--ease);
   cursor: pointer;
 }
-.container-card:hover {
-  box-shadow: var(--shadow-pop);
-  transform: translateY(-1px);
-  border-color: var(--line-2);
-}
-.container-card.card-stopped { opacity: 0.65; }
+.container-card:hover { border-color: var(--line-2); }
+.container-card.card-stopped { background: var(--surface-2); }
 
 /* Card head */
 .card-header {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
 }
 .card-tpl-ico {
-  font-size: 22px;
-  line-height: 1;
-  flex-shrink: 0;
-  margin-top: 1px;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--surface-sink);
+  border: 1px solid var(--line);
+  display: grid;
+  place-items: center;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--ink-2);
+  letter-spacing: -0.02em;
 }
 .card-head-info { flex: 1; min-width: 0; }
 .card-name {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: "JetBrains Mono", monospace;
 }
-.card-image {
-  font-size: 11px;
-  color: var(--ink-3);
+.card-meta {
   font-family: "JetBrains Mono", monospace;
+  font-size: 11.5px;
+  color: var(--ink-3);
+  margin-top: 3px;
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 2px;
 }
+.card-meta-sep { color: var(--ink-4); }
 .card-head-right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
   flex-shrink: 0;
 }
 .card-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ink-3);
 }
 .card-timer.expiring { color: var(--warn); }
@@ -98,38 +106,80 @@
 .card-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 16px;
 }
 .stat-row {
-  background: var(--surface-sink);
-  border-radius: var(--r-sm);
-  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 .stat-row-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
+  margin-bottom: 6px;
 }
 .stat-lbl {
   font-family: "JetBrains Mono", monospace;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ink-4);
+  letter-spacing: 0.13em;
+  color: var(--ink-3);
 }
 .stat-val {
   font-family: "JetBrains Mono", monospace;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 550;
   color: var(--ink);
 }
-.stat-sparkline { height: 24px; }
+.stat-val-dim { color: var(--ink-4); }
+.stat-sparkline { height: 26px; }
 
 /* Card footer */
+.card-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.card-foot-left {
+  flex: 1;
+  min-width: 0;
+}
+.card-foot-owner {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11.5px;
+  color: var(--ink-4);
+}
+.card-foot-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* Action icon buttons (design system .act) */
+.act {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 0.13s var(--ease), color 0.13s var(--ease);
+  flex-shrink: 0;
+}
+.act:hover { background: var(--surface-sink); color: var(--ink); }
+.act:disabled { opacity: 0.35; cursor: not-allowed; }
+.act.danger:hover { background: var(--accent-soft); color: var(--accent-ink); }
+.act.go:hover { background: var(--run-soft); color: var(--run); }
+
+/* Card actions (legacy bottom bar, kept for backward compat) */
 .card-actions {
   display: flex;
   align-items: center;

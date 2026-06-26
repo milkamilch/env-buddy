@@ -57,14 +57,14 @@
 .fav-trash-zone:hover { opacity: 1; }
 .tp-library { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
 .library-section-title { margin: 0 0 0.75rem; font-size: 0.9rem; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.06em; }
-.template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 0.875rem; }
-.template-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 1.1rem; display: flex; flex-direction: column; gap: 0.4rem; cursor: grab; user-select: none; transition: border-color 0.15s, transform 0.1s; box-shadow: var(--shadow-pop); }
+.template-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--grid-gap, 18px); }
+.template-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; cursor: grab; user-select: none; transition: border-color 0.15s var(--ease), transform 0.1s; box-shadow: var(--shadow-card); }
 .template-card:hover { border-color: var(--line-2); transform: translateY(-1px); }
 .template-card:active { cursor: grabbing; }
 .template-card.is-favorite { border-color: color-mix(in oklch, var(--accent) 40%, transparent); }
-.tc-icon { font-size: 1.75rem; line-height: 1; }
-.tc-name { font-size: 0.95rem; font-weight: 600; color: var(--ink); text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tc-type { font-size: 0.72rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.tc-icon { display: none; }
+.tc-name { font-size: 1rem; font-weight: 600; color: var(--ink); text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-type { font-size: 0.72rem; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; font-family: "JetBrains Mono", monospace; }
 .tc-desc { font-size: 0.8rem; color: var(--ink-3); line-height: 1.4; }
 .tc-containers { font-size: 0.75rem; color: var(--ink-2); background: var(--surface-sink); border-radius: var(--r-sm); padding: 0.3rem 0.5rem; }
 .tc-actions { display: flex; gap: 0.4rem; margin-top: 0.25rem; }

@@ -8,7 +8,9 @@ const NAV_ITEMS = [
   { key: "audit",       label: "Audit",       Icon: ScrollText },
 ];
 
-export default function Sidebar({ page, onNavigate }) {
+const QUICK_TEMPLATES = ["postgres", "redis", "mysql", "mongo", "rabbitmq"];
+
+export default function Sidebar({ page, onNavigate, onOpenDrawer }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -27,6 +29,27 @@ export default function Sidebar({ page, onNavigate }) {
           </button>
         ))}
       </nav>
+
+      <div className="sidebar-section">
+        <div className="sidebar-quick-label">Quick-Start</div>
+        <div className="sidebar-quick">
+          {QUICK_TEMPLATES.map((tpl) => (
+            <button
+              key={tpl}
+              className="sidebar-quick-pill"
+              onClick={() => onOpenDrawer?.(tpl)}
+              title={`${tpl} starten`}
+            >
+              {tpl}
+            </button>
+          ))}
+        </div>
+        <div className="sidebar-foot">
+          <span className="sidebar-foot-dot" />
+          <span>API · online</span>
+          <span style={{ marginLeft: "auto" }}>v2.0</span>
+        </div>
+      </div>
     </aside>
   );
 }
