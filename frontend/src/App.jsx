@@ -113,12 +113,12 @@ export default function App() {
   }, [containers, stacks]);
 
   useEffect(() => {
-    if (user) loadStartFormTemplates();
+    if (user) loadStartFormTemplates(); // eslint-disable-line react-hooks/set-state-in-effect
   }, [user]);
 
   useEffect(() => {
     if (!user) return;
-    loadAll();
+    loadAll(); // eslint-disable-line react-hooks/set-state-in-effect
     const interval = setInterval(loadAll, 5000);
     return () => clearInterval(interval);
   }, [user]);

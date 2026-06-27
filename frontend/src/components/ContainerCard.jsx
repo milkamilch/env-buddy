@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Square, RotateCcw, TimerReset, Terminal, ScrollText, Trash2, Play, Copy, BarChart3, Link2, Users, Camera, BookmarkPlus } from "lucide-react";
-import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, probeContainerHealth, updateContainerImage, createTemplate, createSnapshot, fetchContainerShares, grantContainerAccess, revokeContainerAccess } from "../services/api";
+import TEMPLATE_ICONS from "../templateIcons.js";
+import { stopContainer, removeContainer, restartContainer, startStoppedContainer, extendContainer, fetchContainerConfig, downloadContainerDotenv, updateContainerImage, createTemplate, createSnapshot, fetchContainerShares, grantContainerAccess, revokeContainerAccess } from "../services/api";
 import ContainerEditModal from "./ContainerEditModal";
 import ContainerLogsModal from "./ContainerLogsModal";
 import ResourceGraphModal from "./ResourceGraphModal";
@@ -82,7 +83,6 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [extending, setExtending] = useState(false);
   const [cloning, setCloning] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [tcpReachable, setTcpReachable] = useState(null);
   const [updateConfirm, setUpdateConfirm] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
@@ -131,19 +131,6 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     }
   }
 
-  useEffect(() => {
-    if (!isRunning) { setTcpReachable(null); return; }
-    let cancelled = false;
-    async function probe() {
-      try {
-        const result = await probeContainerHealth(container.id);
-        if (!cancelled) setTcpReachable(result.reachable);
-      } catch { if (!cancelled) setTcpReachable(null); }
-    }
-    probe();
-    const id = setInterval(probe, 10000);
-    return () => { cancelled = true; clearInterval(id); };
-  }, [container.id, isRunning]);
 
   useEffect(() => {
     if (!extendOpen) return;
