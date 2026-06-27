@@ -11,7 +11,19 @@ def _handle_docker_api_error(e: docker.errors.APIError, port: int | None = None)
         raise ValueError(f"Port{hint} ist bereits belegt. Wähle einen anderen Host-Port.")
     raise e
 
-client = docker.from_env()
+class _LazyDockerClient:
+    _real = None
+
+    def _get(self):
+        if _LazyDockerClient._real is None:
+            _LazyDockerClient._real = docker.from_env()
+        return _LazyDockerClient._real
+
+    def __getattr__(self, name):
+        return getattr(self._get(), name)
+
+
+client = _LazyDockerClient()
 
 _warned_containers: set = set()
 # Rolling 15-minute history (60 × 15s) per container
@@ -216,6 +228,19 @@ def get_connection_string(template_name: str, port: int) -> str | None:
     return f"http://localhost:{port}"
 
 
+_INTERNAL_ENV_PREFIXES = (
+    "PATH=", "HOSTNAME=", "HOME=", "TERM=", "LANG=", "LC_",
+    "GOSU_VERSION=", "PG_MAJOR=", "PG_VERSION=", "PGDATA=",
+    "MYSQL_MAJOR=", "MYSQL_VERSION=",
+    "MONGO_MAJOR=", "MONGO_VERSION=",
+    "REDIS_VERSION=", "REDIS_DOWNLOAD_",
+    "GPG_KEYS=", "NSS_WRAPPER_",
+    "JAVA_HOME=", "JAVA_VERSION=",
+    "NODE_VERSION=", "NPM_VERSION=", "YARN_VERSION=",
+    "PYTHON_VERSION=", "PYTHON_PIP_VERSION=",
+    "DEBIAN_FRONTEND=",
+)
+
 def get_dotenv_content(container_id: str) -> str:
     c = client.containers.get(container_id)
     template = c.labels.get("template", "")
@@ -227,8 +252,11 @@ def get_dotenv_content(container_id: str) -> str:
         f"HOST_PORT={port}",
     ]
     for item in env_list:
-        if "=" in item:
-            lines.append(item)
+        if "=" not in item:
+            continue
+        if any(item.startswith(prefix) for prefix in _INTERNAL_ENV_PREFIXES):
+            continue
+        lines.append(item)
     conn = get_connection_string(template, int(port)) if port else None
     if conn:
         key = template.upper().replace("-", "_")

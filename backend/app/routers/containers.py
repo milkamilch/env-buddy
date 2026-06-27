@@ -1,8 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import Security
 from jose import jwt, JWTError
 import asyncio
 import os
@@ -17,6 +15,7 @@ from app.services import docker_service
 from app.services.notification_service import notify_container_started
 from app.services.webhook_service import call_webhook
 from app.models.audit import AuditLogDB
+from app.auth_utils import get_current_user
 
 
 def _container_limit() -> int:
@@ -28,21 +27,8 @@ def _container_limit() -> int:
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 ALGORITHM = "HS256"
-_bearer = HTTPBearer(auto_error=False)
 
-
-def _get_required_user(creds: HTTPAuthorizationCredentials = Security(_bearer), db: Session = Depends(get_db)):
-    if not creds:
-        raise HTTPException(status_code=401, detail="Nicht angemeldet")
-    try:
-        payload = jwt.decode(creds.credentials, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = int(payload["sub"])
-        user = db.query(UserDB).filter(UserDB.id == user_id).first()
-        if not user:
-            raise HTTPException(status_code=401, detail="Ungültiger Token")
-        return user
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Ungültiger Token")
+_get_required_user = get_current_user
 
 
 def _assert_owner(container_id: str, user: UserDB, db: Session = None):

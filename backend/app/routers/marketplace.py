@@ -83,6 +83,11 @@ def publish_template(
 ):
     if not req.containers:
         raise HTTPException(status_code=400, detail="Mindestens ein Container erforderlich")
+    for c in req.containers:
+        if not c.service_name.strip():
+            raise HTTPException(status_code=400, detail="service_name darf nicht leer sein")
+        if not c.image.strip():
+            raise HTTPException(status_code=400, detail="image darf nicht leer sein")
 
     tmpl = MarketplaceTemplateDB(
         user_id         = current_user.id,
@@ -153,6 +158,8 @@ def rate_template(
     tmpl = db.query(MarketplaceTemplateDB).filter(MarketplaceTemplateDB.id == template_id).first()
     if not tmpl:
         raise HTTPException(status_code=404, detail="Template nicht gefunden")
+    if tmpl.user_id == current_user.id:
+        raise HTTPException(status_code=403, detail="Eigene Templates können nicht bewertet werden")
 
     existing = db.query(MarketplaceRatingDB).filter(
         MarketplaceRatingDB.template_id == template_id,

@@ -416,6 +416,7 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
                   } catch { toast.error("Fehler beim Erstellen des Links"); }
                 }}><Link2 size={15} strokeWidth={1.6} /></button>
                 {onClone && <button className="act" onClick={handleClone} disabled={cloning} title="Klonen"><Copy size={15} strokeWidth={1.6} /></button>}
+                {!container.shared_from && <button className="act" title="Zugriff teilen" onClick={async (e) => { e.stopPropagation(); const label = container.id.slice(0, 12); try { const list = await fetchContainerShares(label); setShares(list); } catch { /* ignore */ } setShareOpen(true); }}><Users size={15} strokeWidth={1.6} /></button>}
                 <button className="act" title="Als Template speichern" onClick={(e) => { e.stopPropagation(); setTemplateName(container.name || ""); setSaveTemplateOpen(true); }}><BookmarkPlus size={15} strokeWidth={1.6} /></button>
                 {updateConfirm ? (
                   <>

@@ -95,6 +95,7 @@ def delete_team(
     _assert_admin(team_id, current_user.id, db)
     db.query(TeamTemplateDB).filter(TeamTemplateDB.team_id == team_id).delete()
     db.query(TeamMemberDB).filter(TeamMemberDB.team_id == team_id).delete()
+    db.query(TeamInvitationDB).filter(TeamInvitationDB.team_id == team_id).delete()
     db.query(TeamDB).filter(TeamDB.id == team_id).delete()
     db.commit()
     return {"message": "Team gelöscht"}
@@ -147,7 +148,7 @@ def invite_member(
     ).first()
     if pending:
         raise HTTPException(status_code=409, detail="Einladung bereits ausstehend")
-    if hasattr(user, "allow_invitations") and user.allow_invitations is False:
+    if not user.allow_invitations:
         raise HTTPException(status_code=403, detail="Dieser Nutzer akzeptiert keine Einladungen")
     inv = TeamInvitationDB(team_id=team_id, inviter_id=current_user.id, invitee_id=user.id)
     db.add(inv)
