@@ -1,3 +1,8 @@
 backend/templates/
 requirements.txt
 .superpowers/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
