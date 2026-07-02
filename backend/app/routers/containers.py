@@ -145,6 +145,7 @@ def start(request: StartContainerRequest,
                 mem_limit=request.mem_limit,
                 cpu_limit=request.cpu_limit,
                 user_id=current_user.id,
+                password=request.password,
             )
         name = result.get("name") or (result.get("containers") or [{}])[0].get("name", "")
         port = result.get("port") or 0

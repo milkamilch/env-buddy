@@ -344,7 +344,8 @@ def start_container(template_name: str, duration_minutes: int = 60,
                     env_overrides: dict = {}, host_port: int | None = None,
                     container_name: str | None = None, mem_limit: str | None = None,
                     cpu_limit: float | None = None,
-                    extra_labels: dict = {}, user_id: int | None = None):
+                    extra_labels: dict = {}, user_id: int | None = None,
+                    password: str | None = None):
     if template_name not in TEMPLATES:
         raise ValueError(f"Template '{template_name}' not found")
 
@@ -355,8 +356,8 @@ def start_container(template_name: str, duration_minutes: int = 60,
 
     pw_cfg = _PASSWORD_CONFIG.get(template_name)
     auto_pw = None
-    if pw_cfg and template_name not in (env_overrides or {}):
-        auto_pw = secrets.token_urlsafe(16)
+    if pw_cfg:
+        auto_pw = password if password else secrets.token_urlsafe(16)
         if "env" in pw_cfg:
             env_val = pw_cfg.get("env_format", "{pw}").replace("{pw}", auto_pw)
             env[pw_cfg["env"]] = env_val

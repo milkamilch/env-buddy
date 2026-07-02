@@ -43,6 +43,8 @@ export default function StartForm({ templates, onStarted, onStarting, onClose, p
   const [memSteps, setMemSteps]           = useState(ALL_MEM_STEPS.slice(0, 6));
   const [cpuStep, setCpuStep]             = useState(0);
   const [defaultPort, setDefaultPort]     = useState(null);
+  const [password, setPassword]           = useState("");
+  const [showPw, setShowPw]               = useState(false);
 
   // ── Stack mode ───────────────────────────────────────────────────────────
   const [stackStep, setStackStep]         = useState(1);
@@ -78,7 +80,7 @@ export default function StartForm({ templates, onStarted, onStarting, onClose, p
 
   // ── Single: pre-fill when template changes ───────────────────────────────
   useEffect(() => {
-    setHostPort(""); setContainerName(""); setMemStep(0);
+    setHostPort(""); setContainerName(""); setMemStep(0); setPassword("");
     if (!template) { setEnvVars([]); setDefaultPort(null); return; }
     if (template.startsWith("custom:") || template.startsWith("team:")) {
       const first = templates.find((t) => t.key === template)?.containers?.[0];
@@ -115,6 +117,7 @@ export default function StartForm({ templates, onStarted, onStarting, onClose, p
     if (memValue) config.mem_limit = memValue;
     const cpuValue = CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].value;
     if (cpuValue) config.cpu_limit = cpuValue;
+    if (password) config.password = password;
     onClose?.();
     onStarting?.(template?.label || template, template?.icon);
     toast.info(`${template?.label || template} wird gestartet…`);
@@ -257,6 +260,32 @@ export default function StartForm({ templates, onStarted, onStarting, onClose, p
                 <input className="config-input" type="text"
                   placeholder={`auto (testbuddy-${template}-…)`}
                   value={containerName} onChange={(e) => setContainerName(e.target.value)} />
+              </div>
+              <div className="config-row">
+                <label className="config-label">Passwort</label>
+                <div className="config-pw-wrap">
+                  <input
+                    className="config-input config-pw-input"
+                    type={showPw ? "text" : "password"}
+                    placeholder="auto-generiert"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="new-password"
+                  />
+                  <button type="button" className="btn-pw-toggle" onClick={() => setShowPw((v) => !v)}
+                    title={showPw ? "Verbergen" : "Anzeigen"}>
+                    {showPw ? "🙈" : "👁"}
+                  </button>
+                  <button type="button" className="btn-pw-gen" title="Passwort generieren"
+                    onClick={() => {
+                      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#%^&*";
+                      setPassword(Array.from(crypto.getRandomValues(new Uint8Array(16)))
+                        .map((b) => chars[b % chars.length]).join(""));
+                      setShowPw(true);
+                    }}>
+                    🎲
+                  </button>
+                </div>
               </div>
               <div className="config-row">
                 <label className="config-label">Memory-Limit</label>
