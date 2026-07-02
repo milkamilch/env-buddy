@@ -146,7 +146,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar page={path} onNavigate={handleNavigate} onOpenDrawer={() => setDrawerOpen(true)} />
+      <Sidebar page={path} onNavigate={handleNavigate} />
 
       <div className="main">
         <Topbar
