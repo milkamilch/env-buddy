@@ -57,7 +57,7 @@ export default function App() {
       const customMap = Object.fromEntries(customs.map((t) => [`custom:${t.id}`, { key: `custom:${t.id}`, label: t.name, icon: t.icon, containers: t.containers }]));
       const teamMap = Object.fromEntries(teamTpls.map((t) => [`team:${t.id}`, { key: `team:${t.id}`, label: t.name, icon: t.icon, containers: t.containers }]));
       const allMap = { ...defaultMap, ...customMap, ...teamMap };
-      setStartFormTemplates(favKeys.length > 0 ? favKeys.map((k) => allMap[k]).filter(Boolean) : Object.values(defaultMap));
+      setStartFormTemplates(favKeys.length > 0 ? favKeys.map((k) => allMap[k]).filter(Boolean) : Object.values(allMap));
     } catch {
       setError("Backend nicht erreichbar");
     }
