@@ -1,5 +1,21 @@
 const BASE = import.meta.env.VITE_API_URL || "";
 
+// ── Cache (stale-while-revalidate) ──────────────────────────────────────────
+const _cache = new Map();
+
+function withCache(key, ttlMs, fn) {
+  const hit = _cache.get(key);
+  const fresh = hit && Date.now() - hit.ts < ttlMs;
+  if (fresh) return Promise.resolve(hit.data);
+  const request = fn().then((data) => { _cache.set(key, { data, ts: Date.now() }); return data; });
+  if (hit) { request.catch(() => {}); return Promise.resolve(hit.data); }
+  return request;
+}
+
+export function bustCache(prefix) {
+  for (const key of _cache.keys()) if (key.startsWith(prefix)) _cache.delete(key);
+}
+
 function authHeaders() {
   const token = localStorage.getItem("token");
   return {
@@ -71,10 +87,12 @@ export async function resetPassword(token, new_password) {
 
 // ── Containers ───────────────────────────────────────────────────────────────
 
-export async function fetchDefaultTemplates() {
-  const res = await apiFetch(`${BASE}/api/containers/templates`);
-  if (!res.ok) throw new Error("Failed to fetch templates");
-  return res.json();
+export function fetchDefaultTemplates() {
+  return withCache("defaultTemplates", 5 * 60_000, async () => {
+    const res = await apiFetch(`${BASE}/api/containers/templates`);
+    if (!res.ok) throw new Error("Failed to fetch templates");
+    return res.json();
+  });
 }
 
 export async function fetchTemplateDetails(name) {
@@ -227,11 +245,13 @@ export async function removeStack(stackId) {
 
 // ── User Templates ────────────────────────────────────────────────────────────
 
-export async function fetchMyTemplates() {
-  const res = await apiFetch(`${BASE}/api/user-templates/`, { headers: authHeaders() });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden der Templates");
-  return json;
+export function fetchMyTemplates() {
+  return withCache("myTemplates", 30_000, async () => {
+    const res = await apiFetch(`${BASE}/api/user-templates/`, { headers: authHeaders() });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Fehler beim Laden der Templates");
+    return json;
+  });
 }
 
 export async function createTemplate(data) {
@@ -242,6 +262,7 @@ export async function createTemplate(data) {
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.detail || "Fehler beim Erstellen");
+  bustCache("myTemplates");
   return json;
 }
 
@@ -251,14 +272,17 @@ export async function deleteTemplate(id) {
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error("Fehler beim Löschen");
+  bustCache("myTemplates");
   return res.json();
 }
 
-export async function fetchFavorites() {
-  const res = await apiFetch(`${BASE}/api/user-templates/favorites`, { headers: authHeaders() });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
-  return json;
+export function fetchFavorites() {
+  return withCache("favorites", 60_000, async () => {
+    const res = await apiFetch(`${BASE}/api/user-templates/favorites`, { headers: authHeaders() });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+    return json;
+  });
 }
 
 export async function saveFavorites(favorites) {
@@ -269,16 +293,19 @@ export async function saveFavorites(favorites) {
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.detail || "Fehler beim Speichern");
+  bustCache("favorites");
   return json;
 }
 
 // ── Team Templates ───────────────────────────────────────────────────────────
 
-export async function fetchTeamTemplates() {
-  const res = await apiFetch(`${BASE}/api/team-templates/`, { headers: authHeaders() });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden der Team-Templates");
-  return json;
+export function fetchTeamTemplates() {
+  return withCache("teamTemplates", 30_000, async () => {
+    const res = await apiFetch(`${BASE}/api/team-templates/`, { headers: authHeaders() });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Fehler beim Laden der Team-Templates");
+    return json;
+  });
 }
 
 export async function createTeamTemplate(teamId, data) {
@@ -317,11 +344,13 @@ export async function deleteTeamTemplate(teamId, tmplId) {
 
 // ── Teams ─────────────────────────────────────────────────────────────────
 
-export async function fetchMyTeams() {
-  const res = await apiFetch(`${BASE}/api/teams/`, { headers: authHeaders() });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
-  return json;
+export function fetchMyTeams() {
+  return withCache("myTeams", 30_000, async () => {
+    const res = await apiFetch(`${BASE}/api/teams/`, { headers: authHeaders() });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+    return json;
+  });
 }
 
 export async function createTeam(name) {
@@ -496,13 +525,16 @@ export async function sendTestNotification() {
 
 // ── Marketplace ───────────────────────────────────────────────────────────────
 
-export async function fetchMarketplace({ search = "", sort = "newest" } = {}) {
-  const params = new URLSearchParams({ sort });
-  if (search) params.set("search", search);
-  const res = await apiFetch(`${BASE}/api/marketplace/?${params}`);
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
-  return json;
+export function fetchMarketplace({ search = "", sort = "newest" } = {}) {
+  const key = `marketplace:${sort}:${search}`;
+  return withCache(key, 60_000, async () => {
+    const params = new URLSearchParams({ sort });
+    if (search) params.set("search", search);
+    const res = await apiFetch(`${BASE}/api/marketplace/?${params}`);
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+    return json;
+  });
 }
 
 export async function fetchMarketplaceTemplate(id) {
@@ -520,6 +552,7 @@ export async function publishTemplate(data) {
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.detail || "Fehler beim Veröffentlichen");
+  bustCache("marketplace:");
   return json;
 }
 
@@ -530,6 +563,7 @@ export async function deleteMarketplaceTemplate(id) {
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.detail || "Fehler beim Löschen");
+  bustCache("marketplace:");
   return json;
 }
 
@@ -627,10 +661,12 @@ export async function updateContainerImage(containerId) {
 
 // ── Audit ─────────────────────────────────────────────────────────────────
 
-export async function fetchAuditLog() {
-  const res = await apiFetch(`${BASE}/api/audit/`, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to fetch audit log");
-  return res.json();
+export function fetchAuditLog() {
+  return withCache("auditLog", 30_000, async () => {
+    const res = await apiFetch(`${BASE}/api/audit/`, { headers: authHeaders() });
+    if (!res.ok) throw new Error("Failed to fetch audit log");
+    return res.json();
+  });
 }
 
 // ── API Keys ──────────────────────────────────────────────────────────────
@@ -695,11 +731,13 @@ export async function deleteSnapshot(id) {
 
 // ── Public Templates ──────────────────────────────────────────────────────
 
-export async function fetchPublicTemplates() {
-  const res = await apiFetch(`${BASE}/api/user-templates/public`, { headers: authHeaders() });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
-  return json;
+export function fetchPublicTemplates() {
+  return withCache("publicTemplates", 60_000, async () => {
+    const res = await apiFetch(`${BASE}/api/user-templates/public`, { headers: authHeaders() });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || "Fehler beim Laden");
+    return json;
+  });
 }
 
 export async function setTemplateVisibility(id, isPublic) {

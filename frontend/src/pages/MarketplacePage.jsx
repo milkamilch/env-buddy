@@ -414,7 +414,7 @@ export default function MarketplacePage({ user }) {
   const [showPublish, setShowPublish] = useState(false);
 
   async function load() {
-    setLoading(true);
+    if (templates.length === 0) setLoading(true);
     try {
       const data = await fetchMarketplace({ search, sort });
       setTemplates(data);
