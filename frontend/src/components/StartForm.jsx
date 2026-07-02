@@ -28,7 +28,7 @@ function buildMemSteps(totalRamMb) {
   return ALL_MEM_STEPS.filter((s) => s.mb === 0 || s.mb <= totalRamMb);
 }
 
-export default function StartForm({ templates, onStarted, onClose, prefill, onPrefillConsumed }) {
+export default function StartForm({ templates, onStarted, onStarting, onClose, prefill, onPrefillConsumed }) {
   const toast = useToast();
   const [mode, setMode] = useState("single");
 
@@ -116,6 +116,7 @@ export default function StartForm({ templates, onStarted, onClose, prefill, onPr
     const cpuValue = CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].value;
     if (cpuValue) config.cpu_limit = cpuValue;
     onClose?.();
+    onStarting?.(template?.label || template, template?.icon);
     toast.info(`${template?.label || template} wird gestartet…`);
     startContainer(template, duration, config)
       .then(() => { toast.success("Container gestartet"); onStarted(); })
@@ -193,6 +194,7 @@ export default function StartForm({ templates, onStarted, onClose, prefill, onPr
     const defaultName = stackSelected.map((k) => templates.find((t) => t.key === k)?.label || k).join("+");
     const name = stackName || defaultName;
     onClose?.();
+    onStarting?.(name, null);
     toast.info(`Stack „${name}" wird gestartet…`);
     startStack(containers, name, stackDuration)
       .then(() => { toast.success(`Stack „${name}" gestartet`); onStarted(); })

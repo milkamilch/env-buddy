@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { X } from "lucide-react";
 import StartForm from "./StartForm";
 
-export default function StartDrawer({ open, onClose, templates, onStarted, prefill, onPrefillConsumed }) {
+export default function StartDrawer({ open, onClose, templates, onStarted, onStarting, prefill, onPrefillConsumed }) {
   useEffect(() => {
     if (!open) return;
     function onKey(e) {
@@ -29,6 +29,7 @@ export default function StartDrawer({ open, onClose, templates, onStarted, prefi
             <StartForm
               templates={templates}
               onStarted={onStarted}
+              onStarting={onStarting}
               onClose={onClose}
               prefill={prefill}
               onPrefillConsumed={onPrefillConsumed}

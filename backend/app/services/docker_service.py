@@ -353,6 +353,9 @@ def start_container(template_name: str, duration_minutes: int = 60,
                 actual_port = get_free_port(actual_port + 1)
                 run_kwargs["ports"] = {f"{template['port']}/tcp": actual_port}
                 run_kwargs["labels"]["port"] = str(actual_port)
+            elif attempt < 2 and ("conflict" in msg or "already in use" in msg or e.response.status_code == 409):
+                actual_name = f"testbuddy-{template_name}-{uuid.uuid4().hex[:6]}"
+                run_kwargs["name"] = actual_name
             else:
                 _handle_docker_api_error(e, actual_port)
 

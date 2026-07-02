@@ -34,6 +34,7 @@ export default function App() {
   const location = useLocation();
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [clonePrefill, setClonePrefill] = useState(null);
+  const [pendingContainers, setPendingContainers] = useState([]);
 
   function handleLogout() {
     localStorage.removeItem("token");
@@ -68,8 +69,17 @@ export default function App() {
       const [data, stackData] = await Promise.all([fetchContainers(), fetchStacks()]);
       setContainers(data);
       setStacks(stackData);
+      setPendingContainers([]);
       setLoading(false);
     } catch { setLoading(false); }
+  }
+
+  function addPending(label, icon) {
+    const id = `pending-${Date.now()}`;
+    setPendingContainers((prev) => [...prev, {
+      id, name: label, template: label, icon,
+      status: "starting", port: null, stops_at: null, started_at: null, _pending: true,
+    }]);
   }
 
   useEffect(() => {
@@ -159,7 +169,7 @@ export default function App() {
             <Route path="/audit" element={<AuditPage />} />
             <Route path="/dashboard" element={
               <DashboardPage
-                containers={containers}
+                containers={[...containers, ...pendingContainers]}
                 stacks={stacks}
                 loading={loading}
                 startFormTemplates={startFormTemplates}
@@ -182,6 +192,7 @@ export default function App() {
         onClose={() => setDrawerOpen(false)}
         templates={startFormTemplates}
         onStarted={loadAll}
+        onStarting={addPending}
         prefill={clonePrefill}
         onPrefillConsumed={() => setClonePrefill(null)}
       />
