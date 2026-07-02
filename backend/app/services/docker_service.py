@@ -1,5 +1,6 @@
 import docker
 import uuid
+import secrets
 from collections import deque
 from datetime import datetime, timezone, timedelta
 
@@ -202,30 +203,55 @@ TEMPLATES = {
     },
 }
 
-_CONNECTION_STRING_TEMPLATES = {
-    "postgres":    "postgresql://envbuddy:envbuddy@localhost:{port}/testdb",
-    "timescaledb": "postgresql://envbuddy:envbuddy@localhost:{port}/testdb",
-    "mysql":       "mysql://root:envbuddy@localhost:{port}/testdb",
-    "mariadb":     "mysql://root:envbuddy@localhost:{port}/testdb",
-    "mongo":       "mongodb://localhost:{port}",
-    "redis":       "redis://localhost:{port}",
-    "elasticsearch": "http://localhost:{port}",
-    "neo4j":       "bolt://localhost:{port}",
-    "influxdb":    "http://localhost:{port}",
-    "couchdb":     "http://envbuddy:envbuddy@localhost:{port}",
-    "rabbitmq":    "amqp://envbuddy:envbuddy@localhost:{port}",
-    "kafka":       "localhost:{port}",
-    "nats":        "nats://localhost:{port}",
-    "mosquitto":   "mqtt://localhost:{port}",
-    "minio":       "http://localhost:{port}  (user: envbuddy, password: envbuddy123)",
-    "vault":       "http://localhost:{port}  (token: envbuddy)",
+_PASSWORD_CONFIG = {
+    "postgres":    {"env": "POSTGRES_PASSWORD",
+                    "conn": "postgresql://envbuddy:{pw}@{host}:{port}/testdb"},
+    "timescaledb": {"env": "POSTGRES_PASSWORD",
+                    "conn": "postgresql://envbuddy:{pw}@{host}:{port}/testdb"},
+    "mysql":       {"env": "MYSQL_ROOT_PASSWORD",
+                    "conn": "mysql://root:{pw}@{host}:{port}/testdb"},
+    "mariadb":     {"env": "MARIADB_ROOT_PASSWORD",
+                    "conn": "mysql://root:{pw}@{host}:{port}/testdb"},
+    "mongo":       {"env": "MONGO_INITDB_ROOT_PASSWORD",
+                    "extra_env": {"MONGO_INITDB_ROOT_USERNAME": "envbuddy"},
+                    "conn": "mongodb://envbuddy:{pw}@{host}:{port}"},
+    "redis":       {"command": ["redis-server", "--requirepass", "{pw}"],
+                    "conn": "redis://:{pw}@{host}:{port}"},
+    "couchdb":     {"env": "COUCHDB_PASSWORD",
+                    "conn": "http://envbuddy:{pw}@{host}:{port}"},
+    "rabbitmq":    {"env": "RABBITMQ_DEFAULT_PASS",
+                    "conn": "amqp://envbuddy:{pw}@{host}:{port}"},
+    "influxdb":    {"env": "DOCKER_INFLUXDB_INIT_PASSWORD",
+                    "conn": "http://{host}:{port}  (user: envbuddy, password: {pw})"},
+    "minio":       {"env": "MINIO_ROOT_PASSWORD",
+                    "conn": "http://{host}:{port}  (user: envbuddy, password: {pw})"},
+    "vault":       {"env": "VAULT_DEV_ROOT_TOKEN_ID",
+                    "conn": "http://{host}:{port}  (token: {pw})"},
+    "keycloak":    {"env": "KEYCLOAK_ADMIN_PASSWORD",
+                    "conn": "http://{host}:{port}  (admin / {pw})"},
+    "grafana":     {"env": "GF_SECURITY_ADMIN_PASSWORD",
+                    "conn": "http://{host}:{port}  (admin / {pw})"},
+    "neo4j":       {"env": "NEO4J_AUTH", "env_format": "envbuddy/{pw}",
+                    "conn": "bolt://{host}:{port}  (envbuddy / {pw})"},
 }
 
-def get_connection_string(template_name: str, port: int) -> str | None:
-    tpl = _CONNECTION_STRING_TEMPLATES.get(template_name)
+_PLAIN_CONNECTION_TEMPLATES = {
+    "elasticsearch": "http://{host}:{port}",
+    "kafka":         "{host}:{port}",
+    "nats":          "nats://{host}:{port}",
+    "mosquitto":     "mqtt://{host}:{port}",
+}
+
+def get_connection_string(template_name: str, port: int, host: str = "localhost", password: str | None = None) -> str | None:
+    pw_cfg = _PASSWORD_CONFIG.get(template_name)
+    if pw_cfg and password:
+        return pw_cfg["conn"].format(pw=password, host=host, port=port)
+    if pw_cfg:
+        return pw_cfg["conn"].format(pw="???", host=host, port=port)
+    tpl = _PLAIN_CONNECTION_TEMPLATES.get(template_name)
     if tpl:
-        return tpl.format(port=port)
-    return f"http://localhost:{port}"
+        return tpl.format(host=host, port=port)
+    return f"http://{host}:{port}"
 
 
 _INTERNAL_ENV_PREFIXES = (
@@ -258,10 +284,11 @@ def get_dotenv_content(container_id: str, server_host: str = "localhost") -> str
         if any(item.startswith(prefix) for prefix in _INTERNAL_ENV_PREFIXES):
             continue
         lines.append(item)
-    conn = get_connection_string(template, int(port)) if port else None
+    auto_pw = c.labels.get("auto-password")
+    conn = get_connection_string(template, int(port), host=server_host, password=auto_pw) if port else None
     if conn:
         key = template.upper().replace("-", "_")
-        lines.append(f"{key}_URL={conn.replace('localhost', server_host)}")
+        lines.append(f"{key}_URL={conn}")
     return "\n".join(lines) + "\n"
 
 
@@ -323,6 +350,16 @@ def start_container(template_name: str, duration_minutes: int = 60,
     actual_name = container_name if container_name else f"testbuddy-{template_name}-{uuid.uuid4().hex[:6]}"
     env = {**template["env"], **env_overrides}
 
+    pw_cfg = _PASSWORD_CONFIG.get(template_name)
+    auto_pw = None
+    if pw_cfg and template_name not in (env_overrides or {}):
+        auto_pw = secrets.token_urlsafe(16)
+        if "env" in pw_cfg:
+            env_val = pw_cfg.get("env_format", "{pw}").replace("{pw}", auto_pw)
+            env[pw_cfg["env"]] = env_val
+        if "extra_env" in pw_cfg:
+            env.update(pw_cfg["extra_env"])
+
     run_kwargs = dict(
         image=template["image"],
         name=actual_name,
@@ -336,9 +373,12 @@ def start_container(template_name: str, duration_minutes: int = 60,
             "template": template_name,
             "port": str(actual_port),
             "user-id": str(user_id) if user_id else "",
+            **({"auto-password": auto_pw} if auto_pw else {}),
             **extra_labels,
         },
     )
+    if pw_cfg and auto_pw and "command" in pw_cfg:
+        run_kwargs["command"] = [p.replace("{pw}", auto_pw) for p in pw_cfg["command"]]
     if mem_limit:
         run_kwargs["mem_limit"] = mem_limit
     if cpu_limit and cpu_limit > 0:
@@ -529,7 +569,7 @@ def _container_to_dict(c) -> dict:
         "cpu_percent": cpu_percent,
         "ram_mb": ram_mb,
         "ram_percent": ram_percent,
-        "connection_string": get_connection_string(tpl_name, port_val) if port_val else None,
+        "connection_string": get_connection_string(tpl_name, port_val, password=labels.get("auto-password")) if port_val else None,
     }
 
 
