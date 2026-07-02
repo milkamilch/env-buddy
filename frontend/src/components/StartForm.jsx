@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { startContainer, startStack, fetchTemplateDetails, fetchSystemInfo } from "../services/api";
+import { useToast } from "./Toast";
 import "./StartForm.css";
 
 const ALL_MEM_STEPS = [
@@ -27,7 +28,8 @@ function buildMemSteps(totalRamMb) {
   return ALL_MEM_STEPS.filter((s) => s.mb === 0 || s.mb <= totalRamMb);
 }
 
-export default function StartForm({ templates, onStarted, prefill, onPrefillConsumed }) {
+export default function StartForm({ templates, onStarted, onClose, prefill, onPrefillConsumed }) {
+  const toast = useToast();
   const [mode, setMode] = useState("single");
 
   // ── Single mode ──────────────────────────────────────────────────────────
@@ -102,22 +104,22 @@ export default function StartForm({ templates, onStarted, prefill, onPrefillCons
   const removeEnv = (i)       => setEnvVars((p) => p.filter((_, idx) => idx !== i));
   const addEnv    = ()        => setEnvVars((p) => [...p, { key: "", value: "" }]);
 
-  async function handleSubmitSingle(e) {
+  function handleSubmitSingle(e) {
     e.preventDefault();
-    setLoading(true); setError(null);
-    try {
-      const config = {};
-      if (envVars.length > 0)
-        config.env_overrides = Object.fromEntries(envVars.filter((e) => e.key).map((e) => [e.key, e.value]));
-      if (hostPort) config.host_port = parseInt(hostPort, 10);
-      if (containerName) config.container_name = containerName;
-      const memValue = memSteps[Math.min(memStep, memSteps.length - 1)].apiValue;
-      if (memValue) config.mem_limit = memValue;
-      const cpuValue = CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].value;
-      if (cpuValue) config.cpu_limit = cpuValue;
-      onStarted(await startContainer(template, duration, config));
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    const config = {};
+    if (envVars.length > 0)
+      config.env_overrides = Object.fromEntries(envVars.filter((e) => e.key).map((e) => [e.key, e.value]));
+    if (hostPort) config.host_port = parseInt(hostPort, 10);
+    if (containerName) config.container_name = containerName;
+    const memValue = memSteps[Math.min(memStep, memSteps.length - 1)].apiValue;
+    if (memValue) config.mem_limit = memValue;
+    const cpuValue = CPU_STEPS[Math.min(cpuStep, CPU_STEPS.length - 1)].value;
+    if (cpuValue) config.cpu_limit = cpuValue;
+    onClose?.();
+    toast.info(`${template?.label || template} wird gestartet…`);
+    startContainer(template, duration, config)
+      .then(() => { toast.success("Container gestartet"); onStarted(); })
+      .catch((err) => toast.error(err.message));
   }
 
   // ── Stack: step 1 — chip toggle ───────────────────────────────────────────
@@ -178,23 +180,24 @@ export default function StartForm({ templates, onStarted, prefill, onPrefillCons
   const addSCEnv    = (id)       => setStackContainers((p) => p.map((c) => c._id === id
     ? { ...c, env: [...c.env, { key: "", val: "" }] } : c));
 
-  async function handleSubmitStack(e) {
+  function handleSubmitStack(e) {
     e.preventDefault();
-    setLoading(true); setError(null);
-    try {
-      const containers = stackContainers.map((c) => ({
-        service_name:   c.service_name,
-        image:          c.image,
-        internal_port:  parseInt(c.internal_port) || 0,
-        env:            Object.fromEntries(c.env.filter((e) => e.key).map((e) => [e.key, e.val])),
-        host_port:      c.host_port ? parseInt(c.host_port) : null,
-        container_name: c.container_name || null,
-      }));
-      const defaultName = stackSelected.map((k) => templates.find((t) => t.key === k)?.label || k).join("+");
-      onStarted(await startStack(containers, stackName || defaultName, stackDuration));
-      setStackStep(1); setStackSelected([]); setStackContainers([]); setStackName("");
-    } catch (err) { setError(err.message); }
-    finally { setLoading(false); }
+    const containers = stackContainers.map((c) => ({
+      service_name:   c.service_name,
+      image:          c.image,
+      internal_port:  parseInt(c.internal_port) || 0,
+      env:            Object.fromEntries(c.env.filter((e) => e.key).map((e) => [e.key, e.val])),
+      host_port:      c.host_port ? parseInt(c.host_port) : null,
+      container_name: c.container_name || null,
+    }));
+    const defaultName = stackSelected.map((k) => templates.find((t) => t.key === k)?.label || k).join("+");
+    const name = stackName || defaultName;
+    onClose?.();
+    toast.info(`Stack „${name}" wird gestartet…`);
+    startStack(containers, name, stackDuration)
+      .then(() => { toast.success(`Stack „${name}" gestartet`); onStarted(); })
+      .catch((err) => toast.error(err.message));
+    setStackStep(1); setStackSelected([]); setStackContainers([]); setStackName("");
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -292,8 +295,8 @@ export default function StartForm({ templates, onStarted, prefill, onPrefillCons
             </div>
           )}
           {error && <p className="form-error">{error}</p>}
-          <button type="submit" disabled={loading || !template} className="btn-start">
-            {loading ? "Startet..." : "▶ Starten"}
+          <button type="submit" disabled={!template} className="btn-start">
+            ▶ Starten
           </button>
         </form>
       )}
@@ -413,8 +416,8 @@ export default function StartForm({ templates, onStarted, prefill, onPrefillCons
               ← Zurück
             </button>
             <button type="submit" className="btn-start" style={{ flex: 1 }}
-              disabled={loading || stackContainers.length < 2}>
-              {loading ? "Startet…" : `▶ Stack starten (${stackContainers.length})`}
+              disabled={stackContainers.length < 2}>
+              {`▶ Stack starten (${stackContainers.length})`}
             </button>
           </div>
         </form>

@@ -28,7 +28,8 @@ export default function StartDrawer({ open, onClose, templates, onStarted, prefi
           {templates.length > 0 && (
             <StartForm
               templates={templates}
-              onStarted={() => { onStarted(); onClose(); }}
+              onStarted={onStarted}
+              onClose={onClose}
               prefill={prefill}
               onPrefillConsumed={onPrefillConsumed}
             />
