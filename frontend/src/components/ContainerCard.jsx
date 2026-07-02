@@ -94,6 +94,14 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
+  const statsHistory = useStatsHistory(container);
+
+  useEffect(() => {
+    if (!extendOpen) return;
+    const close = () => setExtendOpen(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [extendOpen]);
 
   if (container._pending) {
     const icon = TEMPLATE_ICONS[container.template] || container.icon || "📦";
@@ -114,7 +122,6 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     );
   }
   const isExpiringSoon = remaining != null && remaining > 0 && remaining <= 300;
-  const statsHistory = useStatsHistory(container);
 
   const templateBase = (container.template || "").split(":")[0].split("/").pop().toLowerCase();
 
@@ -153,13 +160,6 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     }
   }
 
-
-  useEffect(() => {
-    if (!extendOpen) return;
-    const close = () => setExtendOpen(false);
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [extendOpen]);
 
   async function handleStop(e) {
     e.stopPropagation();
