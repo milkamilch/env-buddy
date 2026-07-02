@@ -75,25 +75,6 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
   const [acting, setActing] = useState(false);
   const [restarting, setRestarting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-
-  if (container._pending) {
-    const icon = TEMPLATE_ICONS[container.template] || container.icon || "📦";
-    return (
-      <div className={`container-card pending-card${viewMode === "list" ? " container-card-list" : ""}`}>
-        <div className="card-header">
-          <span className="card-icon">{typeof icon === "string" && icon.startsWith("<") ? <span dangerouslySetInnerHTML={{ __html: icon }} /> : icon}</span>
-          <div className="card-title-block">
-            <span className="card-name">{container.name}</span>
-            <span className="card-template">{container.template}</span>
-          </div>
-        </div>
-        <div className="pending-status">
-          <span className="status-dot status-dot-starting" />
-          <span style={{ fontSize: "12px", color: "var(--ink-3)" }}>Startet…</span>
-        </div>
-      </div>
-    );
-  }
   const [logsOpen, setLogsOpen] = useState(false);
   const [graphOpen, setGraphOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
@@ -113,6 +94,25 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
 
   const isRunning = container.status === "running";
   const remaining = useCountdown(isRunning ? container.stops_at : null);
+
+  if (container._pending) {
+    const icon = TEMPLATE_ICONS[container.template] || container.icon || "📦";
+    return (
+      <div className={`container-card pending-card${viewMode === "list" ? " container-card-list" : ""}`}>
+        <div className="card-header">
+          <span className="card-icon">{typeof icon === "string" && icon.startsWith("<") ? <span dangerouslySetInnerHTML={{ __html: icon }} /> : icon}</span>
+          <div className="card-title-block">
+            <span className="card-name">{container.name}</span>
+            <span className="card-template">{container.template}</span>
+          </div>
+        </div>
+        <div className="pending-status">
+          <span className="status-dot status-dot-starting" />
+          <span style={{ fontSize: "12px", color: "var(--ink-3)" }}>Startet…</span>
+        </div>
+      </div>
+    );
+  }
   const isExpiringSoon = remaining != null && remaining > 0 && remaining <= 300;
   const statsHistory = useStatsHistory(container);
 
