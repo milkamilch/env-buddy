@@ -264,12 +264,38 @@ def get_dotenv_content(container_id: str) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _stops_at(started_at_str: str | None, duration_minutes: int) -> str | None:
-    if not started_at_str:
-        return None
-    dt = datetime.fromisoformat(started_at_str)
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+def _effective_started_at(container, label_started_at_str: str | None) -> datetime:
+    """Return the later of the label timestamp and Docker's actual State.StartedAt.
+
+    When a stopped container is restarted via container.start(), Docker updates
+    State.StartedAt but the 'started-at' label retains the original value from
+    months ago. Using that stale label causes auto_stop to fire immediately.
+    """
+    label_dt = None
+    if label_started_at_str:
+        try:
+            label_dt = datetime.fromisoformat(label_started_at_str)
+            if label_dt.tzinfo is None:
+                label_dt = label_dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+
+    docker_dt = None
+    try:
+        docker_started_str = container.attrs.get("State", {}).get("StartedAt", "")
+        if docker_started_str:
+            docker_dt = datetime.fromisoformat(docker_started_str.replace("Z", "+00:00"))
+    except Exception:
+        pass
+
+    candidates = [d for d in (label_dt, docker_dt) if d is not None]
+    if not candidates:
+        return datetime.now(timezone.utc)
+    return max(candidates)
+
+
+def _stops_at(container, label_started_at_str: str | None, duration_minutes: int) -> str | None:
+    dt = _effective_started_at(container, label_started_at_str)
     return (dt + timedelta(minutes=duration_minutes)).isoformat()
 
 def get_free_port(start=10000, end=11000):
@@ -480,10 +506,11 @@ def _container_stats(c):
 def _container_to_dict(c) -> dict:
     labels = c.labels
     cpu_percent, ram_mb, ram_percent = _container_stats(c)
-    started_at = labels.get("started-at")
+    label_started_at = labels.get("started-at")
     duration = int(labels.get("duration-minutes", 60))
     extra = _extensions.get(c.short_id, 0)
-    stops_at = _stops_at(started_at, duration + extra)
+    effective_dt = _effective_started_at(c, label_started_at)
+    stops_at = (effective_dt + timedelta(minutes=duration + extra)).isoformat()
     tpl_name = labels.get("template", "unknown")
     port_val = int(labels["port"]) if labels.get("port") else None
     return {
@@ -493,7 +520,7 @@ def _container_to_dict(c) -> dict:
         "port": port_val,
         "status": c.status,
         "health": _health_status(c),
-        "started_at": started_at,
+        "started_at": effective_dt.isoformat(),
         "stops_at": stops_at,
         "cpu_percent": cpu_percent,
         "ram_mb": ram_mb,
@@ -577,10 +604,10 @@ def list_stacks(user_id: int | None = None):
         if user_id is not None and labels.get("user-id") != str(user_id):
             continue
         cpu_percent, ram_mb, ram_percent = _container_stats(c)
-        started_at = labels.get("started-at")
         duration = int(labels.get("duration-minutes", 60))
         extra = _extensions.get(c.short_id, 0)
-        stops_at = _stops_at(started_at, duration + extra)
+        effective_dt = _effective_started_at(c, labels.get("started-at"))
+        stops_at = (effective_dt + timedelta(minutes=duration + extra)).isoformat()
         container_info = {
             "id": c.short_id,
             "name": c.name,
@@ -588,7 +615,7 @@ def list_stacks(user_id: int | None = None):
             "port": int(labels["port"]) if labels.get("port") else None,
             "status": c.status,
             "health": _health_status(c),
-            "started_at": started_at,
+            "started_at": effective_dt.isoformat(),
             "stops_at": stops_at,
             "cpu_percent": cpu_percent,
             "ram_mb": ram_mb,
@@ -779,15 +806,12 @@ def auto_stop_expired_containers():
 
     for c in containers:
         labels = c.labels
-        started_at_str = labels.get("started-at")
         duration_str = labels.get("duration-minutes")
         user_id_str = labels.get("user-id", "")
-        if not started_at_str or not duration_str:
+        if not duration_str:
             continue
         try:
-            started_at = datetime.fromisoformat(started_at_str)
-            if started_at.tzinfo is None:
-                started_at = started_at.replace(tzinfo=timezone.utc)
+            started_at = _effective_started_at(c, labels.get("started-at"))
             extra = _extensions.get(c.short_id, 0)
             stops_at = started_at + timedelta(minutes=int(duration_str) + extra)
 
@@ -842,10 +866,10 @@ def extend_container(container_id: str, extra_minutes: int = 30) -> dict:
     _extensions[c.short_id] = _extensions.get(c.short_id, 0) + extra_minutes
     _warned_containers.discard(c.id)  # allow re-warning after extension
     labels = c.labels
-    started_at = labels.get("started-at")
     duration = int(labels.get("duration-minutes", 60))
     total_extra = _extensions[c.short_id]
-    new_stops_at = _stops_at(started_at, duration + total_extra)
+    effective_dt = _effective_started_at(c, labels.get("started-at"))
+    new_stops_at = (effective_dt + timedelta(minutes=duration + total_extra)).isoformat()
     return {"extended_by": extra_minutes, "total_extra": total_extra, "stops_at": new_stops_at}
 
 
