@@ -24,6 +24,11 @@ sleep 1
 echo -e "${BLUE}Starting Backend...${NC}"
 cd "$ROOT/backend"
 source venv/bin/activate
+# Auto-detect Colima socket if DOCKER_HOST not set and default socket missing
+if [ -z "$DOCKER_HOST" ] && [ ! -S /var/run/docker.sock ] && [ -S "$HOME/.colima/default/docker.sock" ]; then
+    export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
+    echo -e "${BLUE}Using Colima socket: $DOCKER_HOST${NC}"
+fi
 uvicorn app.main:app --reload &
 BACKEND_PID=$!
 

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, HTTPException, Depends, WebSocket, WebSocketDisconnect, Query, Request
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 from jose import jwt, JWTError
@@ -537,10 +537,11 @@ def stats(container_id: str, current_user: UserDB = Depends(_get_required_user))
 
 
 @router.get("/{container_id}/dotenv", response_class=PlainTextResponse)
-def get_dotenv(container_id: str, current_user: UserDB = Depends(_get_required_user)):
+def get_dotenv(container_id: str, request: Request, current_user: UserDB = Depends(_get_required_user)):
     _assert_owner(container_id, current_user)
     try:
-        content = docker_service.get_dotenv_content(container_id)
+        host = request.headers.get("x-forwarded-host") or request.headers.get("host", "localhost").split(":")[0]
+        content = docker_service.get_dotenv_content(container_id, server_host=host)
         return PlainTextResponse(content, media_type="text/plain",
                                  headers={"Content-Disposition": f'attachment; filename=".env"'})
     except Exception as e:

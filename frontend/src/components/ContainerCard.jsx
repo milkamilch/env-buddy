@@ -129,11 +129,14 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
     ? "var(--warn)"
     : "var(--info)";
 
+  const serverHost = window.location.hostname;
+  const connString = container.connection_string?.replace(/localhost/g, serverHost);
+
   async function handleCopyConnectionString(e) {
     e.stopPropagation();
-    if (!container.connection_string) return;
+    if (!connString) return;
     try {
-      await navigator.clipboard.writeText(container.connection_string);
+      await navigator.clipboard.writeText(connString);
       toast.success("Connection String kopiert");
     } catch {
       toast.error("Kopieren fehlgeschlagen");
@@ -323,10 +326,10 @@ export default function ContainerCard({ container, onStopped, onRemoved, viewMod
         </div>
 
         {/* Connection String */}
-        {container.connection_string && (
+        {connString && (
           <div className="card-connection" onClick={(e) => e.stopPropagation()}>
-            <code className="card-conn-str" title={container.connection_string}>
-              {container.connection_string}
+            <code className="card-conn-str" title={connString}>
+              {connString}
             </code>
             <button className="btn-copy-conn" onClick={handleCopyConnectionString} title="Connection String kopieren">⧉</button>
             <button className="btn-copy-conn" onClick={handleDownloadDotenv} title=".env herunterladen">.env</button>

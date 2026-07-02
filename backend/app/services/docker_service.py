@@ -241,7 +241,7 @@ _INTERNAL_ENV_PREFIXES = (
     "DEBIAN_FRONTEND=",
 )
 
-def get_dotenv_content(container_id: str) -> str:
+def get_dotenv_content(container_id: str, server_host: str = "localhost") -> str:
     c = client.containers.get(container_id)
     template = c.labels.get("template", "")
     port = c.labels.get("port", "")
@@ -249,6 +249,7 @@ def get_dotenv_content(container_id: str) -> str:
     lines = [
         f"# Test-Buddy Container: {c.name}",
         f"# Template: {template}",
+        f"HOST={server_host}",
         f"HOST_PORT={port}",
     ]
     for item in env_list:
@@ -260,7 +261,7 @@ def get_dotenv_content(container_id: str) -> str:
     conn = get_connection_string(template, int(port)) if port else None
     if conn:
         key = template.upper().replace("-", "_")
-        lines.append(f"{key}_URL={conn}")
+        lines.append(f"{key}_URL={conn.replace('localhost', server_host)}")
     return "\n".join(lines) + "\n"
 
 
