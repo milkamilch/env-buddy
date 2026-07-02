@@ -152,9 +152,10 @@ TEMPLATES = {
         "port":  8080,
     },
     "minio": {
-        "image": "minio/minio",
-        "env":   {"MINIO_ROOT_USER": "envbuddy", "MINIO_ROOT_PASSWORD": "envbuddy123"},
-        "port":  9000,
+        "image":   "minio/minio",
+        "env":     {"MINIO_ROOT_USER": "miniobuddy", "MINIO_ROOT_PASSWORD": "miniobuddy123"},
+        "port":    9000,
+        "command": ["server", "/data"],
     },
     "vault": {
         "image": "vault:1.15",
@@ -162,9 +163,10 @@ TEMPLATES = {
         "port":  8200,
     },
     "keycloak": {
-        "image": "quay.io/keycloak/keycloak:24.0",
-        "env":   {"KEYCLOAK_ADMIN": "admin", "KEYCLOAK_ADMIN_PASSWORD": "envbuddy", "KC_HTTP_ENABLED": "true"},
-        "port":  8080,
+        "image":   "quay.io/keycloak/keycloak:24.0",
+        "env":     {"KEYCLOAK_ADMIN": "admin", "KEYCLOAK_ADMIN_PASSWORD": "envbuddy", "KC_HTTP_ENABLED": "true"},
+        "port":    8080,
+        "command": ["start-dev"],
     },
     "gitea": {
         "image": "gitea/gitea:latest",
@@ -224,7 +226,8 @@ _PASSWORD_CONFIG = {
     "influxdb":    {"env": "DOCKER_INFLUXDB_INIT_PASSWORD",
                     "conn": "http://{host}:{port}  (user: envbuddy, password: {pw})"},
     "minio":       {"env": "MINIO_ROOT_PASSWORD",
-                    "conn": "http://{host}:{port}  (user: envbuddy, password: {pw})"},
+                    "extra_env": {"MINIO_ROOT_USER": "miniobuddy"},
+                    "conn": "http://{host}:{port}  (user: miniobuddy, password: {pw})"},
     "vault":       {"env": "VAULT_DEV_ROOT_TOKEN_ID",
                     "conn": "http://{host}:{port}  (token: {pw})"},
     "keycloak":    {"env": "KEYCLOAK_ADMIN_PASSWORD",
@@ -379,6 +382,8 @@ def start_container(template_name: str, duration_minutes: int = 60,
     )
     if pw_cfg and auto_pw and "command" in pw_cfg:
         run_kwargs["command"] = [p.replace("{pw}", auto_pw) for p in pw_cfg["command"]]
+    elif "command" in template:
+        run_kwargs["command"] = template["command"]
     if mem_limit:
         run_kwargs["mem_limit"] = mem_limit
     if cpu_limit and cpu_limit > 0:
