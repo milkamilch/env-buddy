@@ -95,14 +95,16 @@ def _run_migrations():
             pass
 
 async def _auto_stop_loop():
+    loop = asyncio.get_event_loop()
     while True:
         await asyncio.sleep(30)
-        docker_service.auto_stop_expired_containers()
+        await loop.run_in_executor(None, docker_service.auto_stop_expired_containers)
 
 async def _stats_collect_loop():
+    loop = asyncio.get_event_loop()
     while True:
         await asyncio.sleep(15)
-        docker_service.collect_stats_snapshot()
+        await loop.run_in_executor(None, docker_service.collect_stats_snapshot)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
