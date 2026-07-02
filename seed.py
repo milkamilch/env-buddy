@@ -21,7 +21,7 @@ import os
 import sys
 
 BASE_URL       = os.getenv("BASE_URL", "https://testbud.de")
-DB_PATH        = os.getenv("DB_PATH",  "/home/deploy/envbuddy/data/testbuddy.db")
+DB_PATH        = os.getenv("DB_PATH",  "/app/testbuddy.db")
 REAL_USER_ID   = int(os.getenv("REAL_USER_ID", "1"))   # ztudff76fd — already in prod
 
 s = requests.Session()
@@ -47,6 +47,107 @@ def verify_all_in_db():
     con.execute("UPDATE users SET is_verified = 1 WHERE is_verified = 0")
     con.commit()
     con.close()
+
+def seed_audit_entries(user_rows: list[tuple]):
+    """Insert realistic audit log entries for the past weeks."""
+    import random, datetime
+    con = sqlite3.connect(DB_PATH)
+
+    # (username, template, action, extra, days_ago)
+    AUDIT_SEED = [
+        ("lars_w",   "postgres",      "started",      "Port 35432",  14),
+        ("lars_w",   "postgres",      "stopped",      None,          14),
+        ("lars_w",   "redis",         "started",      "Port 36379",  12),
+        ("lars_w",   "redis",         "restarted",    None,          12),
+        ("lars_w",   "postgres",      "started",      "Port 35432",  10),
+        ("lars_w",   "postgres",      "extended",     "+60 min",     10),
+        ("lars_w",   "postgres",      "auto_stopped", "Laufzeit abgelaufen", 10),
+        ("lars_w",   "keycloak",      "started",      "Port 38080",  8),
+        ("lars_w",   "keycloak",      "stopped",      None,          8),
+        ("lars_w",   "redis",         "started",      "Port 36379",  6),
+        ("lars_w",   "mailhog",       "started",      "Port 31025",  5),
+        ("lars_w",   "mailhog",       "removed",      None,          5),
+        ("berkay_p", "mongo",         "started",      "Port 37017",  13),
+        ("berkay_p", "mongo",         "restarted",    None,          13),
+        ("berkay_p", "mongo",         "stopped",      None,          12),
+        ("berkay_p", "postgres",      "started",      "Port 35433",  11),
+        ("berkay_p", "kafka",         "started",      "Port 39092",  9),
+        ("berkay_p", "kafka",         "auto_stopped", "Laufzeit abgelaufen", 9),
+        ("berkay_p", "postgres",      "removed",      None,          8),
+        ("tim_s",    "mailhog",       "started",      "Port 31025",  11),
+        ("tim_s",    "mailhog",       "stopped",      None,          10),
+        ("tim_s",    "mysql",         "started",      "Port 33306",  9),
+        ("tim_s",    "mysql",         "extended",     "+120 min",    9),
+        ("tim_s",    "mysql",         "stopped",      None,          9),
+        ("tim_s",    "mongo",         "started",      "Port 37017",  7),
+        ("tim_s",    "mongo",         "removed",      None,          6),
+        ("anja_r",   "mailhog",       "started",      "Port 31025",  12),
+        ("anja_r",   "redis",         "started",      "Port 36379",  12),
+        ("anja_r",   "redis",         "stopped",      None,          11),
+        ("anja_r",   "mailhog",       "restarted",    None,          10),
+        ("anja_r",   "mailhog",       "stopped",      None,          9),
+        ("moritz_b", "prometheus",    "started",      "Port 39090",  15),
+        ("moritz_b", "grafana",       "started",      "Port 33000",  15),
+        ("moritz_b", "prometheus",    "restarted",    None,          14),
+        ("moritz_b", "rabbitmq",      "started",      "Port 35672",  13),
+        ("moritz_b", "rabbitmq",      "stopped",      None,          12),
+        ("moritz_b", "grafana",       "extended",     "+60 min",     12),
+        ("moritz_b", "grafana",       "auto_stopped", "Laufzeit abgelaufen", 12),
+        ("moritz_b", "prometheus",    "removed",      None,          11),
+        ("sophie_k", "mysql",         "started",      "Port 33306",  10),
+        ("sophie_k", "mysql",         "stopped",      None,          9),
+        ("sophie_k", "mailhog",       "started",      "Port 31025",  7),
+        ("sophie_k", "mailhog",       "removed",      None,          6),
+        ("felix_w",  "rabbitmq",      "started",      "Port 35672",  11),
+        ("felix_w",  "rabbitmq",      "stopped",      None,          10),
+        ("felix_w",  "nginx",         "started",      "Port 38080",  8),
+        ("felix_w",  "nginx",         "restarted",    None,          8),
+        ("felix_w",  "nginx",         "removed",      None,          7),
+        ("lena_h",   "minio",         "started",      "Port 39000",  10),
+        ("lena_h",   "minio",         "extended",     "+60 min",     10),
+        ("lena_h",   "minio",         "stopped",      None,          10),
+        ("lena_h",   "postgres",      "started",      "Port 35432",  8),
+        ("lena_h",   "postgres",      "auto_stopped", "Laufzeit abgelaufen", 7),
+        ("niklas_b", "localstack",    "started",      "Port 34566",  9),
+        ("niklas_b", "localstack",    "stopped",      None,          8),
+        ("niklas_b", "postgres",      "started",      "Port 35432",  6),
+        ("niklas_b", "postgres",      "removed",      None,          5),
+        ("jana_m",   "elasticsearch", "started",      "Port 39200",  8),
+        ("jana_m",   "elasticsearch", "stopped",      None,          7),
+        ("jana_m",   "redis",         "started",      "Port 36379",  5),
+        ("david_k",  "nginx",         "started",      "Port 38080",  7),
+        ("david_k",  "nginx",         "stopped",      None,          7),
+        ("david_k",  "localstack",    "started",      "Port 34566",  6),
+        ("david_k",  "localstack",    "removed",      None,          5),
+        ("emma_s",   "mailhog",       "started",      "Port 31025",  6),
+        ("emma_s",   "mailhog",       "stopped",      None,          5),
+        ("emma_s",   "mysql",         "started",      "Port 33306",  4),
+        ("paul_h",   "rabbitmq",      "started",      "Port 35672",  5),
+        ("paul_h",   "rabbitmq",      "stopped",      None,          5),
+        ("paul_h",   "redis",         "started",      "Port 36379",  3),
+        ("paul_h",   "redis",         "auto_stopped", "Laufzeit abgelaufen", 3),
+    ]
+
+    username_to_id = {row[1]: row[0] for row in user_rows}
+    now = datetime.datetime.utcnow()
+    inserted = 0
+    for username, template, action, extra, days_ago in AUDIT_SEED:
+        uid = username_to_id.get(username)
+        if not uid:
+            continue
+        offset_hours = random.randint(0, 8)
+        ts = (now - datetime.timedelta(days=days_ago, hours=offset_hours)).strftime("%Y-%m-%d %H:%M:%S")
+        cname = f"testbuddy-{template}-{''.join(random.choices('abcdef0123456789', k=6))}"
+        con.execute(
+            "INSERT INTO audit_logs (user_id, username, action, container_name, template, extra, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (uid, username, action, cname, template, extra, ts),
+        )
+        inserted += 1
+    con.commit()
+    con.close()
+    print(f"   ✓ {inserted} Audit-Einträge angelegt")
+
 
 def add_real_user_to_teams(team_ids: list[int]):
     print(f"  → Füge User {REAL_USER_ID} zu {len(team_ids)} Teams hinzu ...")
@@ -540,6 +641,10 @@ def main():
 
     # 3. Login all users
     print("\n3. Login aller Nutzer ...")
+    # fetch user_id→username mapping for audit seeding
+    con = sqlite3.connect(DB_PATH)
+    user_rows = con.execute("SELECT id, username FROM users").fetchall()
+    con.close()
     tokens = {}
     for first, last, username, email, pw in USERS:
         token = login(email, pw)
@@ -669,6 +774,13 @@ def main():
         })
         if r.ok:
             print(f"   ✓ {username}: {name}")
+
+    # 9. Audit entries
+    print("\n9. Erstelle Audit-Einträge ...")
+    try:
+        seed_audit_entries(user_rows)
+    except Exception as e:
+        print(f"   !! Fehler: {e}")
 
     print("\n✅ Seeding abgeschlossen!\n")
 
