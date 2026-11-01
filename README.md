@@ -1,137 +1,137 @@
 # Env-Buddy
 
-> **On-Demand Testumgebungen auf Knopfdruck**
-> Ein Self-Service Web-Dashboard zum Starten, Überwachen und automatischen Stoppen von Docker-Containern – für das gesamte Entwicklerteam.
+> **On-demand test environments at the push of a button**
+> A self-service web dashboard for starting, monitoring and automatically stopping Docker containers – for the whole development team.
 
 ---
 
-## Inhaltsverzeichnis
+## Table of Contents
 
-- [Über das Projekt](#über-das-projekt)
+- [About the Project](#about-the-project)
 - [Features](#features)
-- [Tech-Stack](#tech-stack)
-- [Voraussetzungen](#voraussetzungen)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
 - [Installation & Setup](#installation--setup)
-- [Projekt lokal starten](#projekt-lokal-starten)
-- [API Dokumentation](#api-dokumentation)
-- [Projektstruktur](#projektstruktur)
-- [Verfügbare Templates](#verfügbare-templates)
+- [Running Locally](#running-locally)
+- [API Documentation](#api-documentation)
+- [Project Structure](#project-structure)
+- [Available Templates](#available-templates)
 - [Team](#team)
 - [Git Workflow](#git-workflow)
-- [Commit Konvention](#commit-konvention)
+- [Commit Convention](#commit-convention)
 
 ---
 
-## Über das Projekt
+## About the Project
 
-Entwickler und Tester verlieren täglich wertvolle Zeit, weil sie auf manuell bereitgestellte Testumgebungen warten müssen. Env-Buddy löst dieses Problem mit einem zentralen Web-Dashboard, über das jeder im Team per Klick isolierte Docker-Container starten kann – ganz ohne Docker-Kenntnisse oder Zugriff auf die IT-Abteilung.
+Developers and testers lose valuable time every day waiting for manually provisioned test environments. Env-Buddy solves this with a central web dashboard where anyone on the team can start isolated Docker containers with a click – no Docker knowledge or IT tickets required.
 
-Nach Ablauf eines konfigurierbaren Timers werden die Umgebungen automatisch wieder heruntergefahren – keine vergessenen Container, keine Ressourcenverschwendung.
+Once a configurable timer runs out, environments shut down automatically – no forgotten containers, no wasted resources.
 
 ---
 
 ## Features
 
-### Container-Verwaltung
-- Container per Klick starten (aus eigenen, Team- oder öffentlichen Templates)
-- Container stoppen, neu starten, verlängern und löschen
-- Live CPU- und RAM-Auslastung mit Spark-Line-Verlauf
-- Suche & Filter nach Template und Status
-- Grid- und Listenansicht
-- Container-Logs live per WebSocket streamen (`● LIVE` / `● POLLING` Badge)
-- Integriertes Browser-Terminal (xterm.js, direkt im Container)
-- Container-Konfigurationslink teilen (`?start=base64` zum Klonen)
-- Container als Template oder Snapshot speichern
-- Zugriff auf Container mit anderen Benutzern teilen
-- `.env`-Datei herunterladen
-- Docker-Image-Update per Klick (Pull & Restart)
-- Docker-Health-Check-Anzeige + TCP-Erreichbarkeitsprüfung
-- Bulk-Aktionen: mehrere Container gleichzeitig stoppen/löschen
-- Container importieren (JSON-Einfügen oder Datei-Upload, auch `docker inspect`-Format)
+### Container Management
+- Start containers with a click (from your own, team or public templates)
+- Stop, restart, extend and delete containers
+- Live CPU and RAM usage with sparkline history
+- Search & filter by template and status
+- Grid and list view
+- Stream container logs live via WebSocket (`● LIVE` / `● POLLING` badge)
+- Built-in browser terminal (xterm.js, directly inside the container)
+- Share a container configuration link (`?start=base64` for cloning)
+- Save a container as a template or snapshot
+- Share container access with other users
+- Download the `.env` file
+- One-click Docker image update (pull & restart)
+- Docker health check display + TCP reachability check
+- Bulk actions: stop/delete several containers at once
+- Import containers (paste JSON or upload a file, `docker inspect` format supported)
 
 ### Stacks
-- Multi-Container-Stacks starten, stoppen und löschen
-- Stack-Übersicht mit allen enthaltenen Containern
+- Start, stop and delete multi-container stacks
+- Stack overview with all contained containers
 
 ### Templates
-- Eigene Templates erstellen, bearbeiten, als Favoriten markieren
-- Template als öffentlich markieren (für andere Nutzer sichtbar)
-- Team-Templates teilen und gemeinsam verwalten
-- Marketplace: Community-Templates mit Bewertungen, Kommentaren und Bildern
-- Template-Suche über alle Kategorien
-- Drag & Drop Schnellauswahl-Sidebar
+- Create, edit and favorite your own templates
+- Mark a template as public (visible to other users)
+- Share and co-manage team templates
+- Marketplace: community templates with ratings, comments and images
+- Template search across all categories
+- Drag & drop quick-select sidebar
 
 ### Snapshots
-- Laufende Container-Konfiguration als Snapshot speichern (Knopf `📷` auf der Karte)
-- Snapshots in den Profileinstellungen auflisten und löschen
+- Save a running container's configuration as a snapshot (`📷` button on the card)
+- List and delete snapshots in the profile settings
 
-### API-Keys
-- Bis zu 10 persönliche API-Keys erstellen und widerrufen
-- Key-Prefix zur Identifikation, Raw-Key wird einmalig angezeigt
-- Authentifizierung via `X-Api-Key`-Header oder `Authorization: ApiKey xxx`
-- Fällt automatisch auf JWT zurück
+### API Keys
+- Create and revoke up to 10 personal API keys
+- Key prefix for identification; the raw key is shown only once
+- Authenticate via `X-Api-Key` header or `Authorization: ApiKey xxx`
+- Falls back to JWT automatically
 
 ### GitHub Actions Integration
-- `POST /api/github-actions/trigger` startet Container über API-Key-Auth
-- Fertiges Workflow-YAML-Beispiel in den Profileinstellungen
+- `POST /api/github-actions/trigger` starts containers using API key auth
+- Ready-made workflow YAML example in the profile settings
 
 ### Teams
-- Teams erstellen und Mitglieder einladen
-- Rollen: Admin, Member
-- Team-eigene Template-Bibliothek
+- Create teams and invite members
+- Roles: Admin, Member
+- Team-owned template library
 
-### Authentifizierung & Profil
-- Registrierung mit E-Mail-Verifikation
-- Login mit JWT (24 h gültig)
-- Passwort zurücksetzen per E-Mail
-- Profil bearbeiten (Name, Benutzername, Bio, Passwort, Avatar)
-- Dark/Light-Mode-Toggle
-- Webhook-URL für externe Benachrichtigungen (container.started / container.stopped)
-- E-Mail-Benachrichtigungen bei Start, Stop und 5-Minuten-Warnung
+### Authentication & Profile
+- Sign-up with email verification
+- Login with JWT (valid for 24 h)
+- Password reset via email
+- Edit profile (name, username, bio, password, avatar)
+- Dark/light mode toggle
+- Webhook URL for external notifications (container.started / container.stopped)
+- Email notifications on start, stop and a 5-minute warning
 
 ### UX
-- Command Palette (`Ctrl+K` / `Cmd+K`) für schnelle Navigation und Template-Start
-- Keyboard-Navigation durchgehend unterstützt
-- React Router (Deep Links, Browser-Back/Forward)
-- Toast-Benachrichtigungen
+- Command palette (`Ctrl+K` / `Cmd+K`) for fast navigation and template launch
+- Full keyboard navigation
+- React Router (deep links, browser back/forward)
+- Toast notifications
 
 ---
 
-## Tech-Stack
+## Tech Stack
 
-| Bereich | Technologie | Version |
+| Area | Technology | Version |
 |---------|-------------|---------|
 | Backend | Python + FastAPI | 3.11+ |
 | Frontend | React + Vite | 19 / 7+ |
 | Routing | React Router | v7 |
 | Terminal | xterm.js (@xterm/xterm) | v6 |
 | Container | Docker SDK for Python | 7+ |
-| Datenbank | SQLite (via SQLAlchemy) | 2+ |
+| Database | SQLite (via SQLAlchemy) | 2+ |
 | Auth | JWT (python-jose) + bcrypt | - |
-| E-Mail | SMTP / Gmail | - |
-| API Doku | Swagger UI (automatisch) | - |
+| Email | SMTP / Gmail | - |
+| API docs | Swagger UI (automatic) | - |
 
 ---
 
-## Voraussetzungen
+## Prerequisites
 
 - [Python 3.11+](https://www.python.org/downloads/)
 - [Node.js 18+](https://nodejs.org/)
-- [Docker](https://www.docker.com/products/docker-desktop/) (muss im Hintergrund laufen)
+- [Docker](https://www.docker.com/products/docker-desktop/) (must be running in the background)
 - [Git](https://git-scm.com/)
 
 ---
 
 ## Installation & Setup
 
-### 1. Repository klonen
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/milkamilch/env-buddy.git
 cd env-buddy
 ```
 
-### 2. Backend einrichten
+### 2. Set up the backend
 
 ```bash
 cd backend
@@ -141,45 +141,45 @@ source venv/bin/activate          # macOS / Linux
 pip install -r requirements.txt
 ```
 
-### 3. Frontend einrichten
+### 3. Set up the frontend
 
 ```bash
 cd frontend
 npm install
 ```
 
-### 4. Umgebungsvariablen anlegen
+### 4. Create environment variables
 
-Erstelle `backend/.env`:
+Create `backend/.env`:
 
 ```env
-# JWT Auth
+# JWT auth
 SECRET_KEY=irgendein-langer-geheimer-string
 
-# CORS (kommagetrennt für mehrere Origins)
+# CORS (comma-separated for multiple origins)
 CORS_ORIGINS=http://localhost:5173
 
-# E-Mail (Gmail SMTP)
+# Email (Gmail SMTP)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=deine@gmail.com
 SMTP_PASSWORD=dein-app-passwort
 NOTIFICATION_FROM=Env-Buddy <deine@gmail.com>
 
-# Frontend-URL (für Passwort-Reset-Links in E-Mails)
+# Frontend URL (for password reset links in emails)
 FRONTEND_URL=http://localhost:5173
 
-# Container-Limit pro User (0 = unbegrenzt)
+# Container limit per user (0 = unlimited)
 MAX_CONTAINERS_PER_USER=10
 ```
 
-> **Gmail App-Passwort:** Google-Konto → Sicherheit → 2-Faktor-Auth → App-Passwörter → neues Passwort für "Mail".
+> **Gmail app password:** Google Account → Security → 2-Step Verification → App passwords → new password for "Mail".
 
 ---
 
-## Projekt lokal starten
+## Running Locally
 
-### Ein-Befehl-Start
+### One-command start
 
 ```bash
 ./start.sh
@@ -189,7 +189,7 @@ Backend: **http://localhost:8000**
 Frontend: **http://localhost:5173**  
 Swagger UI: **http://localhost:8000/docs**
 
-### Manuell
+### Manually
 
 **Terminal 1 — Backend**
 ```bash
@@ -206,133 +206,133 @@ npm run dev
 
 ---
 
-## API Dokumentation
+## API Documentation
 
-Interaktive Swagger-Doku: **http://localhost:8000/docs**
+Interactive Swagger docs: **http://localhost:8000/docs**
 
 ### Auth
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `POST` | `/api/auth/register` | Account erstellen |
-| `POST` | `/api/auth/login` | Einloggen, JWT erhalten |
-| `GET` | `/api/auth/me` | Eigenes Profil abrufen |
-| `PUT` | `/api/auth/me/profile` | Profil aktualisieren |
-| `POST` | `/api/auth/me/avatar` | Avatar hochladen |
-| `PUT` | `/api/auth/me/notifications` | Benachrichtigungseinstellungen speichern |
-| `POST` | `/api/auth/forgot-password` | Reset-Link anfordern |
-| `POST` | `/api/auth/reset-password` | Passwort zurücksetzen |
+| `POST` | `/api/auth/register` | Create account |
+| `POST` | `/api/auth/login` | Log in, receive JWT |
+| `GET` | `/api/auth/me` | Get own profile |
+| `PUT` | `/api/auth/me/profile` | Update profile |
+| `POST` | `/api/auth/me/avatar` | Upload avatar |
+| `PUT` | `/api/auth/me/notifications` | Save notification settings |
+| `POST` | `/api/auth/forgot-password` | Request reset link |
+| `POST` | `/api/auth/reset-password` | Reset password |
 
-### Container
+### Containers
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `GET` | `/api/containers/` | Eigene Container auflisten |
-| `POST` | `/api/containers/start` | Container starten |
-| `POST` | `/api/containers/{id}/stop` | Container stoppen |
-| `POST` | `/api/containers/{id}/start` | Gestoppten Container starten |
-| `POST` | `/api/containers/{id}/restart` | Container neu starten |
-| `POST` | `/api/containers/{id}/extend` | Laufzeit verlängern |
-| `DELETE` | `/api/containers/{id}` | Container löschen |
-| `GET` | `/api/containers/{id}/config` | Konfiguration abrufen |
-| `PUT` | `/api/containers/{id}/config` | Konfiguration aktualisieren |
-| `GET` | `/api/containers/{id}/logs` | Logs abrufen (HTTP) |
-| `WS` | `/api/containers/{id}/logs/stream?token=` | Logs live streamen (WebSocket) |
-| `WS` | `/api/containers/{id}/terminal?token=` | Browser-Terminal (WebSocket) |
+| `GET` | `/api/containers/` | List own containers |
+| `POST` | `/api/containers/start` | Start container |
+| `POST` | `/api/containers/{id}/stop` | Stop container |
+| `POST` | `/api/containers/{id}/start` | Start stopped container |
+| `POST` | `/api/containers/{id}/restart` | Restart container |
+| `POST` | `/api/containers/{id}/extend` | Extend runtime |
+| `DELETE` | `/api/containers/{id}` | Delete container |
+| `GET` | `/api/containers/{id}/config` | Get configuration |
+| `PUT` | `/api/containers/{id}/config` | Update configuration |
+| `GET` | `/api/containers/{id}/logs` | Get logs (HTTP) |
+| `WS` | `/api/containers/{id}/logs/stream?token=` | Stream logs live (WebSocket) |
+| `WS` | `/api/containers/{id}/terminal?token=` | Browser terminal (WebSocket) |
 | `GET` | `/api/containers/{id}/stats` | Live CPU & RAM |
-| `GET` | `/api/containers/{id}/stats/history` | Ressourcen-Verlauf |
-| `GET` | `/api/containers/{id}/health` | TCP-Erreichbarkeitsprüfung |
-| `GET` | `/api/containers/{id}/dotenv` | .env herunterladen |
-| `POST` | `/api/containers/{id}/update-image` | Image aktualisieren |
+| `GET` | `/api/containers/{id}/stats/history` | Resource history |
+| `GET` | `/api/containers/{id}/health` | TCP reachability check |
+| `GET` | `/api/containers/{id}/dotenv` | Download .env |
+| `POST` | `/api/containers/{id}/update-image` | Update image |
 
 ### Stacks
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `GET` | `/api/containers/stacks` | Alle Stacks auflisten |
-| `POST` | `/api/containers/stacks/start` | Stack starten |
-| `POST` | `/api/containers/stacks/{id}/stop` | Stack stoppen |
-| `POST` | `/api/containers/stacks/{id}/start` | Gestoppten Stack starten |
-| `DELETE` | `/api/containers/stacks/{id}` | Stack löschen |
+| `GET` | `/api/containers/stacks` | List all stacks |
+| `POST` | `/api/containers/stacks/start` | Start stack |
+| `POST` | `/api/containers/stacks/{id}/stop` | Stop stack |
+| `POST` | `/api/containers/stacks/{id}/start` | Start stopped stack |
+| `DELETE` | `/api/containers/stacks/{id}` | Delete stack |
 
 ### User Templates
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `GET` | `/api/user-templates/` | Eigene Templates |
-| `POST` | `/api/user-templates/` | Template erstellen |
-| `DELETE` | `/api/user-templates/{id}` | Template löschen |
-| `PATCH` | `/api/user-templates/{id}/visibility` | Öffentlich / privat schalten |
-| `GET` | `/api/user-templates/public` | Öffentliche Templates anderer Nutzer |
-| `GET` | `/api/user-templates/favorites` | Favoriten abrufen |
-| `PUT` | `/api/user-templates/favorites` | Favoriten speichern |
+| `GET` | `/api/user-templates/` | Own templates |
+| `POST` | `/api/user-templates/` | Create template |
+| `DELETE` | `/api/user-templates/{id}` | Delete template |
+| `PATCH` | `/api/user-templates/{id}/visibility` | Toggle public / private |
+| `GET` | `/api/user-templates/public` | Other users' public templates |
+| `GET` | `/api/user-templates/favorites` | Get favorites |
+| `PUT` | `/api/user-templates/favorites` | Save favorites |
 
-### API-Keys
+### API Keys
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `GET` | `/api/api-keys/` | Aktive Keys auflisten |
-| `POST` | `/api/api-keys/` | Neuen Key erstellen (Raw-Key einmalig) |
-| `DELETE` | `/api/api-keys/{id}` | Key widerrufen |
+| `GET` | `/api/api-keys/` | List active keys |
+| `POST` | `/api/api-keys/` | Create new key (raw key shown once) |
+| `DELETE` | `/api/api-keys/{id}` | Revoke key |
 
 ### Snapshots
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `GET` | `/api/snapshots/` | Eigene Snapshots auflisten |
-| `POST` | `/api/snapshots/` | Snapshot erstellen |
-| `DELETE` | `/api/snapshots/{id}` | Snapshot löschen |
+| `GET` | `/api/snapshots/` | List own snapshots |
+| `POST` | `/api/snapshots/` | Create snapshot |
+| `DELETE` | `/api/snapshots/{id}` | Delete snapshot |
 
 ### Shared Environments
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `GET` | `/api/shared-access/{label}` | Zugriffsberechtigte auflisten |
-| `POST` | `/api/shared-access/{label}` | Zugriff für Benutzer gewähren |
-| `DELETE` | `/api/shared-access/{share_id}` | Zugriff entziehen |
-| `GET` | `/api/shared-access/my/shared-with-me` | Container, auf die man Zugriff hat |
+| `GET` | `/api/shared-access/{label}` | List users with access |
+| `POST` | `/api/shared-access/{label}` | Grant access to a user |
+| `DELETE` | `/api/shared-access/{share_id}` | Revoke access |
+| `GET` | `/api/shared-access/my/shared-with-me` | Containers shared with you |
 
 ### GitHub Actions
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `POST` | `/api/github-actions/trigger` | Container per API-Key starten |
-| `GET` | `/api/github-actions/workflow-example` | Workflow-YAML-Beispiel |
+| `POST` | `/api/github-actions/trigger` | Start container via API key |
+| `GET` | `/api/github-actions/workflow-example` | Workflow YAML example |
 
 ### Teams
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `GET` | `/api/teams/` | Eigene Teams |
-| `POST` | `/api/teams/` | Team erstellen |
-| `DELETE` | `/api/teams/{id}` | Team löschen |
-| `GET` | `/api/teams/{id}/members` | Mitglieder |
-| `POST` | `/api/teams/{id}/members` | Mitglied hinzufügen |
-| `DELETE` | `/api/teams/{id}/members/{uid}` | Mitglied entfernen |
-| `PUT` | `/api/teams/{id}/members/{uid}/role` | Rolle ändern |
-| `GET` | `/api/teams/{id}/templates` | Team-Templates |
-| `POST` | `/api/teams/{id}/templates` | Template hinzufügen |
-| `PUT` | `/api/teams/{id}/templates/{tid}` | Template bearbeiten |
-| `DELETE` | `/api/teams/{id}/templates/{tid}` | Template entfernen |
+| `GET` | `/api/teams/` | Own teams |
+| `POST` | `/api/teams/` | Create team |
+| `DELETE` | `/api/teams/{id}` | Delete team |
+| `GET` | `/api/teams/{id}/members` | Members |
+| `POST` | `/api/teams/{id}/members` | Add member |
+| `DELETE` | `/api/teams/{id}/members/{uid}` | Remove member |
+| `PUT` | `/api/teams/{id}/members/{uid}/role` | Change role |
+| `GET` | `/api/teams/{id}/templates` | Team templates |
+| `POST` | `/api/teams/{id}/templates` | Add template |
+| `PUT` | `/api/teams/{id}/templates/{tid}` | Edit template |
+| `DELETE` | `/api/teams/{id}/templates/{tid}` | Remove template |
 
 ### Marketplace
 
-| Methode | Endpunkt | Beschreibung |
+| Method | Endpoint | Description |
 |---------|----------|--------------|
-| `GET` | `/api/marketplace/` | Öffentliche Templates |
-| `POST` | `/api/marketplace/` | Template veröffentlichen |
-| `GET` | `/api/marketplace/{id}` | Template-Details |
-| `DELETE` | `/api/marketplace/{id}` | Template entfernen |
-| `POST` | `/api/marketplace/{id}/rate` | Bewerten |
-| `GET/POST` | `/api/marketplace/{id}/comments` | Kommentare |
-| `DELETE` | `/api/marketplace/{id}/comments/{cid}` | Kommentar löschen |
-| `GET/POST` | `/api/marketplace/{id}/images` | Bilder |
-| `DELETE` | `/api/marketplace/{id}/images/{iid}` | Bild löschen |
-| `POST` | `/api/marketplace/{id}/import` | In eigene Bibliothek importieren |
+| `GET` | `/api/marketplace/` | Public templates |
+| `POST` | `/api/marketplace/` | Publish template |
+| `GET` | `/api/marketplace/{id}` | Template details |
+| `DELETE` | `/api/marketplace/{id}` | Remove template |
+| `POST` | `/api/marketplace/{id}/rate` | Rate |
+| `GET/POST` | `/api/marketplace/{id}/comments` | Comments |
+| `DELETE` | `/api/marketplace/{id}/comments/{cid}` | Delete comment |
+| `GET/POST` | `/api/marketplace/{id}/images` | Images |
+| `DELETE` | `/api/marketplace/{id}/images/{iid}` | Delete image |
+| `POST` | `/api/marketplace/{id}/import` | Import into own library |
 
 ---
 
-## Projektstruktur
+## Project Structure
 
 ```
 env-buddy/
@@ -341,27 +341,27 @@ env-buddy/
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   ├── app/
-│   │   ├── main.py                     # FastAPI Einstiegspunkt + Lifespan
-│   │   ├── database.py                 # SQLite / SQLAlchemy Setup
-│   │   ├── auth_utils.py               # JWT + API-Key Authentifizierung
+│   │   ├── main.py                     # FastAPI entry point + lifespan
+│   │   ├── database.py                 # SQLite / SQLAlchemy setup
+│   │   ├── auth_utils.py               # JWT + API key authentication
 │   │   ├── routers/
-│   │   │   ├── auth.py                 # Login, Register, Profil
-│   │   │   ├── containers.py           # Container + WebSocket (Logs, Terminal)
-│   │   │   ├── notifications.py        # E-Mail-Benachrichtigungen
-│   │   │   ├── user_templates.py       # Eigene Templates + Sichtbarkeit
-│   │   │   ├── team_templates.py       # Team-Templates (teamübergreifend)
-│   │   │   ├── teams.py                # Teams & Mitglieder
+│   │   │   ├── auth.py                 # Login, register, profile
+│   │   │   ├── containers.py           # Containers + WebSocket (logs, terminal)
+│   │   │   ├── notifications.py        # Email notifications
+│   │   │   ├── user_templates.py       # Own templates + visibility
+│   │   │   ├── team_templates.py       # Team templates (across teams)
+│   │   │   ├── teams.py                # Teams & members
 │   │   │   ├── marketplace.py          # Marketplace
-│   │   │   ├── audit.py                # Audit-Log
-│   │   │   ├── invitations.py          # Team-Einladungen
-│   │   │   ├── api_keys.py             # REST-API-Keys
-│   │   │   ├── snapshots.py            # Container-Snapshots
-│   │   │   ├── shared_access.py        # Geteilter Container-Zugriff
-│   │   │   └── github_actions.py       # GitHub Actions Integration
+│   │   │   ├── audit.py                # Audit log
+│   │   │   ├── invitations.py          # Team invitations
+│   │   │   ├── api_keys.py             # REST API keys
+│   │   │   ├── snapshots.py            # Container snapshots
+│   │   │   ├── shared_access.py        # Shared container access
+│   │   │   └── github_actions.py       # GitHub Actions integration
 │   │   ├── services/
-│   │   │   ├── docker_service.py       # Docker SDK Logik
-│   │   │   ├── notification_service.py # E-Mail Versand
-│   │   │   └── webhook_service.py      # Webhook-Calls
+│   │   │   ├── docker_service.py       # Docker SDK logic
+│   │   │   ├── notification_service.py # Email sending
+│   │   │   └── webhook_service.py      # Webhook calls
 │   │   └── models/
 │   │       ├── user.py
 │   │       ├── container.py
@@ -371,28 +371,28 @@ env-buddy/
 │   │       ├── marketplace.py
 │   │       ├── audit.py
 │   │       ├── invitation.py
-│   │       ├── api_key.py              # API-Keys
+│   │       ├── api_key.py              # API keys
 │   │       ├── snapshot.py             # Snapshots
-│   │       └── shared_access.py        # Geteilter Zugriff
-│   ├── templates/                      # HTML E-Mail Templates
+│   │       └── shared_access.py        # Shared access
+│   ├── templates/                      # HTML email templates
 │   └── tests/
 ├── frontend/
 │   ├── Dockerfile
 │   ├── nginx.conf
 │   ├── src/
 │   │   ├── main.jsx                    # React + BrowserRouter
-│   │   ├── App.jsx                     # Navigation, Routes, Command Palette
-│   │   ├── templateIcons.js            # Gemeinsame Icon-Map
+│   │   ├── App.jsx                     # Navigation, routes, command palette
+│   │   ├── templateIcons.js            # Shared icon map
 │   │   ├── components/
-│   │   │   ├── ContainerCard.jsx       # Karte mit Stats, Terminal, Share, Snapshot
+│   │   │   ├── ContainerCard.jsx       # Card with stats, terminal, share, snapshot
 │   │   │   ├── ContainerEditModal.jsx
-│   │   │   ├── ContainerLogsModal.jsx  # Live-Logs (WebSocket)
-│   │   │   ├── ContainerTerminalModal.jsx  # Browser-Terminal (xterm.js)
-│   │   │   ├── CommandPalette.jsx      # Ctrl+K Palette
+│   │   │   ├── ContainerLogsModal.jsx  # Live logs (WebSocket)
+│   │   │   ├── ContainerTerminalModal.jsx  # Browser terminal (xterm.js)
+│   │   │   ├── CommandPalette.jsx      # Ctrl+K palette
 │   │   │   ├── CreateTemplateModal.jsx
 │   │   │   ├── DashboardStats.jsx
 │   │   │   ├── ImportContainerModal.jsx
-│   │   │   ├── ProfileModal.jsx        # Profil, API-Keys, Snapshots, CI/CD-Snippet
+│   │   │   ├── ProfileModal.jsx        # Profile, API keys, snapshots, CI/CD snippet
 │   │   │   ├── ResourceGraphModal.jsx
 │   │   │   ├── StackCard.jsx
 │   │   │   ├── StartForm.jsx
@@ -400,36 +400,36 @@ env-buddy/
 │   │   │   └── Toast.jsx
 │   │   ├── pages/
 │   │   │   ├── AuthPage.jsx
-│   │   │   ├── DashboardPage.jsx       # Container-Verwaltung + Import
+│   │   │   ├── DashboardPage.jsx       # Container management + import
 │   │   │   ├── MarketplacePage.jsx
 │   │   │   ├── TeamsPage.jsx
-│   │   │   ├── TemplatesPage.jsx       # Templates + öffentliche Templates
+│   │   │   ├── TemplatesPage.jsx       # Templates + public templates
 │   │   │   └── AuditPage.jsx
 │   │   └── services/
 │   │       └── api.js
 │   └── package.json
 └── .github/
     └── workflows/
-        └── deploy.yml                  # CI: Test → Build → Push GHCR → SSH Deploy
+        └── deploy.yml                  # CI: test → build → push GHCR → SSH deploy
 ```
 
 ---
 
-## Verfügbare Templates
+## Available Templates
 
 | Template | Image | Port |
 |----------|-------|------|
 | `postgres` | postgres:15 | 5432 |
 | `redis` | redis:7 | 6379 |
 | `mysql` | mysql:8 | 3306 |
-| `mongo` | mongo:6 | 27017 |
-| `rabbitmq` | rabbitmq:3-management | 15672 |
+| `mongo` | mongo:7 | 27017 |
+| `rabbitmq` | rabbitmq:3-management | 5672 |
 | `minio` | minio/minio | 9000 |
-| `elasticsearch` | elasticsearch:8 | 9200 |
+| `elasticsearch` | elasticsearch:8.13.0 | 9200 |
 | `mariadb` | mariadb:11 | 3306 |
 
-> Ports werden dynamisch im Bereich 10000–11000 zugewiesen.  
-> Eigene Templates können über das **Templates**-Tab oder den **Marketplace** hinzugefügt werden.
+> Ports are assigned dynamically in the range 10000–11000.  
+> Custom templates can be added via the **Templates** tab or the **Marketplace**.
 
 ---
 
@@ -446,32 +446,32 @@ env-buddy/
 ## Git Workflow
 
 ```
-main        ← Stabile Versionen (CI/CD deployt automatisch)
-feature/*   ← Feature-Branches → PR auf main
+main        ← Stable releases (CI/CD deploys automatically)
+feature/*   ← Feature branches → PR to main
 ```
 
 ```bash
 git checkout -b feature/mein-feature
-# arbeiten, committen
+# work, commit
 git push origin feature/mein-feature
-# Pull Request öffnen → main
+# open a pull request → main
 ```
 
 ---
 
-## Commit Konvention
+## Commit Convention
 
-| Prefix | Wann |
+| Prefix | When |
 |--------|------|
-| `feat:` | Neues Feature |
-| `fix:` | Bug behoben |
-| `docs:` | Dokumentation |
+| `feat:` | New feature |
+| `fix:` | Bug fixed |
+| `docs:` | Documentation |
 | `test:` | Tests |
-| `refactor:` | Umstrukturierung |
-| `chore:` | Setup, Config, Dependencies |
+| `refactor:` | Restructuring |
+| `chore:` | Setup, config, dependencies |
 
 ---
 
-## Lizenz
+## License
 
-Dieses Projekt wurde im Rahmen des Moduls **Software Engineering** entwickelt.
+This project was developed as part of the **Software Engineering** module.
